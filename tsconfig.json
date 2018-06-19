@@ -1,0 +1,27 @@
+{
+  "include": [
+    "./src"
+  ],
+  "exclude": [
+    "./node_modules"
+  ],
+  "compilerOptions": {
+    "preserveWatchOutput": true,
+    "outDir": "./build",
+    "sourceMap": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "jsx": "react",
+    "experimentalDecorators": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true,
+    "baseUrl": "./",
+    "target": "es5",
+    "allowJs": false,
+    "allowSyntheticDefaultImports": false,
+    "skipLibCheck": true,
+    "typeRoots": ["./typings", "./node_modules/@types"]
+  },
+}
