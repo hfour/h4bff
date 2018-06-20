@@ -1,12 +1,7 @@
-import { AnydbSql, Transaction } from 'anydb-sql-2';
-import { Request, Express } from 'express';
+import { Transaction } from 'anydb-sql-2';
+import { Request } from 'express';
 import * as po from 'promise-observer';
 import { Observer } from 'promise-observer';
-
-export interface AppParts {
-    db: AnydbSql;
-    router: Express;
-}
 
 export interface Context {
     tx?: Transaction;
@@ -36,26 +31,38 @@ export class BaseService {
     }
 }
 
+type AnyConstrutor<T> = { new(...args: any[]): T };
+
 export class App {
-    parts: AppParts;
-    instances: { [key: string]: BaseService }
+    instances: Map<Function, any> = new Map();
 
-    constructor(parts: AppParts) {
-        this.instances = {};
-        this.parts = parts;
+    get<T>(f: () => T): T {
+        if (!this.instances.has(f)) {
+            this.instances.set(f, f());
+        }
+        return this.instances.get(f) as T;
     }
 
-    registerService<T extends BaseService>(name: string, Service: T) {
-        this.instances[name] = Service;
+    set<T>(f: () => T): T {
+        if (this.instances.has(f)) throw new Error('Singleton is already set');
+        this.instances.set(f, f());
+        return this.instances.get(f);
     }
 
-    getService(name: string) {
-        if (!this.instances[name]) throw new Error(`Service ${name} not found`)
-        return this.instances[name];
+    setClass<T>(Klass: AnyConstrutor<T>, instance: T): T {
+        if (!this.instances.has(Klass)) {
+            this.instances.set(Klass, instance)
+        }
+        return this.instances.get(Klass);
     }
 
-    getInContext(name: string, ctx: Context) {
-        const service = this.instances[name];
-        return service.setContext(ctx);
+    getClass<T>(Klass: AnyConstrutor<T>): T {
+        return this.instances.get(Klass);
+    }
+
+    getInContext<T>(Klass: AnyConstrutor<T>, ctx: Context) {
+        const service = this.instances.get(Klass);
+        service.setContext(ctx);
+        return service as T;
     }
 }
