@@ -221,7 +221,7 @@ export class RequestContext implements IServiceContext {
 
     const ServiceClass = this.serviceRegistry.getService(serviceAlias);
 
-    const serviceInstance = new ServiceClass({app: this.app, ctx: this.ctx});
+    const serviceInstance = new ServiceClass(this);
     const serviceMethod = (serviceInstance as any)[method] as ServiceMethod;
 
     // in case the method is not a promise, we don't want the error to bubble-up
