@@ -7,56 +7,73 @@ export interface Context {
   request?: Request;
 }
 
-export class BaseService {
-  constructor(private app: App, private ctx: Context) {}
+export interface IServiceContext {
+  ctx: Locator;
+  app: App;
+}
 
-  getService(SvcClass) {
-    return this.ctx.getClass(SvcClass)
+export class BaseService {
+  constructor(private sctx: IServiceContext) {}
+
+  getService<T extends BaseService>(SvcClass: {new(sc: IServiceContext):T }):T {
+    return this.sctx.ctx.getClass(SvcClass)
 
   }
 
-  getSingleton(SingletonClass) {
-    return this.app.getClass(SingletonClass)
+  getSingleton<T extends AppSingleton>(SingletonClass: {new(sc: App):T }):T {
+    return this.sctx.app.getClass(SingletonClass)
   }
 }
 
-type AnyConstrutor<T> = { new (...args: any[]): T };
+type AnyConstrutor<U, T> = { new (u:U): T };
 
-export class Context {
+export class Locator<U> {
   instances: Map<Function, any> = new Map();
-  get<T>(f: () => T): T {
+
+  constructor(private arg: U) {}
+
+  get<T>(f: (u:U) => T): T {
     if (!this.instances.has(f)) {
-      this.instances.set(f, f());
+      this.instances.set(f, f(this.arg));
     }
     return this.instances.get(f) as T;
   }
 
-  set<T>(f: () => T): T {
+  set<T>(f: (u:U) => T): T {
     if (this.instances.has(f)) throw new Error('Singleton is already set');
-    this.instances.set(f, f());
+    this.instances.set(f, f(this.arg));
     return this.instances.get(f);
   }
 
-  setClass<T>(Klass: AnyConstrutor<T>, instance: T): T {
+  getClass<T>(Klass: AnyConstrutor<U, T>): T {
     if (!this.instances.has(Klass)) {
-      this.instances.set(Klass, instance);
+      this.instances.set(Klass, new Klass(this.arg));
     }
-    return this.instances.get(Klass);
-  }
-  getClass<T>(Klass: AnyConstrutor<T>): T {
     return this.instances.get(Klass);
   }
 }
 
-export class Router {
+export class AppSingleton {
+  constructor(protected app: App) {
+    this.initialize();
+  }
+
+  initialize() {
+    throw new Error('Must override initialize() in child class!');
+  }
+}
+
+export class Router extends AppSingleton {
   public routes = Express.Router();
 
   contextualWrapper = (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
-    (req as any).ctx = new Context();
     (req as any).app = this.app;
+    (req as any).requestContext = new RequestContext(req, res)
     next();
   };
-  constructor(private app: App) {}
+  initialize() {
+
+  }
   post(url: string, ...middlewares: Express.RequestHandler[]) {
     return this.routes.post(url, this.contextualWrapper, ...middlewares);
   }
@@ -75,15 +92,6 @@ function getServiceNameMethod(s: string): [string, string] {
   return [s.slice(0, lastDotIndex), s.slice(lastDotIndex + 1)];
 }
 
-export class AppSingleton {
-  constructor(protected app: App) {
-    this.initialize();
-  }
-
-  initialize() {
-    throw new Error('Must override initialize() in child class!');
-  }
-}
 
 type ServiceMethod = Function; // & { __exposed: true; __auditOpts: AuditOpts };
 
@@ -125,29 +133,31 @@ export class ServiceRegistry extends AppSingleton {
     return this.services[serviceAlias];
   }
 
-  routeHandler = (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
-    let context = new ServiceContext(req, res, this);
+  routeHandler = (req: Express.Request, res: Express.Response) => {
+    let context = new RequestContext(req, res);
     return context.call();
   };
 }
 
-export class ServiceContext {
-  private ctx: Context;
+export class RequestContext {
+  private ctx = new Locator(this);
 
   private get app() {
-    return this.reg.exposedApp;
+    return (this.req as any).app as App;
   }
 
   get rpcPath(): string {
     return this.req.query.method;
   }
 
+  get serviceRegistry() {
+    return this.app.getClass(ServiceRegistry);
+  }
+
   constructor(
     private req: Express.Request,
-    private res: Express.Response,
-    private reg: ServiceRegistry
+    private res: Express.Response
   ) {
-    this.ctx = (req as any).ctx;
   }
 
   private jsonFail(code: number, message: string, data: any = null) {
@@ -203,13 +213,13 @@ export class ServiceContext {
 
     const [serviceAlias, method] = getServiceNameMethod(req.query.method);
 
-    if (!this.reg.exists(serviceAlias, method)) {
+    if (!this.serviceRegistry.exists(serviceAlias, method)) {
       return this.jsonFail(404, 'Method not found');
     }
 
-    const ServiceClass = this.reg.getService(serviceAlias);
+    const ServiceClass = this.serviceRegistry.getService(serviceAlias);
 
-    const serviceInstance = new ServiceClass(this.app, this.ctx);
+    const serviceInstance = new ServiceClass({app: this.app, ctx: this.ctx});
     const serviceMethod = (serviceInstance as any)[method] as ServiceMethod;
 
     // in case the method is not a promise, we don't want the error to bubble-up
@@ -222,37 +232,9 @@ export class ServiceContext {
 }
 
 export class App {
-  private appContext = new Context();
+  private appContext = new Locator(this);
 
-  instances: Map<Function, any> = new Map();
-
-  get<T>(f: () => T): T {
-    if (!this.instances.has(f)) {
-      this.instances.set(f, f());
-    }
-    return this.instances.get(f) as T;
-  }
-
-  set<T>(f: () => T): T {
-    if (this.instances.has(f)) throw new Error('Singleton is already set');
-    this.instances.set(f, f());
-    return this.instances.get(f);
-  }
-
-  setClass<T>(Klass: AnyConstrutor<T>, instance: T): T {
-    if (!this.instances.has(Klass)) {
-      this.instances.set(Klass, instance);
-    }
-    return this.instances.get(Klass);
-  }
-
-  getClass<T>(Klass: AnyConstrutor<T>): T {
-    return this.instances.get(Klass);
-  }
-
-  getInContext<T>(Klass: AnyConstrutor<T>, ctx: Context) {
-    const service = this.instances.get(Klass);
-    service.setContext(ctx);
-    return service as T;
+  getClass<T>(Klass: AnyConstrutor<App, T>): T {
+    return this.appContext.getClass(Klass)
   }
 }
