@@ -8,7 +8,7 @@ export interface Context {
 }
 
 export interface IServiceContext {
-  ctx: Locator;
+  ctx: Locator<IServiceContext>;
   app: App;
 }
 
@@ -139,10 +139,10 @@ export class ServiceRegistry extends AppSingleton {
   };
 }
 
-export class RequestContext {
-  private ctx = new Locator(this);
+export class RequestContext implements IServiceContext {
+  public ctx = new Locator(this);
 
-  private get app() {
+  public get app() {
     return (this.req as any).app as App;
   }
 
