@@ -10,6 +10,7 @@ export interface Context {
 export interface IServiceContext {
   ctx: Locator<IServiceContext>;
   app: App;
+  req: Request
 }
 
 export class BaseService {
@@ -146,6 +147,7 @@ export class RequestContext implements IServiceContext {
     return (this.req as any).app as App;
   }
 
+
   get rpcPath(): string {
     return this.req.query.method;
   }
@@ -155,7 +157,7 @@ export class RequestContext implements IServiceContext {
   }
 
   constructor(
-    private req: Express.Request,
+    public req: Express.Request,
     private res: Express.Response
   ) {
   }
