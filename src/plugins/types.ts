@@ -1,4 +1,4 @@
-import { Transaction, AnydbSql, anydbSQL } from 'anydb-sql-2';
+import { Transaction, anydbSQL } from 'anydb-sql-2';
 import { Request } from 'express';
 import * as Express from 'express';
 import * as bodyParser from 'body-parser';
@@ -295,11 +295,7 @@ export class RPCDispatcher extends BaseService {
 // DB STUFF:
 
 export class Database extends AppSingleton {
-  db: AnydbSql;
-
-  initialize() {
-    this.db = anydbSQL({ url: 'postgres://admin:admin@localhost:5432/draft' });
-  }
+  db = anydbSQL({ url: 'postgres://admin:admin@localhost:5432/draft' });
 
   private migrations: string[] = [];
 

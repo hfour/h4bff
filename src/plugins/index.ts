@@ -9,7 +9,8 @@ import {
   TransactionProvider,
   AppSingleton
 } from './types';
-import { Table, AnydbSql } from 'anydb-sql-2';
+
+import { Table } from 'anydb-sql-2';
 
 interface File {
   id: string;
@@ -60,11 +61,10 @@ export class Files extends BaseService {
   tx = this.getService(TransactionProvider).tx;
 
   write(params: { filename: string; data: Buffer }) {
-    const tx = this.getService(TransactionProvider).tx;
     const record = { id: uuid(), filename: params.filename, data: params.data };
     return this.filesTbl
       .insert(record)
-      .execWithin(tx)
+      .execWithin(this.tx)
       .thenReturn(record);
   }
 }
@@ -73,7 +73,7 @@ export function filesPlugin(app: App) {
   // Routes
   app.load(FilesRouter);
 
-  // Singletons
+  // Storage
   app.load(FilesStorage);
 
   // RPC
