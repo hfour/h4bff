@@ -86,17 +86,15 @@ export class AppSingleton {
   }
 }
 
-
-
 export class ContextualRouter extends AppSingleton {
   private router = Express.Router();
 
-  private contexts = new WeakMap<Express.Request, RequestContext>()
+  private contexts = new WeakMap<Express.Request, RequestContext>();
 
   public getContext(req: Express.Request, res: Express.Response) {
     let result = this.contexts.get(req);
     if (!result) {
-      this.contexts.set(req, result = new RequestContext(this.app, req, res));
+      this.contexts.set(req, (result = new RequestContext(this.app, req, res)));
     }
     return result;
   }
@@ -119,7 +117,7 @@ export class ContextualRouter extends AppSingleton {
   }
 
   install(path: string, app: Express.Application) {
-    app.use(path, this.router)
+    app.use(path, this.router);
   }
 }
 
@@ -128,7 +126,7 @@ export class RPCServiceRegistry extends AppSingleton {
   private services: { [key: string]: typeof BaseService } = {};
 
   constructor(app: App) {
-    super(app)
+    super(app);
     this.router.post('/rpc', bodyParser.json(), this.routeHandler.bind(this));
   }
 
@@ -153,9 +151,11 @@ export class RPCServiceRegistry extends AppSingleton {
   }
 
   routeHandler(req: Express.Request, res: Express.Response) {
-    let dispatcher = this.getSingleton(ContextualRouter).getContext(req, res).getService(RPCDispatcher)
+    let dispatcher = this.getSingleton(ContextualRouter)
+      .getContext(req, res)
+      .getService(RPCDispatcher);
     return dispatcher.call();
-  };
+  }
 }
 
 type RequestListener = (req: RPCDispatcher, error?: Error) => PromiseLike<void>;
@@ -186,7 +186,6 @@ export class RequestContext implements IRequestContext {
 }
 
 export class RPCDispatcher extends BaseService {
-
   get res() {
     return (this.req as any).context.res as Express.Response;
   }
@@ -234,7 +233,7 @@ export class RPCDispatcher extends BaseService {
   private success(data: any, code: number = 200) {
     // TODO emit success, for e.g. audit logger, instead of locator onDispose
     // this.app.getSingleton(RPCEvents).emit('success', ...)
-    console.log('success')
+    console.log('success');
     this.getSingleton(RPCEvents)
       .requestComplete(this, null)
       .then(() => {
@@ -262,7 +261,7 @@ export class RPCDispatcher extends BaseService {
 
   call() {
     let { req } = this;
-    console.log('calling', req.query.method)
+    console.log('calling', req.query.method);
 
     if (!req.query.method) {
       return this.jsonFail(400, '"method" query parameter not found');
@@ -315,7 +314,7 @@ export class Database extends AppSingleton {
 
 export class TransactionCleaner extends AppSingleton {
   constructor(app: App) {
-    super(app)
+    super(app);
     this.getSingleton(RPCEvents).onRequestComplete((reqContext, error) => {
       return reqContext.getService(TransactionProvider).onDispose(error);
     });
