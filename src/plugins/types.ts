@@ -1,14 +1,15 @@
-import { Transaction } from 'anydb-sql-2';
+import { Transaction, AnydbSql, anydbSQL } from 'anydb-sql-2';
 import { Request } from 'express';
 import * as Express from 'express';
+import * as bodyParser from 'body-parser';
 
-export interface Context {
+export interface ReqTx {
   tx?: Transaction;
   request?: Request;
 }
 
 export interface IServiceContext {
-  ctx: Locator<IServiceContext>;
+  locator: Locator<IServiceContext>;
   app: App;
   req: Request
 }
@@ -17,36 +18,36 @@ export class BaseService {
   constructor(private sctx: IServiceContext) {}
 
   getService<T extends BaseService>(SvcClass: {new(sc: IServiceContext):T }):T {
-    return this.sctx.ctx.getClass(SvcClass)
+    return this.sctx.locator.getClass(SvcClass)
 
   }
 
   getSingleton<T extends AppSingleton>(SingletonClass: {new(sc: App):T }):T {
-    return this.sctx.app.getClass(SingletonClass)
+    return this.sctx.app.get(SingletonClass)
   }
 }
 
-type AnyConstrutor<U, T> = { new (u:U): T };
+type ClassContructor<U, T> = { new (u:U): T };
 
 export class Locator<U> {
   instances: Map<Function, any> = new Map();
 
   constructor(private arg: U) {}
 
-  get<T>(f: (u:U) => T): T {
-    if (!this.instances.has(f)) {
-      this.instances.set(f, f(this.arg));
-    }
-    return this.instances.get(f) as T;
-  }
+  // get<T>(f: (u:U) => T): T {
+  //   if (!this.instances.has(f)) {
+  //     this.instances.set(f, f(this.arg));
+  //   }
+  //   return this.instances.get(f) as T;
+  // }
 
-  set<T>(f: (u:U) => T): T {
-    if (this.instances.has(f)) throw new Error('Singleton is already set');
-    this.instances.set(f, f(this.arg));
-    return this.instances.get(f);
-  }
+  // set<T>(f: (u:U) => T): T {
+  //   if (this.instances.has(f)) throw new Error('Singleton is already set');
+  //   this.instances.set(f, f(this.arg));
+  //   return this.instances.get(f);
+  // }
 
-  getClass<T>(Klass: AnyConstrutor<U, T>): T {
+  getClass<T>(Klass: ClassContructor<U, T>): T {
     if (!this.instances.has(Klass)) {
       this.instances.set(Klass, new Klass(this.arg));
     }
@@ -64,48 +65,33 @@ export class AppSingleton {
   }
 }
 
-export class Router extends AppSingleton {
-  public routes = Express.Router();
+export class ContextualRouter extends AppSingleton {
+  public router = Express.Router();
 
   contextualWrapper = (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
     (req as any).app = this.app;
-    (req as any).requestContext = new RequestContext(req, res)
+    (req as any).requestContext = new RPC(req, res)
     next();
   };
-  initialize() {
 
-  }
+  initialize() {}
+
   post(url: string, ...middlewares: Express.RequestHandler[]) {
-    return this.routes.post(url, this.contextualWrapper, ...middlewares);
+    return this.router.post(url, this.contextualWrapper, ...middlewares);
+  }
+
+  get(url: string, ...middlewares: Express.RequestHandler[]) {
+    return this.router.get(url, this.contextualWrapper, ...middlewares)
   }
 }
-
-/**
- * When given 'serviceAlias.method' string, it splits it to ['serviceAlias', 'method'].
- *
- * If the string has more than one dot, the serviceAlias consumes all parts of the name
- * except for the last one:
- *
- * 'path.with.more.dots' => ['path.with.more', 'dots']
- */
-function getServiceNameMethod(s: string): [string, string] {
-  const lastDotIndex = s.lastIndexOf('.');
-  return [s.slice(0, lastDotIndex), s.slice(lastDotIndex + 1)];
-}
-
-
-type ServiceMethod = Function; // & { __exposed: true; __auditOpts: AuditOpts };
 
 export class ServiceRegistry extends AppSingleton {
-  private router = this.app.getClass(Router);
+  private router: ContextualRouter;
   private services: { [key: string]: typeof BaseService } = {};
 
   initialize() {
-    this.router.post('/rpc', this.routeHandler);
-  }
-
-  public get exposedApp() {
-    return this.app;
+    this.router = this.app.get(ContextualRouter);
+    this.router.post('/rpc', bodyParser.json(), this.routeHandler.bind(this));
   }
 
   add(namespace: string, svc: typeof BaseService) {
@@ -115,45 +101,59 @@ export class ServiceRegistry extends AppSingleton {
     this.services[namespace] = svc;
   }
 
-  /**
-   * Returns true if:
-   *   1. the service exists
-   *   2. the method exists
-   *   3. the method is an exposed function
-   */
   exists(serviceAlias: string, method: string) {
+    console.log('exists')
     const ServiceClass = this.services[serviceAlias];
+    console.log(ServiceClass);
     if (!ServiceClass) {
       return false;
     }
     const serviceMethod = (ServiceClass.prototype as any)[method];
-    return typeof serviceMethod === 'function' && serviceMethod.__exposed;
+    console.log('method', serviceMethod)
+    console.log()
+    return typeof serviceMethod === 'function';// && serviceMethod.__exposed;
   }
 
-  getService(serviceAlias: string) {
+  get(serviceAlias: string) {
     return this.services[serviceAlias];
   }
 
-  routeHandler = (req: Express.Request, res: Express.Response) => {
-    let context = new RequestContext(req, res);
+  routeHandler(req: Express.Request, res: Express.Response) {
+    let context = new RPC(req, res);
     return context.call();
   };
 }
 
-export class RequestContext implements IServiceContext {
-  public ctx = new Locator(this);
+export class Database extends AppSingleton {
+  db: AnydbSql;
+
+  initialize() {
+    this.db = anydbSQL({ url: 'postgres://admin:admin@localhost:5432/draft' })
+  }
+}
+
+export class TransactionProvider extends AppSingleton {
+  initialize() {}
+
+  get tx() {
+    const db = this.app.get(Database).db;
+    return db.begin();
+  }
+}
+
+export class RPC implements IServiceContext {
+  public locator = new Locator(this);
 
   public get app() {
     return (this.req as any).app as App;
   }
-
 
   get rpcPath(): string {
     return this.req.query.method;
   }
 
   get serviceRegistry() {
-    return this.app.getClass(ServiceRegistry);
+    return this.app.get(ServiceRegistry);
   }
 
   constructor(
@@ -173,7 +173,7 @@ export class RequestContext implements IServiceContext {
       version: 2
     });
 
-    //TODO emit fail, for e.g. audit logger.
+    // TODO emit fail, for e.g. audit logger.
     // this.app.getSingleton(RPCEvents).emit('fail', ...)
   }
 
@@ -189,6 +189,7 @@ export class RequestContext implements IServiceContext {
       return this.jsonFail(500, 'Something bad happened.');
     }
   }
+
   private success(data: any, code: number = 200) {
     this.res.status(code).json({
       code,
@@ -196,8 +197,21 @@ export class RequestContext implements IServiceContext {
       error: null,
       version: 2
     });
-    //TODO emit success, for e.g. audit logger.
+    // TODO emit success, for e.g. audit logger.
     // this.app.getSingleton(RPCEvents).emit('success', ...)
+  }
+
+  /**
+   * When given 'serviceAlias.method' string, it splits it to ['serviceAlias', 'method'].
+   *
+   * If the string has more than one dot, the serviceAlias consumes all parts of the name
+   * except for the last one:
+   *
+   * 'path.with.more.dots' => ['path.with.more', 'dots']
+   */
+  private getServiceNameMethod(s: string): [string, string] {
+    const lastDotIndex = s.lastIndexOf('.');
+    return [s.slice(0, lastDotIndex), s.slice(lastDotIndex + 1)];
   }
 
   call() {
@@ -213,16 +227,16 @@ export class RequestContext implements IServiceContext {
       );
     }
 
-    const [serviceAlias, method] = getServiceNameMethod(req.query.method);
+    const [serviceAlias, method] = this.getServiceNameMethod(req.query.method);
 
     if (!this.serviceRegistry.exists(serviceAlias, method)) {
       return this.jsonFail(404, 'Method not found');
     }
 
-    const ServiceClass = this.serviceRegistry.getService(serviceAlias);
+    const ServiceClass = this.serviceRegistry.get(serviceAlias);
 
     const serviceInstance = new ServiceClass(this);
-    const serviceMethod = (serviceInstance as any)[method] as ServiceMethod;
+    const serviceMethod = (serviceInstance as any)[method] as Function;
 
     // in case the method is not a promise, we don't want the error to bubble-up
     const promiseWrapper = Promise.resolve();
@@ -234,9 +248,9 @@ export class RequestContext implements IServiceContext {
 }
 
 export class App {
-  private appContext = new Locator(this);
+  private locator = new Locator(this);
 
-  getClass<T>(Klass: AnyConstrutor<App, T>): T {
-    return this.appContext.getClass(Klass)
+  get<T>(Klass: ClassContructor<App, T>): T {
+    return this.locator.getClass(Klass)
   }
 }

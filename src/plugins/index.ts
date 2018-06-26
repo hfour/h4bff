@@ -1,8 +1,7 @@
 import { v4 as uuid } from 'uuid';
 
-import { a1db, config, router } from '../index'
-import { BaseService,  App } from './types';
-import { Table, AnydbSql } from 'anydb-sql-2';
+import { BaseService, App, ContextualRouter, ServiceRegistry, Database, TransactionProvider } from './types';
+import { Table } from 'anydb-sql-2';
 
 interface File {
     id: string;
@@ -13,9 +12,9 @@ interface File {
 export class Files extends BaseService {
     filesTbl: Table<'files', File>;
 
-    constructor(db: AnydbSql, fileUrl: string) {
-        super();
-        this.events(['created', 'removed', 'updated']);
+    initialize() {
+        const db = this.getSingleton(Database).db;
+
         this.filesTbl = db.define({
             name: 'files',
             columns: {
@@ -25,58 +24,32 @@ export class Files extends BaseService {
             }
         }) as Table<'files', File>;
 
-        console.log('storing files in location', fileUrl);
-    }
-
-    initialize() {
-        return this.filesTbl.create().ifNotExists().exec();
+        const tx = this.getSingleton(TransactionProvider).tx;
+        return this.filesTbl.create().ifNotExists().execWithin(tx);
     }
 
     write(params: { filename: string; data: Buffer }) {
+        this.initialize(); // ??!??!!
+        const tx = this.getSingleton(TransactionProvider).tx;
         const record = { id: uuid(), filename: params.filename, data: params.data };
-        return this.filesTbl.insert(record).execWithin(this.ctx.tx)
-            .then(() => this.emit.created({ fileId: record.id, data: params.data }))
+        return this.filesTbl.insert(record).execWithin(tx)
             .thenReturn(record);
     }
 }
 
 export function filesPlugin(app: App) {
-    const _router = app.get(router);
-    const _db = app.get(a1db);
-    const _config = app.get(config);
-    const fileUrl = _config.fromEnv('FILE_URL');
+    // Routes
+    const router = app.get(ContextualRouter);
 
-    _router.get('/files/:fileId', (req, res) => {
+    router.get('/files/:fileId', (req, res) => {
         res.end('heres file ' + req.params['fileId'])
     })
 
-    _router.post('/files', (_req, res) => {
+    router.post('/files', (_req, res) => {
         res.end('file uploaded')
     })
 
-    app.setClass(Files, new Files(_db, fileUrl));
-}
-
-export function antivirusPlugin(app: App) {
-    const files = app.getClass(Files);
-
-    const _config = app.get(config);
-
-    files.on.created((buffer: any) => {
-        console.log('buffer scan', buffer);
-        return new AntiVirus().scan(buffer);
-    })
-
-    class AntiVirus extends BaseService {
-        constructor() {
-            super();
-            console.log('config in antivirus', _config);
-        }
-
-        scan(buffer: Buffer) {
-            console.log('file scanned', buffer);
-        }
-    }
-    
-    app.setClass(AntiVirus, new AntiVirus());
+    // RPC
+    const rpc = app.get(ServiceRegistry);
+    rpc.add('files', Files);
 }
