@@ -7,10 +7,8 @@ const myApp = new App();
 
 filesPlugin(myApp)
 
-const router = myApp.get(ContextualRouter);
-
 const expressApp = express();
+myApp.getClass(ContextualRouter).install('/', expressApp)
 
-expressApp.use('/', router.router);
 
 expressApp.listen(8080)

@@ -11,47 +11,71 @@ export interface ReqTx {
 export interface IServiceContext {
   locator: Locator<IServiceContext>;
   app: App;
-  req: Request
+  req: Express.Request;
+}
+
+export class App {
+  private locator = new Locator(this);
+
+  getClass<T>(Klass: ClassContructor<App, T>): T {
+    return this.locator.getClass(Klass);
+  }
+
+  load<T>(Klass: ClassContructor<App, T>) {
+    this.locator.setClass(Klass);
+  }
+
+  // TODO: Initialize.
 }
 
 export class BaseService {
   constructor(private sctx: IServiceContext) {}
 
-  getService<T extends BaseService>(SvcClass: {new(sc: IServiceContext):T }):T {
-    return this.sctx.locator.getClass(SvcClass)
-
+  get req() {
+    return this.sctx.req;
   }
 
-  getSingleton<T extends AppSingleton>(SingletonClass: {new(sc: App):T }):T {
-    return this.sctx.app.get(SingletonClass)
+
+  getService<T extends BaseService>(SvcClass: { new (sc: IServiceContext): T }): T {
+    return this.sctx.locator.getClass(SvcClass);
+  }
+
+  getSingleton<T extends AppSingleton>(SingletonClass: { new (sc: App): T }): T {
+    return this.sctx.app.getClass(SingletonClass);
   }
 }
 
-type ClassContructor<U, T> = { new (u:U): T };
+type ClassContructor<U, T> = { new (u: U): T };
 
 export class Locator<U> {
   instances: Map<Function, any> = new Map();
 
   constructor(private arg: U) {}
 
-  // get<T>(f: (u:U) => T): T {
-  //   if (!this.instances.has(f)) {
-  //     this.instances.set(f, f(this.arg));
-  //   }
-  //   return this.instances.get(f) as T;
-  // }
+  get<T>(f: (u: U) => T): T {
+    if (!this.instances.has(f)) {
+      this.instances.set(f, f(this.arg));
+    }
+    return this.instances.get(f) as T;
+  }
 
-  // set<T>(f: (u:U) => T): T {
-  //   if (this.instances.has(f)) throw new Error('Singleton is already set');
-  //   this.instances.set(f, f(this.arg));
-  //   return this.instances.get(f);
-  // }
+  set<T>(f: (u: U) => T): T {
+    if (this.instances.has(f)) throw new Error('Singleton is already set');
+    this.instances.set(f, f(this.arg));
+    return this.instances.get(f);
+  }
 
   getClass<T>(Klass: ClassContructor<U, T>): T {
     if (!this.instances.has(Klass)) {
       this.instances.set(Klass, new Klass(this.arg));
     }
     return this.instances.get(Klass);
+  }
+
+  setClass<T>(Klass: ClassContructor<U, T>) {
+    if (!this.instances.has(Klass)) {
+      this.instances.set(Klass, new Klass(this.arg));
+    }
   }
 }
 
@@ -63,34 +87,54 @@ export class AppSingleton {
   initialize() {
     throw new Error('Must override initialize() in child class!');
   }
+
+  getClass<T>(Klass: ClassContructor<App, T>): T {
+    return this.app.getClass(Klass);
+  }
 }
 
+type ContextualRequest = Express.Request & { app: App; context: RequestContext };
+
+type ContextualRequestHandler = (
+  req: ContextualRequest,
+  res: Express.Response,
+  next: Express.NextFunction
+) => any;
+
 export class ContextualRouter extends AppSingleton {
-  public router = Express.Router();
+  private router = Express.Router();
 
   contextualWrapper = (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
     (req as any).app = this.app;
-    (req as any).requestContext = new RPC(req, res)
+    (req as any).context = new RequestContext(req as ContextualRequest, res);
     next();
   };
 
   initialize() {}
 
-  post(url: string, ...middlewares: Express.RequestHandler[]) {
+  post(url: string, ...middlewares: ContextualRequestHandler[]) {
     return this.router.post(url, this.contextualWrapper, ...middlewares);
   }
 
-  get(url: string, ...middlewares: Express.RequestHandler[]) {
-    return this.router.get(url, this.contextualWrapper, ...middlewares)
+  get(url: string, ...middlewares: ContextualRequestHandler[]) {
+    return this.router.get(url, this.contextualWrapper, ...middlewares);
+  }
+
+  use(url: string, ...middlewares: ContextualRequestHandler[]) {
+    return this.router.use(url, this.contextualWrapper, ...middlewares);
+  }
+
+  install(path: string, app: Express.Application) {
+    app.use(path, this.router)
   }
 }
 
-export class ServiceRegistry extends AppSingleton {
+export class RPCServiceRegistry extends AppSingleton {
   private router: ContextualRouter;
   private services: { [key: string]: typeof BaseService } = {};
 
   initialize() {
-    this.router = this.app.get(ContextualRouter);
+    this.router = this.app.getClass(ContextualRouter);
     this.router.post('/rpc', bodyParser.json(), this.routeHandler.bind(this));
   }
 
@@ -102,64 +146,65 @@ export class ServiceRegistry extends AppSingleton {
   }
 
   exists(serviceAlias: string, method: string) {
-    console.log('exists')
+    console.log('exists');
     const ServiceClass = this.services[serviceAlias];
     console.log(ServiceClass);
     if (!ServiceClass) {
       return false;
     }
     const serviceMethod = (ServiceClass.prototype as any)[method];
-    console.log('method', serviceMethod)
-    console.log()
-    return typeof serviceMethod === 'function';// && serviceMethod.__exposed;
+    console.log('method', serviceMethod);
+    console.log();
+    return typeof serviceMethod === 'function'; // && serviceMethod.__exposed;
   }
 
   get(serviceAlias: string) {
     return this.services[serviceAlias];
   }
 
-  routeHandler(req: Express.Request, res: Express.Response) {
-    let context = new RPC(req, res);
+  routeHandler: ContextualRequestHandler = (req) => {
+    let context = req.context.locator.getClass(RPCRequestContext)
     return context.call();
   };
 }
 
-export class Database extends AppSingleton {
-  db: AnydbSql;
+type RequestListener = (req: RPCRequestContext, error?: Error) => PromiseLike<void>;
 
-  initialize() {
-    this.db = anydbSQL({ url: 'postgres://admin:admin@localhost:5432/draft' })
+export class RPCEvents extends AppSingleton {
+  private listeners: RequestListener[];
+  onRequestComplete(listener: RequestListener) {
+    this.listeners.push(listener);
   }
+
+  requestComplete: RequestListener = (req, err) => {
+    return Promise.all(this.listeners.map(l => l(req, err))).then(() => void 0);
+  };
 }
 
-export class TransactionProvider extends AppSingleton {
-  initialize() {}
-
-  get tx() {
-    const db = this.app.get(Database).db;
-    return db.begin();
-  }
-}
-
-export class RPC implements IServiceContext {
+export class RequestContext implements IServiceContext {
   public locator = new Locator(this);
-
+  constructor(public req: ContextualRequest, public res: Express.Response) {}
   public get app() {
-    return (this.req as any).app as App;
+    return this.req.app;
+  }
+}
+
+export class RPCRequestContext extends BaseService {
+
+  private get context() {
+    return (this.req as ContextualRequest).context;
+  }
+
+  get res() {
+    return this.context.res;
   }
 
   get rpcPath(): string {
     return this.req.query.method;
   }
 
-  get serviceRegistry() {
-    return this.app.get(ServiceRegistry);
-  }
-
-  constructor(
-    public req: Express.Request,
-    private res: Express.Response
-  ) {
+  get rpcRegistry() {
+    return this.getSingleton(RPCServiceRegistry);
   }
 
   private jsonFail(code: number, message: string, data: any = null) {
@@ -172,33 +217,41 @@ export class RPC implements IServiceContext {
       },
       version: 2
     });
-
-    // TODO emit fail, for e.g. audit logger.
-    // this.app.getSingleton(RPCEvents).emit('fail', ...)
   }
 
   private fail(e: Error) {
-    if (typeof (e as any).code === 'number') {
-      return this.jsonFail((e as any).code, e.message);
-    } else if ((e as any).isJoi) {
-      console.error(`Validation failed for "${this.rpcPath}":`);
-      (e as any).details.forEach((err: any) => console.error(` \-> ${err.message}`));
-      return this.jsonFail(400, 'Technical error, the request was malformed.');
-    } else {
-      console.error(e);
-      return this.jsonFail(500, 'Something bad happened.');
-    }
+    // TODO emit fail, for e.g. audit logger, instead of locator onDispose
+    // this.app.getSingleton(RPCEvents).emit('fail', ...)
+
+    this.getSingleton(RPCEvents)
+      .requestComplete(this, e)
+      .then(() => {
+        if (typeof (e as any).code === 'number') {
+          return this.jsonFail((e as any).code, e.message);
+        } else if ((e as any).isJoi) {
+          console.error(`Validation failed for "${this.rpcPath}":`);
+          (e as any).details.forEach((err: any) => console.error(` \-> ${err.message}`));
+          return this.jsonFail(400, 'Technical error, the request was malformed.');
+        } else {
+          console.error(e);
+          return this.jsonFail(500, 'Something bad happened.');
+        }
+      });
   }
 
   private success(data: any, code: number = 200) {
-    this.res.status(code).json({
-      code,
-      result: data,
-      error: null,
-      version: 2
-    });
-    // TODO emit success, for e.g. audit logger.
+    // TODO emit success, for e.g. audit logger, instead of locator onDispose
     // this.app.getSingleton(RPCEvents).emit('success', ...)
+    this.getSingleton(RPCEvents)
+      .requestComplete(this, null)
+      .then(() => {
+        this.res.status(code).json({
+          code,
+          result: data,
+          error: null,
+          version: 2
+        });
+      });
   }
 
   /**
@@ -229,28 +282,79 @@ export class RPC implements IServiceContext {
 
     const [serviceAlias, method] = this.getServiceNameMethod(req.query.method);
 
-    if (!this.serviceRegistry.exists(serviceAlias, method)) {
+    if (!this.rpcRegistry.exists(serviceAlias, method)) {
       return this.jsonFail(404, 'Method not found');
     }
 
-    const ServiceClass = this.serviceRegistry.get(serviceAlias);
+    const ServiceClass = this.rpcRegistry.get(serviceAlias);
 
-    const serviceInstance = new ServiceClass(this);
+    const serviceInstance = this.getService(ServiceClass);
     const serviceMethod = (serviceInstance as any)[method] as Function;
 
     // in case the method is not a promise, we don't want the error to bubble-up
     const promiseWrapper = Promise.resolve();
     return promiseWrapper
       .then(() => serviceMethod.call(serviceInstance, req.body.params) as Promise<any>)
-      .then(result => this.success(result))
-      .catch(error => this.fail(error))
+      .then(result => this.success(result), error => this.fail(error));
   }
 }
 
-export class App {
-  private locator = new Locator(this);
+// DB STUFF:
 
-  get<T>(Klass: ClassContructor<App, T>): T {
-    return this.locator.getClass(Klass)
+export class Database extends AppSingleton {
+  db: AnydbSql;
+
+  initialize() {
+    this.db = anydbSQL({ url: 'postgres://admin:admin@localhost:5432/draft' });
+  }
+
+  private migrations: string[];
+
+  addMigration(mig: string) {
+    this.migrations.push(mig);
+  }
+
+  getMigrationsList() {
+    return this.migrations;
+  }
+}
+
+export class TransactionCleaner extends AppSingleton {
+  initialize() {
+    this.getClass(RPCEvents).onRequestComplete((reqContext, error) => {
+      return reqContext.getService(TransactionProvider).onDispose(error);
+    });
+  }
+}
+
+export class TransactionProvider extends BaseService {
+  private db = this.getSingleton(Database).db;
+  private pool = this.db.getPool();
+
+  initialize() {}
+
+  private _tx: Transaction;
+
+  get tx() {
+    if (!this._tx) this._tx = this.db.begin();
+    return this._tx;
+  }
+
+  get conn() {
+    if (this._tx) return this._tx;
+    return this.pool;
+  }
+
+  onDispose(error: Error) {
+    if (this._tx) {
+      let tx = this._tx;
+      this._tx = null;
+
+      // TODO: get logger singleton in this TX provider, and log that the rollback could
+      // not be performend (unless its "method rollback unavailable in state closed")
+      if (error) return tx.rollbackAsync().catch(() => {});
+      else return tx.commitAsync();
+    }
+    return Promise.resolve();
   }
 }

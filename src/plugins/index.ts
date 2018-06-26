@@ -1,55 +1,76 @@
 import { v4 as uuid } from 'uuid';
 
-import { BaseService, App, ContextualRouter, ServiceRegistry, Database, TransactionProvider } from './types';
+import {
+  BaseService,
+  App,
+  ContextualRouter,
+  RPCServiceRegistry,
+  Database,
+  TransactionProvider,
+  AppSingleton
+} from './types';
 import { Table } from 'anydb-sql-2';
 
 interface File {
-    id: string;
-    filename: string;
-    data: Buffer;
+  id: string;
+  filename: string;
+  data: Buffer;
+}
+
+export class FilesStorage extends AppSingleton {
+  private db = this.app.getClass(Database).db;
+
+  filesTbl = this.db.define({
+    name: 'files',
+    columns: {
+      id: { primaryKey: true, dataType: 'uuid' },
+      filename: { dataType: 'text', notNull: true },
+      data: { notNull: true, dataType: 'bytea' }
+    }
+  }) as Table<'files', File>;
+
+  initialize() {
+    this.app.getClass(Database).addMigration(
+      this.filesTbl
+        .create()
+        .ifNotExists()
+        .toQuery().text
+    );
+  }
 }
 
 export class Files extends BaseService {
-    filesTbl: Table<'files', File>;
+  filesTbl = this.getSingleton(FilesStorage).filesTbl;
+  tx = this.getService(TransactionProvider).tx;
 
-    initialize() {
-        const db = this.getSingleton(Database).db;
+  initialize() {}
 
-        this.filesTbl = db.define({
-            name: 'files',
-            columns: {
-                id: { primaryKey: true, dataType: 'uuid' },
-                filename: { dataType: 'text', notNull: true },
-                data: { notNull: true, dataType: 'bytea' }
-            }
-        }) as Table<'files', File>;
-
-        const tx = this.getSingleton(TransactionProvider).tx;
-        return this.filesTbl.create().ifNotExists().execWithin(tx);
-    }
-
-    write(params: { filename: string; data: Buffer }) {
-        this.initialize(); // ??!??!!
-        const tx = this.getSingleton(TransactionProvider).tx;
-        const record = { id: uuid(), filename: params.filename, data: params.data };
-        return this.filesTbl.insert(record).execWithin(tx)
-            .thenReturn(record);
-    }
+  write(params: { filename: string; data: Buffer }) {
+    const tx = this.getService(TransactionProvider).tx;
+    const record = { id: uuid(), filename: params.filename, data: params.data };
+    return this.filesTbl
+      .insert(record)
+      .execWithin(tx)
+      .thenReturn(record);
+  }
 }
 
 export function filesPlugin(app: App) {
-    // Routes
-    const router = app.get(ContextualRouter);
+  // Routes
+  const router = app.getClass(ContextualRouter);
 
-    router.get('/files/:fileId', (req, res) => {
-        res.end('heres file ' + req.params['fileId'])
-    })
+  router.get('/files/:fileId', (req, res) => {
+    res.end('heres file ' + req.params['fileId']);
+  });
 
-    router.post('/files', (_req, res) => {
-        res.end('file uploaded')
-    })
+  router.post('/files', (_req, res) => {
+    res.end('file uploaded');
+  });
 
-    // RPC
-    const rpc = app.get(ServiceRegistry);
-    rpc.add('files', Files);
+  // RPC
+  const rpc = app.getClass(RPCServiceRegistry);
+  rpc.add('files', Files);
+
+  // Singletons
+  app.load(FilesStorage);
 }
