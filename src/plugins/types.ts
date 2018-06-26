@@ -13,6 +13,7 @@ export interface IRequestContext {
   getService<T extends BaseService>(SvcClass: { new (sc: IRequestContext): T }): T;
   getSingleton<T extends AppSingleton>(SingletonClass: { new (sc: App): T }): T;
   req: Express.Request;
+  res: Express.Response;
 }
 
 export class App {
@@ -188,7 +189,7 @@ export class RequestContext implements IRequestContext {
 
 export class RPCDispatcher extends BaseService {
   get res() {
-    return (this.req as any).context.res as Express.Response;
+    return this.context.res;
   }
 
   get rpcPath(): string {
