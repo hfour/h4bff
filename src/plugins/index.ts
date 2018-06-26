@@ -18,21 +18,20 @@ interface File {
 }
 
 export class FilesStorage extends AppSingleton {
-  private db: AnydbSql;
-  filesTbl: Table<"files", File>;
+  private db = this.app.getSingleton(Database).db;
+  filesTbl = this.db.define({
+    name: "files",
+    columns: {
+      id: { primaryKey: true, dataType: "uuid" },
+      filename: { dataType: "text", notNull: true },
+      data: { notNull: true, dataType: "bytea" }
+    }
+  }) as Table<"files", File>;
 
-  initialize() {
-    this.db = this.app.getClass(Database).db;
-    this.filesTbl = this.db.define({
-      name: "files",
-      columns: {
-        id: { primaryKey: true, dataType: "uuid" },
-        filename: { dataType: "text", notNull: true },
-        data: { notNull: true, dataType: "bytea" }
-      }
-    }) as Table<"files", File>;
+  constructor(app: App) {
+    super(app)
 
-    this.app.getClass(Database).addMigration(
+    this.app.getSingleton(Database).addMigration(
       this.filesTbl
         .create()
         .ifNotExists()
@@ -45,7 +44,6 @@ export class Files extends BaseService {
   filesTbl = this.getSingleton(FilesStorage).filesTbl;
   tx = this.getService(TransactionProvider).tx;
 
-  initialize() {}
 
   write(params: { filename: string; data: Buffer }) {
     const tx = this.getService(TransactionProvider).tx;
@@ -59,7 +57,7 @@ export class Files extends BaseService {
 
 export function filesPlugin(app: App) {
   // Routes
-  const router = app.getClass(ContextualRouter);
+  const router = app.getSingleton(ContextualRouter);
 
   router.get("/files/:fileId", (req, res) => {
     res.end("heres file " + req.params["fileId"]);
@@ -70,7 +68,7 @@ export function filesPlugin(app: App) {
   });
 
   // RPC
-  const rpc = app.getClass(RPCServiceRegistry);
+  const rpc = app.getSingleton(RPCServiceRegistry);
   rpc.add("files", Files);
 
   // Singletons

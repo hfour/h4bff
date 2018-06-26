@@ -8,16 +8,16 @@ export interface ReqTx {
   request?: Request;
 }
 
-export interface IServiceContext {
-  locator: Locator<IServiceContext>;
-  app: App;
+export interface IRequestContext {
+  getService<T extends BaseService>(SvcClass: { new (sc: IRequestContext): T }): T;
+  getSingleton<T extends AppSingleton>(SingletonClass: { new (sc: App): T }): T;
   req: Express.Request;
 }
 
 export class App {
   private locator = new Locator(this);
 
-  getClass<T>(Klass: ClassContructor<App, T>): T {
+  getSingleton<T>(Klass: ClassContructor<App, T>): T {
     return this.locator.getClass(Klass);
   }
 
@@ -29,19 +29,18 @@ export class App {
 }
 
 export class BaseService {
-  constructor(private sctx: IServiceContext) {}
+  constructor(protected context: IRequestContext) {}
 
   get req() {
-    return this.sctx.req;
+    return this.context.req;
   }
 
-
-  getService<T extends BaseService>(SvcClass: { new (sc: IServiceContext): T }): T {
-    return this.sctx.locator.getClass(SvcClass);
+  getService<T extends BaseService>(SvcClass: { new (sc: IRequestContext): T }): T {
+    return this.context.getService(SvcClass);
   }
 
   getSingleton<T extends AppSingleton>(SingletonClass: { new (sc: App): T }): T {
-    return this.sctx.app.getClass(SingletonClass);
+    return this.context.getSingleton(SingletonClass);
   }
 }
 
@@ -80,48 +79,42 @@ export class Locator<U> {
 }
 
 export class AppSingleton {
-  constructor(protected app: App) {
-    this.initialize();
-  }
+  constructor(protected app: App) {}
 
-  initialize() {
-    console.error(new Error().stack)
-    throw new Error('Must override initialize() in child class!');
-  }
-
-  getClass<T>(Klass: ClassContructor<App, T>): T {
-    return this.app.getClass(Klass);
+  getSingleton<T>(Klass: ClassContructor<App, T>): T {
+    return this.app.getSingleton(Klass);
   }
 }
 
-type ContextualRequest = Express.Request & { app: App; context: RequestContext };
 
-type ContextualRequestHandler = (
-  req: ContextualRequest,
-  res: Express.Response,
-  next: Express.NextFunction
-) => any;
 
 export class ContextualRouter extends AppSingleton {
   private router = Express.Router();
 
+  private contexts = new WeakMap<Express.Request, RequestContext>()
+
+  public getContext(req: Express.Request, res: Express.Response) {
+    let result = this.contexts.get(req);
+    if (!result) {
+      this.contexts.set(req, result = new RequestContext(this.app, req, res));
+    }
+    return result;
+  }
+
   contextualWrapper = (req: Express.Request, res: Express.Response, next: Express.NextFunction) => {
-    (req as any).app = this.app;
-    (req as any).context = new RequestContext(req as ContextualRequest, res);
+    this.getContext(req, res);
     next();
   };
 
-  initialize() {}
-
-  post(url: string, ...middlewares: ContextualRequestHandler[]) {
+  post(url: string, ...middlewares: Express.RequestHandler[]) {
     return this.router.post(url, this.contextualWrapper, ...middlewares);
   }
 
-  get(url: string, ...middlewares: ContextualRequestHandler[]) {
+  get(url: string, ...middlewares: Express.RequestHandler[]) {
     return this.router.get(url, this.contextualWrapper, ...middlewares);
   }
 
-  use(url: string, ...middlewares: ContextualRequestHandler[]) {
+  use(url: string, ...middlewares: Express.RequestHandler[]) {
     return this.router.use(url, this.contextualWrapper, ...middlewares);
   }
 
@@ -131,11 +124,11 @@ export class ContextualRouter extends AppSingleton {
 }
 
 export class RPCServiceRegistry extends AppSingleton {
-  private router: ContextualRouter;
+  private router = this.app.getSingleton(ContextualRouter);
   private services: { [key: string]: typeof BaseService } = {};
 
-  initialize() {
-    this.router = this.app.getClass(ContextualRouter);
+  constructor(app: App) {
+    super(app)
     this.router.post('/rpc', bodyParser.json(), this.routeHandler.bind(this));
   }
 
@@ -159,18 +152,16 @@ export class RPCServiceRegistry extends AppSingleton {
     return this.services[serviceAlias];
   }
 
-  routeHandler(req: ContextualRequest) {
-    let context = req.context.locator.getClass(RPCRequestContext)
-    return context.call();
+  routeHandler(req: Express.Request, res: Express.Response) {
+    let dispatcher = this.getSingleton(ContextualRouter).getContext(req, res).getService(RPCDispatcher)
+    return dispatcher.call();
   };
 }
 
-type RequestListener = (req: RPCRequestContext, error?: Error) => PromiseLike<void>;
+type RequestListener = (req: RPCDispatcher, error?: Error) => PromiseLike<void>;
 
 export class RPCEvents extends AppSingleton {
   private listeners: RequestListener[] = [];
-
-  initialize() {}
 
   onRequestComplete(listener: RequestListener) {
     this.listeners.push(listener);
@@ -181,22 +172,23 @@ export class RPCEvents extends AppSingleton {
   };
 }
 
-export class RequestContext implements IServiceContext {
-  public locator = new Locator(this);
-  constructor(public req: ContextualRequest, public res: Express.Response) {}
-  public get app() {
-    return this.req.app;
+export class RequestContext implements IRequestContext {
+  private locator = new Locator(this);
+  constructor(private app: App, public req: Express.Request, public res: Express.Response) {}
+
+  getService<T extends BaseService>(SvcClass: { new (sc: IRequestContext): T }): T {
+    return this.locator.getClass(SvcClass);
+  }
+
+  getSingleton<T extends AppSingleton>(SingletonClass: { new (sc: App): T }): T {
+    return this.app.getSingleton(SingletonClass);
   }
 }
 
-export class RPCRequestContext extends BaseService {
-
-  private get context() {
-    return (this.req as ContextualRequest).context;
-  }
+export class RPCDispatcher extends BaseService {
 
   get res() {
-    return this.context.res;
+    return (this.req as any).context.res as Express.Response;
   }
 
   get rpcPath(): string {
@@ -322,8 +314,9 @@ export class Database extends AppSingleton {
 }
 
 export class TransactionCleaner extends AppSingleton {
-  initialize() {
-    this.getClass(RPCEvents).onRequestComplete((reqContext, error) => {
+  constructor(app: App) {
+    super(app)
+    this.getSingleton(RPCEvents).onRequestComplete((reqContext, error) => {
       return reqContext.getService(TransactionProvider).onDispose(error);
     });
   }
@@ -332,8 +325,6 @@ export class TransactionCleaner extends AppSingleton {
 export class TransactionProvider extends BaseService {
   private db = this.getSingleton(Database).db;
   private pool = this.db.getPool();
-
-  initialize() {}
 
   private _tx: Transaction;
 
