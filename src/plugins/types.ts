@@ -13,7 +13,7 @@ export interface IRequestContext {
   getService<T extends BaseService>(SvcClass: { new (sc: IRequestContext): T }): T;
   getSingleton<T extends AppSingleton>(SingletonClass: { new (sc: App): T }): T;
   req: Express.Request;
-  res: Express.Response;
+  res: Express.Response
 }
 
 export class App {
@@ -50,11 +50,13 @@ type ClassContructor<U, T> = { new (u: U): T };
 
 export class Locator<U> {
   instances: Map<Function, any> = new Map();
+  overrides: Map<Function, Function> = new Map();
 
   constructor(private arg: U) {}
 
   get<T>(f: (u: U) => T): T {
     if (!this.instances.has(f)) {
+      if (this.overrides.has(f)) f = this.overrides.get(f) as any;
       this.instances.set(f, f(this.arg));
     }
     return this.instances.get(f) as T;
@@ -64,6 +66,10 @@ export class Locator<U> {
     if (this.instances.has(f)) throw new Error('Singleton is already set');
     this.instances.set(f, f(this.arg));
     return this.instances.get(f);
+  }
+
+  override<T>(f: (u:U) => T, g: (u:U) => T) {
+    this.overrides.set(f, g);
   }
 
   getClass<T>(Klass: ClassContructor<U, T>): T {
@@ -77,6 +83,10 @@ export class Locator<U> {
     if (!this.instances.has(Klass)) {
       this.instances.set(Klass, new Klass(this.arg));
     }
+  }
+
+  overrideClass<T>(f: ClassContructor<U, T>, g: ClassContructor<U, T>) {
+    this.overrides.set(f, g);
   }
 }
 
