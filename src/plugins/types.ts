@@ -85,6 +85,7 @@ export class AppSingleton {
   }
 
   initialize() {
+    console.error(new Error().stack)
     throw new Error('Must override initialize() in child class!');
   }
 
@@ -146,15 +147,11 @@ export class RPCServiceRegistry extends AppSingleton {
   }
 
   exists(serviceAlias: string, method: string) {
-    console.log('exists');
     const ServiceClass = this.services[serviceAlias];
-    console.log(ServiceClass);
     if (!ServiceClass) {
       return false;
     }
     const serviceMethod = (ServiceClass.prototype as any)[method];
-    console.log('method', serviceMethod);
-    console.log();
     return typeof serviceMethod === 'function'; // && serviceMethod.__exposed;
   }
 
@@ -162,7 +159,7 @@ export class RPCServiceRegistry extends AppSingleton {
     return this.services[serviceAlias];
   }
 
-  routeHandler: ContextualRequestHandler = (req) => {
+  routeHandler(req: ContextualRequest) {
     let context = req.context.locator.getClass(RPCRequestContext)
     return context.call();
   };
@@ -171,7 +168,10 @@ export class RPCServiceRegistry extends AppSingleton {
 type RequestListener = (req: RPCRequestContext, error?: Error) => PromiseLike<void>;
 
 export class RPCEvents extends AppSingleton {
-  private listeners: RequestListener[];
+  private listeners: RequestListener[] = [];
+
+  initialize() {}
+
   onRequestComplete(listener: RequestListener) {
     this.listeners.push(listener);
   }
@@ -242,6 +242,7 @@ export class RPCRequestContext extends BaseService {
   private success(data: any, code: number = 200) {
     // TODO emit success, for e.g. audit logger, instead of locator onDispose
     // this.app.getSingleton(RPCEvents).emit('success', ...)
+    console.log('success')
     this.getSingleton(RPCEvents)
       .requestComplete(this, null)
       .then(() => {
@@ -269,6 +270,7 @@ export class RPCRequestContext extends BaseService {
 
   call() {
     let { req } = this;
+    console.log('calling', req.query.method)
 
     if (!req.query.method) {
       return this.jsonFail(400, '"method" query parameter not found');
@@ -308,7 +310,7 @@ export class Database extends AppSingleton {
     this.db = anydbSQL({ url: 'postgres://admin:admin@localhost:5432/draft' });
   }
 
-  private migrations: string[];
+  private migrations: string[] = [];
 
   addMigration(mig: string) {
     this.migrations.push(mig);

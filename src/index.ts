@@ -10,5 +10,5 @@ filesPlugin(myApp)
 const expressApp = express();
 myApp.getClass(ContextualRouter).install('/', expressApp)
 
-
+console.log('listening on http://localhost:8080/')
 expressApp.listen(8080)

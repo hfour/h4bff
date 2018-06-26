@@ -1,4 +1,4 @@
-import { v4 as uuid } from 'uuid';
+import { v4 as uuid } from "uuid";
 
 import {
   BaseService,
@@ -8,8 +8,8 @@ import {
   Database,
   TransactionProvider,
   AppSingleton
-} from './types';
-import { Table } from 'anydb-sql-2';
+} from "./types";
+import { Table, AnydbSql } from "anydb-sql-2";
 
 interface File {
   id: string;
@@ -18,18 +18,20 @@ interface File {
 }
 
 export class FilesStorage extends AppSingleton {
-  private db = this.app.getClass(Database).db;
-
-  filesTbl = this.db.define({
-    name: 'files',
-    columns: {
-      id: { primaryKey: true, dataType: 'uuid' },
-      filename: { dataType: 'text', notNull: true },
-      data: { notNull: true, dataType: 'bytea' }
-    }
-  }) as Table<'files', File>;
+  private db: AnydbSql;
+  filesTbl: Table<"files", File>;
 
   initialize() {
+    this.db = this.app.getClass(Database).db;
+    this.filesTbl = this.db.define({
+      name: "files",
+      columns: {
+        id: { primaryKey: true, dataType: "uuid" },
+        filename: { dataType: "text", notNull: true },
+        data: { notNull: true, dataType: "bytea" }
+      }
+    }) as Table<"files", File>;
+
     this.app.getClass(Database).addMigration(
       this.filesTbl
         .create()
@@ -59,17 +61,17 @@ export function filesPlugin(app: App) {
   // Routes
   const router = app.getClass(ContextualRouter);
 
-  router.get('/files/:fileId', (req, res) => {
-    res.end('heres file ' + req.params['fileId']);
+  router.get("/files/:fileId", (req, res) => {
+    res.end("heres file " + req.params["fileId"]);
   });
 
-  router.post('/files', (_req, res) => {
-    res.end('file uploaded');
+  router.post("/files", (_req, res) => {
+    res.end("file uploaded");
   });
 
   // RPC
   const rpc = app.getClass(RPCServiceRegistry);
-  rpc.add('files', Files);
+  rpc.add("files", Files);
 
   // Singletons
   app.load(FilesStorage);
