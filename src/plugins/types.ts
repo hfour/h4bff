@@ -2,6 +2,7 @@ import { Transaction, anydbSQL } from 'anydb-sql-2';
 import { Request } from 'express';
 import * as Express from 'express';
 import * as bodyParser from 'body-parser';
+import * as Promise from 'bluebird'
 
 export interface ReqTx {
   tx?: Transaction;
