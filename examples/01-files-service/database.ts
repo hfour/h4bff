@@ -1,7 +1,6 @@
-import { AppSingleton, BaseService, App } from '../../src';
+import { AppSingleton, BaseService, App, RPCEvents } from 'h4b2';
 import { anydbSQL, Transaction } from 'anydb-sql-2';
 
-import { RPCEvents } from './rpc';
 
 export class Database extends AppSingleton {
   db = anydbSQL({ url: 'postgres://admin:admin@localhost:5432/draft' });

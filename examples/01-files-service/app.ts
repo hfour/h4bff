@@ -1,7 +1,6 @@
 import * as express from "express";
-import { App } from "../../src"; // from h4b2
+import { App, ContextualRouter } from "h4b2"; // from h4b2
 
-import { ContextualRouter } from "./rpc";
 import { filesPlugin } from "./files-plugin";
 
 const myApp = new App();

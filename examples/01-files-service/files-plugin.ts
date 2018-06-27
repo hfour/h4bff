@@ -1,8 +1,6 @@
 import { v4 as uuid } from "uuid";
 import { Table } from "anydb-sql-2";
-import { BaseService, App, AppSingleton } from "../../src"; // from h4b2
-
-import { ContextualRouter, RPCServiceRegistry } from "./rpc";
+import { BaseService, App, AppSingleton, ContextualRouter, RPCServiceRegistry } from "h4b2"; // from h4b2
 import { Database, TransactionProvider } from "./database";
 
 interface File {

@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "backend framework",
   "main": "build/index.js",
+  "typings": "build/index.d.ts",
   "author": "Andrej T.",
   "license": "UNLICENCED",
   "private": true,
@@ -21,6 +22,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "watch": "tsc -w"
+    "watch": "tsc -w",
+    "example": "tsc && cd examples && yarn start"
   }
 }
