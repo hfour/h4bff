@@ -10,8 +10,8 @@ export interface ReqTx {
 }
 
 export interface IRequestContext {
-  getService<T extends BaseService>(SvcClass: { new (sc: IRequestContext): T }): T;
-  getSingleton<T extends AppSingleton>(SingletonClass: { new (sc: App): T }): T;
+  getService<T extends BaseService>(SvcClass: ConstructorOrFactory<IRequestContext,T>): T;
+  getSingleton<T extends AppSingleton>(SingletonClass: ConstructorOrFactory<App, T>): T;
   req: Express.Request;
   res: Express.Response
 }
@@ -19,7 +19,7 @@ export interface IRequestContext {
 
 type ClassFactory<U, T> = (u: U) => T
 type ClassConstructor<U, T> = { new (u: U): T }
-type ConstructorOrFactory<U, T> = ClassFactory<U, T> | ClassConstructor<U, T>
+export type ConstructorOrFactory<U, T> = ClassFactory<U, T> | ClassConstructor<U, T>
 
 export class App {
   private locator = new Locator(this, AppSingleton);
@@ -62,15 +62,14 @@ export class Locator<U> {
 
   constructor(private arg: U, private base: ClassConstructor<U, any>) {}
 
-
   private instantiate<T>(f: ConstructorOrFactory<U, T>) {
     if (f.prototype instanceof this.base) return new (f as ClassConstructor<U, T>)(this.arg)
     else return (f as ClassFactory<U, T>)(this.arg)
   }
 
   get<T>(f: ConstructorOrFactory<U, T>): T {
+    if (this.overrides.has(f)) f = this.overrides.get(f) as any;
     if (!this.instances.has(f)) {
-      if (this.overrides.has(f)) f = this.overrides.get(f) as any;
       this.instances.set(f, this.instantiate(f));
     }
     return this.instances.get(f) as T;
@@ -82,7 +81,7 @@ export class Locator<U> {
     return this.instances.get(f);
   }
 
-  override<T>(f: ClassFactory<U, T>, g: ClassFactory<U, T>) {
+  override<T>(f: ConstructorOrFactory<U, T>, g: ConstructorOrFactory<U, T>) {
     this.overrides.set(f, g);
   }
 }

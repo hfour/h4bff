@@ -67,7 +67,7 @@ export class Files extends BaseService {
   }
 }
 
-export function FilesPlugin(app: App) {
+export let FilesPlugin = (app: App) => {
   app.load(FilesRouter); // Routes
   app.load(FilesStorage); // Storage, storing DB tables
 
