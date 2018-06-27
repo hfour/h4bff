@@ -1,7 +1,7 @@
-import { v4 as uuid } from "uuid";
-import { Table } from "anydb-sql-2";
-import { BaseService, App, AppSingleton, ContextualRouter, RPCServiceRegistry } from "h4b2"; // from h4b2
-import { Database, TransactionProvider } from "./database";
+import { v4 as uuid } from 'uuid';
+import { Table } from 'anydb-sql-2';
+import { BaseService, App, AppSingleton, ContextualRouter, RPCServiceRegistry } from 'h4b2'; // from h4b2
+import { Database, TransactionProvider } from './database';
 
 interface File {
   id: string;
@@ -12,13 +12,13 @@ interface File {
 export class FilesStorage extends AppSingleton {
   private db = this.app.getSingleton(Database).db;
   filesTbl = this.db.define({
-    name: "files",
+    name: 'files',
     columns: {
-      id: { primaryKey: true, dataType: "uuid" },
-      filename: { dataType: "text", notNull: true },
-      data: { notNull: true, dataType: "bytea" }
+      id: { primaryKey: true, dataType: 'uuid' },
+      filename: { dataType: 'text', notNull: true },
+      data: { notNull: true, dataType: 'bytea' }
     }
-  }) as Table<"files", File>;
+  }) as Table<'files', File>;
 
   constructor(app: App) {
     super(app);
@@ -32,20 +32,17 @@ export class FilesStorage extends AppSingleton {
   }
 }
 
-export class FilesRouter extends AppSingleton {
-  constructor(app: App) {
-    super(app);
-    let router = app.getSingleton(ContextualRouter);
+export let FilesRouter = (app: App) => {
+  let router = app.getSingleton(ContextualRouter);
 
-    router.get("/files/:fileId", (req, res) => {
-      res.end("heres file " + req.params["fileId"]);
-    });
+  router.get('/files/:fileId', (req, res) => {
+    res.end('heres file ' + req.params['fileId']);
+  });
 
-    router.post("/files", (_req, res) => {
-      res.end("file uploaded");
-    });
-  }
-}
+  router.post('/files', (_req, res) => {
+    res.end('file uploaded');
+  });
+};
 
 export class Files extends BaseService {
   db = this.getSingleton(FilesStorage);
@@ -70,11 +67,11 @@ export class Files extends BaseService {
   }
 }
 
-export function filesPlugin(app: App) {
+export function FilesPlugin(app: App) {
   app.load(FilesRouter); // Routes
   app.load(FilesStorage); // Storage, storing DB tables
 
   // RPC
   const rpc = app.getSingleton(RPCServiceRegistry);
-  rpc.add("files", Files);
+  rpc.add('files', Files);
 }

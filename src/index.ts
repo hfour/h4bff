@@ -16,21 +16,31 @@ export interface IRequestContext {
   res: Express.Response
 }
 
+
+type ClassFactory<U, T> = (u: U) => T
+type ClassConstructor<U, T> = { new (u: U): T }
+type ConstructorOrFactory<U, T> = ClassFactory<U, T> | ClassConstructor<U, T>
+
 export class App {
-  private locator = new Locator(this);
+  private locator = new Locator(this, AppSingleton);
 
-  getSingleton<T>(Klass: ClassContructor<App, T>): T {
-    return this.locator.getClass(Klass);
+  getSingleton<T>(Klass: ConstructorOrFactory<App, T>): T {
+    return this.locator.get(Klass);
   }
 
-  load<T>(Klass: ClassContructor<App, T>) {
-    this.locator.setClass(Klass);
+  load<T>(Klass: ConstructorOrFactory<App, T>) {
+    this.locator.set(Klass);
   }
-
-  // TODO: Initialize.
 }
 
 export class BaseService {
+
+  static _factory: any
+  static get factory() {
+    if (!this._factory) this._factory = (sc: IRequestContext) => new this(sc)
+    return this._factory;
+  }
+
   constructor(protected context: IRequestContext) {}
 
   get req() {
@@ -46,46 +56,33 @@ export class BaseService {
   }
 }
 
-type ClassContructor<U, T> = { new (u: U): T };
-
 export class Locator<U> {
   instances: Map<Function, any> = new Map();
   overrides: Map<Function, Function> = new Map();
 
-  constructor(private arg: U) {}
+  constructor(private arg: U, private base: ClassConstructor<U, any>) {}
 
-  get<T>(f: (u: U) => T): T {
+
+  private instantiate<T>(f: ConstructorOrFactory<U, T>) {
+    if (f.prototype instanceof this.base) return new (f as ClassConstructor<U, T>)(this.arg)
+    else return (f as ClassFactory<U, T>)(this.arg)
+  }
+
+  get<T>(f: ConstructorOrFactory<U, T>): T {
     if (!this.instances.has(f)) {
       if (this.overrides.has(f)) f = this.overrides.get(f) as any;
-      this.instances.set(f, f(this.arg));
+      this.instances.set(f, this.instantiate(f));
     }
     return this.instances.get(f) as T;
   }
 
-  set<T>(f: (u: U) => T): T {
+  set<T>(f: ConstructorOrFactory<U, T>) {
     if (this.instances.has(f)) throw new Error('Singleton is already set');
-    this.instances.set(f, f(this.arg));
+    this.instances.set(f, this.instantiate(f));
     return this.instances.get(f);
   }
 
-  override<T>(f: (u:U) => T, g: (u:U) => T) {
-    this.overrides.set(f, g);
-  }
-
-  getClass<T>(Klass: ClassContructor<U, T>): T {
-    if (!this.instances.has(Klass)) {
-      this.instances.set(Klass, new Klass(this.arg));
-    }
-    return this.instances.get(Klass);
-  }
-
-  setClass<T>(Klass: ClassContructor<U, T>) {
-    if (!this.instances.has(Klass)) {
-      this.instances.set(Klass, new Klass(this.arg));
-    }
-  }
-
-  overrideClass<T>(f: ClassContructor<U, T>, g: ClassContructor<U, T>) {
+  override<T>(f: ClassFactory<U, T>, g: ClassFactory<U, T>) {
     this.overrides.set(f, g);
   }
 }
@@ -93,7 +90,7 @@ export class Locator<U> {
 export class AppSingleton {
   constructor(protected app: App) {}
 
-  getSingleton<T>(Klass: ClassContructor<App, T>): T {
+  getSingleton<T>(Klass: ConstructorOrFactory<App, T>): T {
     return this.app.getSingleton(Klass);
   }
 }
@@ -185,14 +182,14 @@ export class RPCEvents extends AppSingleton {
 }
 
 export class RequestContext implements IRequestContext {
-  private locator = new Locator(this);
+  private locator = new Locator(this, BaseService);
   constructor(private app: App, public req: Express.Request, public res: Express.Response) {}
 
-  getService<T extends BaseService>(SvcClass: { new (sc: IRequestContext): T }): T {
-    return this.locator.getClass(SvcClass);
+  getService<T extends BaseService>(SvcClass: ConstructorOrFactory<IRequestContext, T>): T {
+    return this.locator.get(SvcClass);
   }
 
-  getSingleton<T extends AppSingleton>(SingletonClass: { new (sc: App): T }): T {
+  getSingleton<T extends AppSingleton>(SingletonClass: ConstructorOrFactory<App, T>): T {
     return this.app.getSingleton(SingletonClass);
   }
 }
@@ -320,13 +317,10 @@ export class Database extends AppSingleton {
   }
 }
 
-export class TransactionCleaner extends AppSingleton {
-  constructor(app: App) {
-    super(app);
-    this.getSingleton(RPCEvents).onRequestComplete((reqContext, error) => {
-      return reqContext.getService(TransactionProvider).onDispose(error);
-    });
-  }
+export let TransactionCleaner = (app: App) => {
+  app.getSingleton(RPCEvents).onRequestComplete((reqContext, error) => {
+    return reqContext.getService(TransactionProvider).onDispose(error);
+  });
 }
 
 export class TransactionProvider extends BaseService {
