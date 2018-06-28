@@ -2,7 +2,7 @@ import { Transaction, anydbSQL } from 'anydb-sql-2';
 import { Request } from 'express';
 import * as Express from 'express';
 import * as bodyParser from 'body-parser';
-import * as Promise from 'bluebird'
+import * as Promise from 'bluebird';
 
 export interface ReqTx {
   tx?: Transaction;
@@ -10,19 +10,18 @@ export interface ReqTx {
 }
 
 export interface IRequestContext {
-  getService<T extends BaseService>(SvcClass: ConstructorOrFactory<IRequestContext,T>): T;
+  getService<T extends BaseService>(SvcClass: ConstructorOrFactory<IRequestContext, T>): T;
   getSingleton<T extends AppSingleton>(SingletonClass: ConstructorOrFactory<App, T>): T;
   req: Express.Request;
-  res: Express.Response
+  res: Express.Response;
 }
 
-
-type ClassFactory<U, T> = (u: U) => T
-type ClassConstructor<U, T> = { new (u: U): T }
-export type ConstructorOrFactory<U, T> = ClassFactory<U, T> | ClassConstructor<U, T>
+type ClassFactory<U, T> = (u: U) => T;
+type ClassConstructor<U, T> = { new (u: U): T };
+export type ConstructorOrFactory<U, T> = ClassFactory<U, T> | ClassConstructor<U, T>;
 
 export class App {
-  private locator = new Locator(this, AppSingleton);
+  private locator = new Locator(this, s => '__appSingleton' in s);
 
   getSingleton<T>(Klass: ConstructorOrFactory<App, T>): T {
     return this.locator.get(Klass);
@@ -34,10 +33,10 @@ export class App {
 }
 
 export class BaseService {
-
-  static _factory: any
+  protected static __baseService = true;
+  static _factory: any;
   static get factory() {
-    if (!this._factory) this._factory = (sc: IRequestContext) => new this(sc)
+    if (!this._factory) this._factory = (sc: IRequestContext) => new this(sc);
     return this._factory;
   }
 
@@ -60,11 +59,14 @@ export class Locator<U> {
   instances: Map<Function, any> = new Map();
   overrides: Map<Function, Function> = new Map();
 
-  constructor(private arg: U, private base: ClassConstructor<U, any>) {}
+  constructor(private arg: U, private isClass: (v: ConstructorOrFactory<U, any>) => boolean) {}
 
+  private isClassTG<T>(v: ConstructorOrFactory<U, T>): v is ClassConstructor<U, T> {
+    return this.isClass(v);
+  }
   private instantiate<T>(f: ConstructorOrFactory<U, T>) {
-    if (f.prototype instanceof this.base) return new (f as ClassConstructor<U, T>)(this.arg)
-    else return (f as ClassFactory<U, T>)(this.arg)
+    if (this.isClassTG(f)) return new f(this.arg);
+    else return f(this.arg);
   }
 
   get<T>(f: ConstructorOrFactory<U, T>): T {
@@ -87,6 +89,8 @@ export class Locator<U> {
 }
 
 export class AppSingleton {
+  protected static __appSingleton = true;
+
   constructor(protected app: App) {}
 
   getSingleton<T>(Klass: ConstructorOrFactory<App, T>): T {
@@ -95,7 +99,7 @@ export class AppSingleton {
 }
 
 export class ContextualRouter extends AppSingleton {
-  private router = Express.Router();
+  private router = Express();
 
   private contexts = new WeakMap<Express.Request, RequestContext>();
 
@@ -181,7 +185,10 @@ export class RPCEvents extends AppSingleton {
 }
 
 export class RequestContext implements IRequestContext {
-  private locator = new Locator(this, BaseService);
+  private locator = new Locator(
+    this,
+    (s: ConstructorOrFactory<this, BaseService>) => '__baseService' in s
+  );
   constructor(private app: App, public req: Express.Request, public res: Express.Response) {}
 
   getService<T extends BaseService>(SvcClass: ConstructorOrFactory<IRequestContext, T>): T {
@@ -320,7 +327,7 @@ export let TransactionCleaner = (app: App) => {
   app.getSingleton(RPCEvents).onRequestComplete((reqContext, error) => {
     return reqContext.getService(TransactionProvider).onDispose(error);
   });
-}
+};
 
 export class TransactionProvider extends BaseService {
   private db = this.getSingleton(Database).db;
