@@ -1,7 +1,11 @@
 import { strValidator, validator, validate } from './experiment';
 
+class U {
+  @validator() name!: string;
+}
 class C {
-  @validator(strValidator) id: string | undefined;
+  @validator() id!: string;
+  @validator() u!: U;
 }
 
 class Test {
@@ -14,8 +18,8 @@ class Test {
 it('works', () => {
   console.log('Experiment');
   let t = new Test();
-  t.myMethod({ id: '1' });
+  t.myMethod({ id: '1', u: { name: 'ok' } });
   expect(() => {
-    t.myMethod({ id: 1 as any });
-  }).toThrowError('Invalid property id : not a string');
+    t.myMethod({ id: '1', u: { name: (1 as any) as string } });
+  }).toThrowError('Invalid property u : Invalid property name : not a string');
 });
