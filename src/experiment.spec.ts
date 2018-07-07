@@ -1,4 +1,4 @@
-import { strValidator, validator, validate } from './experiment';
+import { validator, validate } from './experiment';
 
 class U {
   @validator() name!: string;

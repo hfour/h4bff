@@ -20,13 +20,8 @@ export function getMeta<T>(o: T) {
 
 let defaultValidators = new Map<any, (o: any) => string | undefined>();
 defaultValidators.set(String, (s: any) => (typeof s === 'string' ? undefined : 'not a string'));
-
 defaultValidators.set(Number, (s: any) => (typeof s === 'number' ? undefined : 'not a number'));
 defaultValidators.set(Boolean, (s: any) => (typeof s === 'boolean' ? undefined : 'not a boolean'));
-defaultValidators.set(Object, (s: any) => {
-  let validators = getValidators(s);
-  return applyValidators(s, validators);
-});
 
 function getValidators(o: any): Validator[] {
   let fields = Reflect.getMetadata('validated', o) || new Set();
