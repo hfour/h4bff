@@ -22,13 +22,18 @@ export type ConstructorOrFactory<U, T> = ClassFactory<U, T> | ClassConstructor<U
 
 export class App {
   private locator = new Locator(this, s => '__appSingleton' in s);
+  private plugins: ConstructorOrFactory<App, any>[] = [];
 
   getSingleton<T>(Klass: ConstructorOrFactory<App, T>): T {
     return this.locator.get(Klass);
   }
 
   load<T>(Klass: ConstructorOrFactory<App, T>) {
-    this.locator.set(Klass);
+    this.plugins.push(Klass);
+  }
+
+  activate() {
+    this.plugins.forEach(p => this.locator.set(p));
   }
 }
 

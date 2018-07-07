@@ -3,12 +3,21 @@ import { App, ContextualRouter } from "h4b2"; // from h4b2
 
 import { FilesPlugin } from "./files-plugin";
 
-const myApp = new App();
 
-myApp.load(FilesPlugin);
+export class MyApp extends App {
+  constructor() {
+    super()
+    this.load(FilesPlugin);
+  }
 
-const expressApp = express();
-myApp.getSingleton(ContextualRouter).install("/", expressApp);
+  start() {
+    const expressApp = express();
+    this.getSingleton(ContextualRouter).install("/", expressApp);
+    console.log("listening on http://localhost:8080/");
+    expressApp.listen(8080);
+  }
+}
 
-console.log("listening on http://localhost:8080/");
-expressApp.listen(8080);
+let app = new MyApp();
+
+app.start()
