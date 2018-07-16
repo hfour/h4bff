@@ -4,20 +4,6 @@ let meta = new WeakMap<any, { [k: string]: { [k: string]: any } }>();
 
 type Validator = { key: string; validator: (o: any) => string };
 
-export function updateMeta<T, Key extends keyof T>(o: T, field: Key, obj: { [key: string]: any }) {
-  let m = meta.get(o);
-  if (m == null) {
-    m = {};
-    meta.set(o, m);
-  }
-  m[field as string] = m[field as string] || {};
-  Object.assign(m[field as string], obj);
-}
-
-export function getMeta<T>(o: T) {
-  return meta.get(o);
-}
-
 let defaultValidators = new Map<any, (o: any) => string | undefined>();
 defaultValidators.set(String, (s: any) => (typeof s === 'string' ? undefined : 'not a string'));
 defaultValidators.set(Number, (s: any) => (typeof s === 'number' ? undefined : 'not a number'));

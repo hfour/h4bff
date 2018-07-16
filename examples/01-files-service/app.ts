@@ -1,23 +1,23 @@
-import * as express from "express";
-import { App, ContextualRouter } from "h4b2"; // from h4b2
+import * as express from 'express';
+import { App, ContextualRouter } from 'h4b2'; // from h4b2
 
-import { FilesPlugin } from "./files-plugin";
+import { FilesPlugin } from './files-plugin';
+import { Database } from './database';
 
-
-export class MyApp extends App {
+export default class MyApp extends App {
   constructor() {
-    super()
+    super();
     this.load(FilesPlugin);
   }
 
   start() {
     const expressApp = express();
-    this.getSingleton(ContextualRouter).install("/", expressApp);
-    console.log("listening on http://localhost:8080/");
+    this.getSingleton(ContextualRouter).install('/', expressApp);
+    console.log('listening on http://localhost:8080/');
     expressApp.listen(8080);
   }
+
+  migrate() {
+    const bla = this.getSingleton(Database).getMigrationsList();
+  }
 }
-
-let app = new MyApp();
-
-app.start()
