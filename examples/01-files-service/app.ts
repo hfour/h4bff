@@ -1,13 +1,14 @@
 import * as express from 'express';
 import { App, ContextualRouter } from 'h4b2'; // from h4b2
 
-import { FilesPlugin } from './files-plugin';
+import { FilesPlugin, FilePermissions } from './files-plugin';
 import { Database } from './database';
 
 export default class MyApp extends App {
   constructor() {
     super();
     this.load(FilesPlugin);
+    this.getSingleton(FilePermissions);
   }
 
   start() {
@@ -21,3 +22,7 @@ export default class MyApp extends App {
     const bla = this.getSingleton(Database).getMigrationsList();
   }
 }
+
+let a = new MyApp();
+
+a.start();
