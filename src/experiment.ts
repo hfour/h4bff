@@ -1,7 +1,5 @@
 import 'reflect-metadata';
 
-let meta = new WeakMap<any, { [k: string]: { [k: string]: any } }>();
-
 type Validator = { key: string; validator: (o: any) => string };
 
 let defaultValidators = new Map<any, (o: any) => string | undefined>();

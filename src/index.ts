@@ -21,11 +21,28 @@ type ClassConstructor<U, T> = { new (u: U): T };
 export type ConstructorOrFactory<U, T> = ClassFactory<U, T> | ClassConstructor<U, T>;
 
 export class App {
-  private locator = new Locator(this, s => '__appSingleton' in s);
+  private singletonLocator = new Locator(this, s => '__appSingleton' in s);
+
+  /**
+   * @internal
+   */
+  serviceLocator = new Locator((null as any) as IRequestContext, s => '__baseService' in s);
+
   private plugins: ConstructorOrFactory<App, any>[] = [];
 
   getSingleton<T>(Klass: ConstructorOrFactory<App, T>): T {
-    return this.locator.get(Klass);
+    return this.singletonLocator.get(Klass);
+  }
+
+  overrideSingleton<T>(Klass: ConstructorOrFactory<App, T>, Klass2: ConstructorOrFactory<App, T>) {
+    return this.singletonLocator.override(Klass, Klass2);
+  }
+
+  overrideService<T>(
+    Klass: ConstructorOrFactory<IRequestContext, T>,
+    Klass2: ConstructorOrFactory<IRequestContext, T>
+  ) {
+    return this.serviceLocator.override(Klass, Klass2);
   }
 
   load<T>(Klass: ConstructorOrFactory<App, T>) {
@@ -33,7 +50,7 @@ export class App {
   }
 
   activate() {
-    this.plugins.forEach(p => this.locator.set(p));
+    this.plugins.forEach(p => this.singletonLocator.set(p));
   }
 }
 
@@ -60,21 +77,24 @@ export class BaseService {
   }
 }
 
-export class Locator<U> {
-  instances: Map<Function, any> = new Map();
-  overrides: Map<Function, Function> = new Map();
+export class Locator<Context> {
+  private instances: Map<Function, any> = new Map();
 
-  constructor(private arg: U, private isClass: (v: ConstructorOrFactory<U, any>) => boolean) {}
+  constructor(
+    private arg: Context,
+    private isClass: (v: ConstructorOrFactory<Context, any>) => boolean,
+    private overrides: Map<Function, Function> = new Map()
+  ) {}
 
-  private isClassTG<T>(v: ConstructorOrFactory<U, T>): v is ClassConstructor<U, T> {
+  private isClassTG<T>(v: ConstructorOrFactory<Context, T>): v is ClassConstructor<Context, T> {
     return this.isClass(v);
   }
-  private instantiate<T>(f: ConstructorOrFactory<U, T>) {
+  private instantiate<T>(f: ConstructorOrFactory<Context, T>) {
     if (this.isClassTG(f)) return new f(this.arg);
     else return f(this.arg);
   }
 
-  get<T>(f: ConstructorOrFactory<U, T>): T {
+  get<T>(f: ConstructorOrFactory<Context, T>): T {
     if (this.overrides.has(f)) f = this.overrides.get(f) as any;
     if (!this.instances.has(f)) {
       this.instances.set(f, this.instantiate(f));
@@ -82,14 +102,19 @@ export class Locator<U> {
     return this.instances.get(f) as T;
   }
 
-  set<T>(f: ConstructorOrFactory<U, T>) {
+  set<T>(f: ConstructorOrFactory<Context, T>) {
+    if (this.overrides.has(f)) f = this.overrides.get(f) as any;
     if (this.instances.has(f)) throw new Error('Singleton is already set');
     this.instances.set(f, this.instantiate(f));
     return this.instances.get(f);
   }
 
-  override<T>(f: ConstructorOrFactory<U, T>, g: ConstructorOrFactory<U, T>) {
+  override<T>(f: ConstructorOrFactory<Context, T>, g: ConstructorOrFactory<Context, T>) {
     this.overrides.set(f, g);
+  }
+
+  withNewContext(context: Context) {
+    return new Locator(context, this.isClass, this.overrides);
   }
 }
 
@@ -190,11 +215,8 @@ export class RPCEvents extends AppSingleton {
 }
 
 export class RequestContext implements IRequestContext {
-  private locator = new Locator(
-    this,
-    (s: ConstructorOrFactory<this, BaseService>) => '__baseService' in s
-  );
   constructor(private app: App, public req: Express.Request, public res: Express.Response) {}
+  private locator = this.app.serviceLocator.withNewContext(this);
 
   getService<T extends BaseService>(SvcClass: ConstructorOrFactory<IRequestContext, T>): T {
     return this.locator.get(SvcClass);
