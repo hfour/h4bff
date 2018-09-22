@@ -22,7 +22,7 @@
     "@types/uuid": "^3.4.3",
     "jest": "^23.3.0",
     "ts-jest": "^23.0.0",
-    "typescript": "^2.9.2"
+    "typescript": "^3.0.3"
   },
   "scripts": {
     "build": "tsc",

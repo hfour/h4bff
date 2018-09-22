@@ -10,5 +10,22 @@
     "build": "yarn install --force && tsc",
     "start": "yarn install --force && tsc && node build/app",
     "watch": "tsc -w"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "(/tests/.*|(\\.|/)(test|spec))\\.(tsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
+  },
+  "devDependencies": {
+    "jest": "^23.6.0"
   }
 }
