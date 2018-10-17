@@ -356,20 +356,26 @@ export class Database extends AppSingleton {
 
   constructor(app: App) {
     super(app);
-    app.load(TransactionCleaner);
   }
 }
 
-export let TransactionCleaner = (app: App) => {
-  app.getSingleton(RPCEvents).onRequestComplete((reqContext, error) => {
-    return reqContext.getService(TransactionProvider).onDispose(error);
-  });
-};
+export class TransactionCleaner extends AppSingleton {
+  constructor(app: App) {
+    super(app);
+    app.getSingleton(RPCEvents).onRequestComplete((reqContext, error) => {
+      return reqContext.getService(TransactionProvider).onDispose(error);
+    });
+  }
+}
 
 export class TransactionProvider extends BaseService {
   private db = this.getSingleton(Database).db;
   private pool = this.db.getPool();
 
+  constructor(context: IRequestContext) {
+    super(context);
+    this.getSingleton(TransactionCleaner);
+  }
   private _tx: Transaction | null = null;
 
   get tx() {
