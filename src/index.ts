@@ -9,11 +9,6 @@ export interface ReqTx {
   request?: Request;
 }
 
-export interface IServiceContext {
-  getService<T extends BaseService>(SvcClass: ConstructorOrFactory<IServiceContext, T>): T;
-  getSingleton<T extends AppSingleton>(SingletonClass: ConstructorOrFactory<App, T>): T;
-}
-
 type ClassFactory<U, T> = (u: U) => T;
 type ClassConstructor<U, T> = { new (u: U): T };
 export type ConstructorOrFactory<U, T> = ClassFactory<U, T> | ClassConstructor<U, T>;
@@ -26,7 +21,7 @@ export class App {
   /**
    * @internal
    */
-  serviceLocator = new Locator((null as any) as IServiceContext, s => '__baseService' in s);
+  serviceLocator = new Locator(this.createServiceContext(), s => '__baseService' in s);
 
   getSingleton<T>(Klass: ConstructorOrFactory<App, T>): T {
     return this.singletonLocator.get(Klass);
@@ -40,8 +35,8 @@ export class App {
   }
 
   overrideService<T>(
-    Klass: ConstructorOrFactory<IServiceContext, T>,
-    Klass2: ConstructorOrFactory<IServiceContext, PublicInterface<T>>
+    Klass: ConstructorOrFactory<ServiceContext, T>,
+    Klass2: ConstructorOrFactory<ServiceContext, PublicInterface<T>>
   ) {
     return this.serviceLocator.override(Klass, Klass2);
   }
@@ -60,10 +55,18 @@ export class App {
 }
 
 class ServiceContext {
-  constructor(private app: App) {}
-  private locator = this.app.serviceLocator.clone();
+  private _locator: Locator<ServiceContext> | null = null;
 
-  getService<T extends BaseService>(SvcClass: ConstructorOrFactory<IServiceContext, T>): T {
+  get locator() {
+    if (this._locator == null) {
+      this._locator = this.app.serviceLocator.withNewContext(this);
+    }
+    return this._locator;
+  }
+
+  constructor(private app: App) {}
+
+  getService<T extends BaseService>(SvcClass: ConstructorOrFactory<ServiceContext, T>): T {
     return this.locator.get(SvcClass);
   }
 
@@ -76,13 +79,13 @@ export class BaseService {
   protected static __baseService = true;
   static _factory: any;
   static get factory() {
-    if (!this._factory) this._factory = (sc: IServiceContext) => new this(sc);
+    if (!this._factory) this._factory = (sc: ServiceContext) => new this(sc);
     return this._factory;
   }
 
-  constructor(protected context: IServiceContext) {}
+  constructor(protected context: ServiceContext) {}
 
-  getService<T extends BaseService>(SvcClass: { new (sc: IServiceContext): T }): T {
+  getService<T extends BaseService>(SvcClass: { new (sc: ServiceContext): T }): T {
     return this.context.getService(SvcClass);
   }
 
@@ -129,8 +132,8 @@ export class Locator<Context> {
     this.overrides.set(f, g);
   }
 
-  clone() {
-    return new Locator(this.arg, this.isClass, this.overrides);
+  withNewContext(ctx: Context) {
+    return new Locator(ctx, this.isClass, this.overrides);
   }
 }
 
@@ -389,7 +392,7 @@ export class TransactionProvider extends BaseService {
   private db = this.getSingleton(Database).db;
   private pool = this.db.getPool();
 
-  constructor(context: IServiceContext) {
+  constructor(context: ServiceContext) {
     super(context);
     this.getSingleton(TransactionCleaner);
   }
