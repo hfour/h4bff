@@ -353,6 +353,11 @@ export class Database extends AppSingleton {
   getMigrationsList() {
     return this.migrations;
   }
+
+  constructor(app: App) {
+    super(app);
+    app.load(TransactionCleaner);
+  }
 }
 
 export let TransactionCleaner = (app: App) => {
