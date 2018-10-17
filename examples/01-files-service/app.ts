@@ -22,4 +22,4 @@ export default class MyApp extends App {
   }
 }
 
-let a = new MyApp();
+new MyApp().start();
