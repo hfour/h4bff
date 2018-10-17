@@ -9,11 +9,9 @@ export interface ReqTx {
   request?: Request;
 }
 
-export interface IRequestContext {
-  getService<T extends BaseService>(SvcClass: ConstructorOrFactory<IRequestContext, T>): T;
+export interface IServiceContext {
+  getService<T extends BaseService>(SvcClass: ConstructorOrFactory<IServiceContext, T>): T;
   getSingleton<T extends AppSingleton>(SingletonClass: ConstructorOrFactory<App, T>): T;
-  req: Express.Request;
-  res: Express.Response;
 }
 
 type ClassFactory<U, T> = (u: U) => T;
@@ -28,7 +26,7 @@ export class App {
   /**
    * @internal
    */
-  serviceLocator = new Locator((null as any) as IRequestContext, s => '__baseService' in s);
+  serviceLocator = new Locator((null as any) as IServiceContext, s => '__baseService' in s);
 
   getSingleton<T>(Klass: ConstructorOrFactory<App, T>): T {
     return this.singletonLocator.get(Klass);
@@ -42,8 +40,8 @@ export class App {
   }
 
   overrideService<T>(
-    Klass: ConstructorOrFactory<IRequestContext, T>,
-    Klass2: ConstructorOrFactory<IRequestContext, PublicInterface<T>>
+    Klass: ConstructorOrFactory<IServiceContext, T>,
+    Klass2: ConstructorOrFactory<IServiceContext, PublicInterface<T>>
   ) {
     return this.serviceLocator.override(Klass, Klass2);
   }
@@ -55,23 +53,36 @@ export class App {
   loadPlugins() {
     throw new Error('Override this method to load plugins');
   }
+
+  createServiceContext() {
+    return new ServiceContext(this);
+  }
+}
+
+class ServiceContext {
+  constructor(private app: App) {}
+  private locator = this.app.serviceLocator.clone();
+
+  getService<T extends BaseService>(SvcClass: ConstructorOrFactory<IServiceContext, T>): T {
+    return this.locator.get(SvcClass);
+  }
+
+  getSingleton<T extends AppSingleton>(SingletonClass: ConstructorOrFactory<App, T>): T {
+    return this.app.getSingleton(SingletonClass);
+  }
 }
 
 export class BaseService {
   protected static __baseService = true;
   static _factory: any;
   static get factory() {
-    if (!this._factory) this._factory = (sc: IRequestContext) => new this(sc);
+    if (!this._factory) this._factory = (sc: IServiceContext) => new this(sc);
     return this._factory;
   }
 
-  constructor(protected context: IRequestContext) {}
+  constructor(protected context: IServiceContext) {}
 
-  get req() {
-    return this.context.req;
-  }
-
-  getService<T extends BaseService>(SvcClass: { new (sc: IRequestContext): T }): T {
+  getService<T extends BaseService>(SvcClass: { new (sc: IServiceContext): T }): T {
     return this.context.getService(SvcClass);
   }
 
@@ -118,8 +129,8 @@ export class Locator<Context> {
     this.overrides.set(f, g);
   }
 
-  withNewContext(context: Context) {
-    return new Locator(context, this.isClass, this.overrides);
+  clone() {
+    return new Locator(this.arg, this.isClass, this.overrides);
   }
 }
 
@@ -136,12 +147,14 @@ export class AppSingleton {
 export class ContextualRouter extends AppSingleton {
   private router = Express();
 
-  private contexts = new WeakMap<Express.Request, RequestContext>();
+  private contexts = new WeakMap<Express.Request, ServiceContext>();
 
   public getContext(req: Express.Request, res: Express.Response) {
     let result = this.contexts.get(req);
     if (!result) {
-      this.contexts.set(req, (result = new RequestContext(this.app, req, res)));
+      result = this.app.createServiceContext();
+      result.getService(RequestInfo)._setRequestResponse(req, res);
+      this.contexts.set(req, result);
     }
     return result;
   }
@@ -219,22 +232,26 @@ export class RPCEvents extends AppSingleton {
   };
 }
 
-export class RequestContext implements IRequestContext {
-  constructor(private app: App, public req: Express.Request, public res: Express.Response) {}
-  private locator = this.app.serviceLocator.withNewContext(this);
+export class RequestInfo extends BaseService {
+  req!: Express.Request;
+  res!: Express.Response;
 
-  getService<T extends BaseService>(SvcClass: ConstructorOrFactory<IRequestContext, T>): T {
-    return this.locator.get(SvcClass);
-  }
-
-  getSingleton<T extends AppSingleton>(SingletonClass: ConstructorOrFactory<App, T>): T {
-    return this.app.getSingleton(SingletonClass);
+  /**
+   * @internal
+   */
+  _setRequestResponse(req: Express.Request, res: Express.Response) {
+    this.req = req;
+    this.res = res;
   }
 }
 
 export class RPCDispatcher extends BaseService {
   get res() {
-    return this.context.res;
+    return this.getService(RequestInfo).res;
+  }
+
+  get req() {
+    return this.getService(RequestInfo).req;
   }
 
   get rpcPath(): string {
@@ -372,7 +389,7 @@ export class TransactionProvider extends BaseService {
   private db = this.getSingleton(Database).db;
   private pool = this.db.getPool();
 
-  constructor(context: IRequestContext) {
+  constructor(context: IServiceContext) {
     super(context);
     this.getSingleton(TransactionCleaner);
   }
