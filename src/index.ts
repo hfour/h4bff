@@ -20,6 +20,8 @@ type ClassFactory<U, T> = (u: U) => T;
 type ClassConstructor<U, T> = { new (u: U): T };
 export type ConstructorOrFactory<U, T> = ClassFactory<U, T> | ClassConstructor<U, T>;
 
+export type PublicInterface<T> = { [K in keyof T]: T[K] };
+
 export class App {
   private singletonLocator = new Locator(this, s => '__appSingleton' in s);
 
@@ -28,29 +30,30 @@ export class App {
    */
   serviceLocator = new Locator((null as any) as IRequestContext, s => '__baseService' in s);
 
-  private plugins: ConstructorOrFactory<App, any>[] = [];
-
   getSingleton<T>(Klass: ConstructorOrFactory<App, T>): T {
     return this.singletonLocator.get(Klass);
   }
 
-  overrideSingleton<T>(Klass: ConstructorOrFactory<App, T>, Klass2: ConstructorOrFactory<App, T>) {
+  overrideSingleton<T>(
+    Klass: ConstructorOrFactory<App, T>,
+    Klass2: ConstructorOrFactory<App, PublicInterface<T>>
+  ) {
     return this.singletonLocator.override(Klass, Klass2);
   }
 
   overrideService<T>(
     Klass: ConstructorOrFactory<IRequestContext, T>,
-    Klass2: ConstructorOrFactory<IRequestContext, T>
+    Klass2: ConstructorOrFactory<IRequestContext, PublicInterface<T>>
   ) {
     return this.serviceLocator.override(Klass, Klass2);
   }
 
   load<T>(Klass: ConstructorOrFactory<App, T>) {
-    this.plugins.push(Klass);
+    this.singletonLocator.get(Klass);
   }
 
-  activate() {
-    this.plugins.forEach(p => this.singletonLocator.set(p));
+  loadPlugins() {
+    throw new Error('Override this method to load plugins');
   }
 }
 
@@ -95,7 +98,9 @@ export class Locator<Context> {
   }
 
   get<T>(f: ConstructorOrFactory<Context, T>): T {
-    if (this.overrides.has(f)) f = this.overrides.get(f) as any;
+    if (this.overrides.has(f)) {
+      f = this.overrides.get(f) as any;
+    }
     if (!this.instances.has(f)) {
       this.instances.set(f, this.instantiate(f));
     }

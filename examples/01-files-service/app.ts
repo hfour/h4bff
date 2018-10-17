@@ -5,13 +5,12 @@ import { FilesPlugin } from './files-plugin';
 //import { Database } from './database';
 
 export default class MyApp extends App {
-  constructor() {
-    super();
+  loadPlugins() {
     this.load(FilesPlugin);
   }
 
   start() {
-    this.activate();
+    this.loadPlugins();
     const expressApp = express();
     this.getSingleton(ContextualRouter).install('/', expressApp);
     console.log('listening on http://localhost:8080/');
@@ -24,5 +23,3 @@ export default class MyApp extends App {
 }
 
 let a = new MyApp();
-
-a.start();

@@ -1,7 +1,7 @@
 import { v4 as uuid } from 'uuid';
 import { Table } from 'anydb-sql-2';
 import { BaseService, App, AppSingleton, ContextualRouter, RPCServiceRegistry } from 'h4b2'; // from h4b2
-import { Database, TransactionProvider } from './database';
+import { Database, TransactionProvider } from 'h4b2';
 import { mapSeries } from 'bluebird';
 
 interface File {
@@ -33,10 +33,10 @@ export class FilesStorage extends AppSingleton {
   }
 }
 
-declare class UserService extends BaseService {}
+export class UserService extends BaseService {}
 
 export class FilePermissions extends AppSingleton {
-  private allowances: Array<(user: UserService) => Promise<boolean>>;
+  private allowances: Array<(user: UserService) => Promise<boolean>> = [];
   constructor(app: App) {
     super(app);
   }
@@ -82,16 +82,14 @@ export class Files extends BaseService {
    */
   get(params: { id: string }) {
     let perms = this.getSingleton(FilePermissions);
-    perms
+    return perms
       .checkPermission(this.getService(UserService))
-      .then(() => this.db.filesTbl.where({ id: params.id }).execWithin(this.tx));
+      .then(() => this.db.filesTbl.where({ id: params.id }).getWithin(this.tx));
   }
 }
 
 export let FilesPlugin = (app: App) => {
   app.load(FilesRouter); // Routes
-  app.load(FilesStorage); // Storage, storing DB tables
-  app.load(FilePermissions); // file permissions
 
   // RPC
   const rpc = app.getSingleton(RPCServiceRegistry);
