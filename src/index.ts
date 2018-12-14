@@ -1,3 +1,6 @@
+import * as fs from 'fs';
+import * as path from 'path';
+import * as migrations from 'anydb-sql-2-migrations';
 import { Transaction, anydbSQL } from 'anydb-sql-2';
 import { Request } from 'express';
 import * as Express from 'express';
@@ -362,20 +365,47 @@ export class RPCDispatcher extends BaseService {
 // DB STUFF:
 
 export class Database extends AppSingleton {
-  db = anydbSQL({ url: 'postgres://admin:admin@localhost:5432/draft' });
+  db = anydbSQL({ url: 'postgres://draft:draft@db:5432/draft' });
 
-  private migrations: string[] = [];
+  constructor(app: App) {
+    super(app);
+  }
 
-  addMigration(mig: string) {
+  private migrations: migrations.MigrationTask[] = [];
+
+  addMigration(mig: migrations.MigrationTask) {
     this.migrations.push(mig);
+  }
+
+  addMigrationFolder(location: string) {
+    fs.readdirSync(location)
+      .filter(file => /\.js$/.test(file))
+      .forEach(file => {
+        const fileName = file.replace(/\.js$/, '');
+        /* tslint:disable-next-line:non-literal-require */
+        const task = require(path.resolve(location, fileName));
+        task.name = path.basename(fileName, '.js');
+        this.migrations.push(task);
+      });
   }
 
   getMigrationsList() {
     return this.migrations;
   }
 
-  constructor(app: App) {
-    super(app);
+  runMigrations() {
+    const sequence = migrations.create(this.db, this.migrations);
+    return sequence.run();
+  }
+
+  upMigrations() {
+    const sequence = migrations.create(this.db, this.migrations);
+    return sequence.migrate({ silent: true });
+  }
+
+  downMigrations() {
+    const sequence = migrations.create(this.db, this.migrations);
+    return sequence.drop();
   }
 }
 
