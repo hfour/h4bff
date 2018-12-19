@@ -1,0 +1,6 @@
+# .prettierignore
+build/
+node_modules/
+typings/
+package.json
+package-lock.json

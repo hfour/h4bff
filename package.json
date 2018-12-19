@@ -23,13 +23,16 @@
     "@types/uuid": "^3.4.3",
     "jest": "^23.3.0",
     "ts-jest": "^23.0.0",
-    "typescript": "^3.0.3"
+    "typescript": "^3.0.3",
+    "prettier": "^1.15.3"
   },
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
     "example": "tsc && cd examples && yarn start",
-    "test": "jest"
+    "test": "jest",
+    "prettier": "prettier --list-different **/*.ts '**/*.md' **/*.json",
+    "prettier:fix": "prettier --write **/*.ts '**/*.md' **/*.json"
   },
   "jest": {
     "transform": {

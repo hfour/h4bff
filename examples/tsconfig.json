@@ -1,7 +1,5 @@
 {
-  "include": [
-    "01-files-service"
-  ],
+  "include": ["01-files-service"],
   "compilerOptions": {
     "preserveWatchOutput": true,
     "outDir": "./build",
@@ -19,5 +17,5 @@
     "allowJs": false,
     "allowSyntheticDefaultImports": false,
     "skipLibCheck": true
-  },
+  }
 }

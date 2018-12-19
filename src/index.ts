@@ -30,16 +30,13 @@ export class App {
     return this.singletonLocator.get(Klass);
   }
 
-  overrideSingleton<T>(
-    Klass: ConstructorOrFactory<App, T>,
-    Klass2: ConstructorOrFactory<App, PublicInterface<T>>
-  ) {
+  overrideSingleton<T>(Klass: ConstructorOrFactory<App, T>, Klass2: ConstructorOrFactory<App, PublicInterface<T>>) {
     return this.singletonLocator.override(Klass, Klass2);
   }
 
   overrideService<T>(
     Klass: ConstructorOrFactory<ServiceContext, T>,
-    Klass2: ConstructorOrFactory<ServiceContext, PublicInterface<T>>
+    Klass2: ConstructorOrFactory<ServiceContext, PublicInterface<T>>,
   ) {
     return this.serviceLocator.override(Klass, Klass2);
   }
@@ -103,7 +100,7 @@ export class Locator<Context> {
   constructor(
     private arg: Context,
     private isClass: (v: ConstructorOrFactory<Context, any>) => boolean,
-    private overrides: Map<Function, Function> = new Map()
+    private overrides: Map<Function, Function> = new Map(),
   ) {}
 
   private isClassTG<T>(v: ConstructorOrFactory<Context, T>): v is ClassConstructor<Context, T> {
@@ -274,9 +271,9 @@ export class RPCDispatcher extends BaseService {
       result: data,
       error: {
         code,
-        message
+        message,
       },
-      version: 2
+      version: 2,
     });
   }
 
@@ -311,7 +308,7 @@ export class RPCDispatcher extends BaseService {
           code,
           result: data,
           error: null,
-          version: 2
+          version: 2,
         });
       });
   }
@@ -337,10 +334,7 @@ export class RPCDispatcher extends BaseService {
       return this.jsonFail(400, '"method" query parameter not found');
     }
     if (!req.body.params) {
-      return this.jsonFail(
-        400,
-        '"params" not found, send an empty object in case of no parameters'
-      );
+      return this.jsonFail(400, '"params" not found, send an empty object in case of no parameters');
     }
 
     const [serviceAlias, method] = this.getServiceNameMethod(req.query.method);
@@ -365,7 +359,7 @@ export class RPCDispatcher extends BaseService {
 // DB STUFF:
 
 export class Database extends AppSingleton {
-  db = anydbSQL({ url: 'postgres://draft:draft@db:5432/draft' });
+  db = anydbSQL({ url: process.env['POSTGRES_URL'] });
 
   constructor(app: App) {
     super(app);
