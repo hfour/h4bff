@@ -14,7 +14,8 @@
     "express": "^4.0.37",
     "promise-observer": "^1.0.13",
     "reflect-metadata": "^0.1.12",
-    "uuid": "^3.2.1"
+    "uuid": "^3.2.1",
+    "@toi/toi": "^1.0.5"
   },
   "devDependencies": {
     "@types/bluebird": "^3.5.0",

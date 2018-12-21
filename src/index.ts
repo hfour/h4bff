@@ -1,11 +1,13 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as migrations from 'anydb-sql-2-migrations';
-import { Transaction, anydbSQL } from 'anydb-sql-2';
+import * as bodyParser from 'body-parser';
 import { Request } from 'express';
 import * as Express from 'express';
-import * as bodyParser from 'body-parser';
 import * as Promise from 'bluebird';
+import * as migrations from 'anydb-sql-2-migrations';
+import { Transaction, anydbSQL, AnydbSql } from 'anydb-sql-2';
+import * as toi from '@toi/toi';
+import { Envoi } from 'envoi';
 
 export interface ReqTx {
   tx?: Transaction;
@@ -356,16 +358,34 @@ export class RPCDispatcher extends BaseService {
   }
 }
 
-// DB STUFF:
+/**
+ * Holds the app-specific configuration.
+ */
+export function AppConfig() {
+  return new Envoi();
+}
 
+/**
+ * Exposes an api to comminicate with the database.
+ */
 export class Database extends AppSingleton {
-  db = anydbSQL({ url: process.env['POSTGRES_URL'] });
+  private appConfig = this.getSingleton(AppConfig);
+  private migrations: migrations.MigrationTask[] = [];
+
+  db: AnydbSql;
 
   constructor(app: App) {
     super(app);
-  }
 
-  private migrations: migrations.MigrationTask[] = [];
+    // register the env variables needed for the DB
+    const connString = this.appConfig.register(
+      'POSTGRES_URL',
+      toi.required().and(toi.str.is()),
+      'Database connection string.',
+    ).value;
+    const maxConn = this.appConfig.register('DB_MAX_CONNS', toi.str.is(), 'Max database connections.').value;
+    this.db = anydbSQL({ url: connString, connections: { min: 2, max: Number(maxConn || 20) } });
+  }
 
   addMigration(mig: migrations.MigrationTask) {
     this.migrations.push(mig);

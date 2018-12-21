@@ -18,6 +18,11 @@
     esutils "^2.0.2"
     js-tokens "^3.0.0"
 
+"@toi/toi@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@toi/toi/-/toi-1.0.5.tgz#02767cec11125892de2c1f27de2b90a75c51da91"
+  integrity sha512-NjFj0QQ0b16X3i0dgKCuOo0j9of5yH1WgKovvKb1TBC5EdeAqst7wJ4EClPhwcsJTLCjFEykEyOy3RbXh4XPrQ==
+
 "@types/bluebird@^3.5.0":
   version "3.5.24"
   resolved "https://registry.yarnpkg.com/@types/bluebird/-/bluebird-3.5.24.tgz#11f76812531c14f793b8ecbf1de96f672905de8a"
