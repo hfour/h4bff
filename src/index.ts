@@ -17,6 +17,7 @@ export interface ReqTx {
 type ClassFactory<U, T> = (u: U) => T;
 type ClassConstructor<U, T> = { new (u: U): T };
 export type ConstructorOrFactory<U, T> = ClassFactory<U, T> | ClassConstructor<U, T>;
+export type ServiceContextConstructor<T> = ClassConstructor<ServiceContext, T>;
 
 export type PublicInterface<T> = { [K in keyof T]: T[K] };
 
@@ -56,7 +57,7 @@ export class App {
   }
 }
 
-class ServiceContext {
+export class ServiceContext {
   private _locator: Locator<ServiceContext> | null = null;
 
   get locator() {
@@ -159,6 +160,8 @@ export class ContextualRouter extends AppSingleton {
     if (!result) {
       result = this.app.createServiceContext();
       result.getService(RequestInfo)._setRequestResponse(req, res);
+      // todo attach handler to res.end that will despose the service context
+      // maybe attach Request event handlers to deal with it
       this.contexts.set(req, result);
     }
     return result;
@@ -426,6 +429,8 @@ export class Database extends AppSingleton {
 export class TransactionCleaner extends AppSingleton {
   constructor(app: App) {
     super(app);
+    // todo: replace RPC event with Request events that will cover all requests that finish with success
+    // todo: implement the audit logger in the same way (onRequestComplete => builder => log)
     app.getSingleton(RPCEvents).onRequestComplete((reqContext, error) => {
       return reqContext.getService(TransactionProvider).onDispose(error);
     });
