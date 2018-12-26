@@ -387,43 +387,47 @@ export class Database extends AppSingleton {
       'Database connection string.',
     ).value;
     const maxConn = this.appConfig.register('DB_MAX_CONNS', toi.str.is(), 'Max database connections.').value;
-    this.db = anydbSQL({ url: connString, connections: { min: 2, max: Number(maxConn || 20) } });
+    const dbInstance = anydbSQL({ url: connString, connections: { min: 2, max: Number(maxConn || 20) } });
+    this.db = dbInstance;
   }
 
-  addMigration(mig: migrations.MigrationTask) {
+  addMigration = (mig: migrations.MigrationTask) => {
     this.migrations.push(mig);
-  }
+  };
 
-  addMigrationFolder(location: string) {
-    fs.readdirSync(location)
-      .filter(file => /\.js$/.test(file))
-      .forEach(file => {
-        const fileName = file.replace(/\.js$/, '');
+  addMigrationFolder = (location: string) => {
+    let files = fs.readdirSync(location).filter(file => /\.js|\.ts$/.test(file));
+    if (files.length === 0) {
+      console.warn(`There is no migrations found in: ${location}`);
+    } else {
+      files.forEach(file => {
+        const fileName = file.replace(/\.js|\.ts$/, '');
         /* tslint:disable-next-line:non-literal-require */
         const task = require(path.resolve(location, fileName));
-        task.name = path.basename(fileName, '.js');
+        task.name = path.basename(fileName, path.extname(file));
         this.migrations.push(task);
       });
-  }
+    }
+  };
 
-  getMigrationsList() {
+  getMigrationsList = () => {
     return this.migrations;
-  }
+  };
 
-  runMigrations() {
+  runMigrations = () => {
     const sequence = migrations.create(this.db, this.migrations);
     return sequence.run();
-  }
+  };
 
-  upMigrations() {
+  upMigrations = () => {
     const sequence = migrations.create(this.db, this.migrations);
     return sequence.migrate({ silent: true });
-  }
+  };
 
-  downMigrations() {
+  downMigrations = () => {
     const sequence = migrations.create(this.db, this.migrations);
     return sequence.drop();
-  }
+  };
 }
 
 export class TransactionCleaner extends AppSingleton {
