@@ -474,3 +474,12 @@ export class TransactionProvider extends BaseService {
     return Promise.resolve();
   }
 }
+
+export class UserProvider extends BaseService {
+  private requestInfo = this.getService(RequestInfo);
+
+  get user() {
+    let request = this.requestInfo.req;
+    return request && (request as any).user;
+  }
+}
