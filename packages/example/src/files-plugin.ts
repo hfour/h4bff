@@ -1,8 +1,9 @@
-import { v4 as uuid } from 'uuid';
-import { Table } from 'anydb-sql-2';
-import { BaseService, App, AppSingleton, ContextualRouter, RPCServiceRegistry } from 'h4b2'; // from h4b2
-import { Database, TransactionProvider } from 'h4b2';
 import { mapSeries } from 'bluebird';
+import * as Promise from 'bluebird';
+import { Table } from 'anydb-sql-2';
+import { v4 as uuid } from 'uuid';
+import { Database, TransactionProvider, ContextualRouter, RPCServiceRegistry } from 'backend';
+import { BaseService, App, AppSingleton } from 'core';
 
 interface File {
   id: string;
@@ -17,8 +18,8 @@ export class FilesStorage extends AppSingleton {
     columns: {
       id: { primaryKey: true, dataType: 'uuid' },
       filename: { dataType: 'text', notNull: true },
-      data: { notNull: true, dataType: 'bytea' }
-    }
+      data: { notNull: true, dataType: 'bytea' },
+    },
   }) as Table<'files', File>;
 
   constructor(app: App) {
@@ -28,7 +29,7 @@ export class FilesStorage extends AppSingleton {
       this.filesTbl
         .create()
         .ifNotExists()
-        .toQuery().text
+        .toQuery().text,
     );
   }
 }

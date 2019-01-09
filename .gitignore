@@ -1,2 +1,9 @@
 node_modules/
 build/
+accidental-build/
+*.log
+coverage
+package-lock.json
+packages/*/node_modules
+packages/*/build
+packages/*/.intermediate

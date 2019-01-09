@@ -1,0 +1,48 @@
+{
+  "name": "example",
+  "version": "1.0.0",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "watch": "tsc -w",
+    "test": "jest",
+    "start": "yarn install --force && tsc && node build/app"
+  },
+  "dependencies": {
+    "uuid": "^3.2.1",
+    "core": "*",
+    "backend": "*"
+  },
+  "devDependencies": {
+    "@types/uuid": "^3.4.3",
+    "@types/jest": "^23.3.2",
+    "jest": "^23.6.0",
+    "ts-jest": "^23.10.5"
+  },
+  "jest": {
+    "verbose": false,
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "tsconfig.json",
+        "isolatedModules": true
+      }
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    },
+    "testRegex": "(.*\\.spec\\.ts|src/tests/index\\.ts)",
+    "testPathIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.ts"
+    ],
+    "coverageDirectory": "coverage"
+  }
+}

@@ -1,9 +1,9 @@
 export class Config {
-  vars: { [key: string]: string } = {};
+  vars: { [key: string]: string | undefined } = {};
 
-  fromEnv(name: string, defaultVal: string = null) {
+  fromEnv(name: string, defaultVal?: string) {
     const val = process.env[name];
-    if (!val && defaultVal === null) {
+    if (!val && !defaultVal) {
       throw new Error(`Could not load var from env: ${name}`);
     }
     return val;

@@ -1,5 +1,6 @@
 import * as fp from './files-plugin';
-import { App, TransactionProvider, BaseService } from 'h4b2';
+import { TransactionProvider } from 'backend';
+import { App, BaseService } from 'core';
 
 import * as Bromise from 'bluebird';
 import { UserService } from './files-plugin';
@@ -16,7 +17,7 @@ class TxMock extends BaseService {
       },
       commitAsync() {
         return null as any;
-      }
+      },
     };
   }
   conn: any;
