@@ -11,7 +11,7 @@ function getValidators(o: any): Validator[] {
   let fields = Reflect.getMetadata('validated', o) || new Set();
   return Array.from(fields).map(f => ({
     key: f as string,
-    validator: Reflect.getMetadata('validator', o, f as any)
+    validator: Reflect.getMetadata('validator', o, f as any),
   }));
 }
 

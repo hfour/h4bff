@@ -1,47 +1,55 @@
 {
   "name": "h4b2",
   "version": "1.0.0",
-  "description": "backend framework",
-  "main": "build/index.js",
-  "typings": "build/index.d.ts",
+  "description": "End-to-end framework and inversion of control container for building modular web apps based on Plug-In architecture.",
+  "main": "doesnt-exist",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TokyoFarmer/h4b2.git"
+  },
+  "keywords": [
+    "plugin",
+    "framework"
+  ],
   "author": "Andrej T.",
-  "license": "UNLICENCED",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TokyoFarmer/h4b2/issues"
+  },
+  "homepage": "https://github.com/TokyoFarmer/h4b2#readme",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "workspace-sources": {
+    "*": [
+      "packages/*/src"
+    ]
+  },
   "dependencies": {
-    "anydb-sql-2": "^2.1.0",
-    "bluebird": "^3.5.1",
-    "express": "^4.16.3",
-    "promise-observer": "^1.0.13",
-    "reflect-metadata": "^0.1.12",
-    "uuid": "^3.2.1"
+    "reflect-metadata": "^0.1.12"
   },
   "devDependencies": {
-    "@types/bluebird": "^3.5.20",
-    "@types/express": "^4.16.0",
-    "@types/jest": "^23.1.4",
-    "@types/uuid": "^3.4.3",
-    "jest": "^23.3.0",
-    "ts-jest": "^23.0.0",
-    "typescript": "^3.0.3"
+    "wsrun": "^3.6.2",
+    "typescript": "^3.0.3",
+    "typescript-workspace-plugin": "^2.0.1",
+    "prettier": "^1.15.3"
   },
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w",
-    "example": "tsc && cd examples && yarn start",
-    "test": "jest"
+    "build": "wsrun --stages -r --ifDependency build",
+    "watch": "wsrun watch",
+    "test": "wsrun -r -p --ifDependency test",
+    "clean": "git clean -fdx build/ node_modules/ packages/*/node_modules packages/*/build packages/*/.intermediate",
+    "prettier": "prettier --list-different **/*.ts '**/*.md' **/*.json",
+    "prettier:fix": "prettier --write **/*.ts '**/*.md' **/*.json"
   },
   "jest": {
-    "transform": {
-      "^.+\\.tsx?$": "ts-jest"
-    },
-    "testRegex": "(/tests/.*|(\\.|/)(test|spec))\\.(tsx?)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "jsx",
-      "json",
-      "node"
+    "verbose": true,
+    "projects": [
+      "<rootDir>/packages/core",
+      "<rootDir>/packages/backend",
+      "<rootDir>/packages/frontend",
+      "<rootDir>/packages/example"
     ]
   }
 }

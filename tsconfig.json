@@ -1,27 +1,26 @@
 {
-  "include": ["./src"],
-  "exclude": ["./node_modules"],
   "compilerOptions": {
+    "strict": true,
     "preserveWatchOutput": true,
-    "outDir": "./build",
+    "outDir": "./accidental-build",
     "sourceMap": true,
     "module": "commonjs",
     "moduleResolution": "node",
     "jsx": "react",
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "declaration": true,
-    "declarationMap": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true,
+    "noEmitOnError": true,
     "baseUrl": "./",
-    "target": "es6",
+    "target": "es2015",
     "allowJs": false,
     "allowSyntheticDefaultImports": false,
     "skipLibCheck": true,
-    "strict": true,
-    "typeRoots": ["./typings", "./node_modules/@types"]
-  }
+    "pretty": true,
+    "typeRoots": ["./typings", "./node_modules/@types"],
+    "plugins": [{ "name": "typescript-workspace-plugin" }]
+  },
+  "exclude": ["build", "node_modules", ".git"]
 }

@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { App, ContextualRouter } from 'h4b2'; // from h4b2
+import { App, ContextualRouter } from 'backend'; // from h4b2
 
 import { FilesPlugin } from './files-plugin';
 //import { Database } from './database';
