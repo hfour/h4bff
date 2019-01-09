@@ -153,6 +153,7 @@ export class AppSingleton {
 export class ContextualRouter extends AppSingleton {
   private router = Express();
 
+  // todo: maybe clean up context upon response (onRequstCompleted hook probably)
   private contexts = new WeakMap<Express.Request, ServiceContext>();
 
   public getContext(req: Express.Request, res: Express.Response) {
