@@ -1,5 +1,5 @@
 {
-    "name": "frontend",
+    "name": "@h4bff/frontend",
     "version": "1.0.0",
     "description": "Frontend framework",
     "main": "build/index.js",
@@ -12,7 +12,6 @@
       "test": "jest"
     },
     "dependencies": {
-      "core": "*"
+      "@h4bff/core": "*"
     }
   }
-  

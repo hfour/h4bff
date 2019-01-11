@@ -1,5 +1,5 @@
 {
-  "name": "h4b2",
+  "name": "h4b2-monorepo",
   "version": "1.0.0",
   "description": "End-to-end framework and inversion of control container for building modular web apps based on Plug-In architecture.",
   "main": "doesnt-exist",
@@ -22,12 +22,9 @@
     "packages/*"
   ],
   "workspace-sources": {
-    "*": [
+    "@h4bff/*": [
       "packages/*/src"
     ]
-  },
-  "dependencies": {
-    "reflect-metadata": "^0.1.12"
   },
   "devDependencies": {
     "wsrun": "^3.6.2",
@@ -36,10 +33,10 @@
     "prettier": "^1.15.3"
   },
   "scripts": {
-    "build": "wsrun --stages -r --ifDependency build",
+    "build": "wsrun --stages -r build",
     "watch": "wsrun watch",
-    "test": "wsrun -r -p --ifDependency test",
-    "clean": "git clean -fdx build/ node_modules/ packages/*/node_modules packages/*/build packages/*/.intermediate",
+    "test": "wsrun test",
+    "clean": "git clean -fdx packages/*/build",
     "prettier": "prettier --list-different **/*.ts '**/*.md' **/*.json",
     "prettier:fix": "prettier --write **/*.ts '**/*.md' **/*.json"
   },

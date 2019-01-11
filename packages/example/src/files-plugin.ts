@@ -2,8 +2,8 @@ import { mapSeries } from 'bluebird';
 import * as Promise from 'bluebird';
 import { Table } from 'anydb-sql-2';
 import { v4 as uuid } from 'uuid';
-import { Database, TransactionProvider, ContextualRouter, RPCServiceRegistry } from 'backend';
-import { BaseService, App, AppSingleton } from 'core';
+import { Database, TransactionProvider, ContextualRouter, RPCServiceRegistry } from '@h4bff/backend';
+import { BaseService, App, AppSingleton } from '@h4bff/core';
 
 interface File {
   id: string;

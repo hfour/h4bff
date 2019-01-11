@@ -1,5 +1,5 @@
 import * as Promise from 'bluebird';
-import { BaseService } from 'core';
+import { BaseService } from '@h4bff/core';
 import { RPCServiceRegistry } from './serviceRegistry';
 import { RPCEvents } from './events';
 import { RequestInfo } from '../router';

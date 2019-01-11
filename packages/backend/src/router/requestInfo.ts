@@ -1,5 +1,5 @@
 import * as Express from 'express';
-import { BaseService } from 'core';
+import { BaseService } from '@h4bff/core';
 
 export class RequestInfo extends BaseService {
   req!: Express.Request;

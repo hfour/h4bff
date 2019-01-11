@@ -1,5 +1,5 @@
 import { RPCDispatcher } from './dispatcher';
-import { AppSingleton } from 'core';
+import { AppSingleton } from '@h4bff/core';
 
 type RequestListener = (req: RPCDispatcher, error: Error | null) => PromiseLike<void>;
 

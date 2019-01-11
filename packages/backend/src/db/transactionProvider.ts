@@ -1,6 +1,6 @@
 import * as Promise from 'bluebird';
 import { Transaction } from 'anydb-sql-2';
-import { BaseService, ServiceContext } from 'core';
+import { BaseService, ServiceContext } from '@h4bff/core';
 import { Database } from './database';
 import { TransactionCleaner } from './transactionCleaner';
 

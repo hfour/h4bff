@@ -1,5 +1,5 @@
 {
-    "name": "core",
+    "name": "@h4bff/core",
     "version": "1.0.0",
     "description": "Core module",
     "main": "build/index.js",
@@ -12,4 +12,3 @@
       "test": "jest"
     }
   }
-  

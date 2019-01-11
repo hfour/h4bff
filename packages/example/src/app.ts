@@ -1,6 +1,6 @@
 import * as express from 'express';
-import { App } from 'core';
-import { ContextualRouter } from 'backend';
+import { App } from '@h4bff/core';
+import { ContextualRouter } from '@h4bff/backend';
 
 import { FilesPlugin } from './files-plugin';
 //import { Database } from './database';

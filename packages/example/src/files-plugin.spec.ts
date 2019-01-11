@@ -1,6 +1,6 @@
 import * as fp from './files-plugin';
-import { TransactionProvider } from 'backend';
-import { App, BaseService } from 'core';
+import { TransactionProvider } from '@h4bff/backend';
+import { App, BaseService } from '@h4bff/core';
 
 import * as Bromise from 'bluebird';
 import { UserService } from './files-plugin';

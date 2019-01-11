@@ -1,5 +1,5 @@
 {
-  "name": "example",
+  "name": "@h4bff/example",
   "version": "1.0.0",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "uuid": "^3.2.1",
-    "core": "*",
-    "backend": "*"
+    "@h4bff/core": "*",
+    "@h4bff/backend": "*"
   },
   "devDependencies": {
     "@types/uuid": "^3.4.3",

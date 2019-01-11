@@ -1,5 +1,5 @@
 import * as Express from 'express';
-import { AppSingleton, ServiceContext } from 'core';
+import { AppSingleton, ServiceContext } from '@h4bff/core';
 import { RequestInfo } from './requestInfo';
 
 export class ContextualRouter extends AppSingleton {

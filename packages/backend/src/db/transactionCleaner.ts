@@ -1,4 +1,4 @@
-import { AppSingleton, App } from 'core';
+import { AppSingleton, App } from '@h4bff/core';
 import { RPCEvents } from '../rpc';
 import { TransactionProvider } from './transactionProvider';
 

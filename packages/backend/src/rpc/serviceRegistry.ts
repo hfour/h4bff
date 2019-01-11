@@ -1,7 +1,7 @@
 import * as bodyParser from 'body-parser';
 import * as Promise from 'bluebird';
 import { Request, Response } from 'express';
-import { App, BaseService, AppSingleton } from 'core';
+import { App, BaseService, AppSingleton } from '@h4bff/core';
 import { ContextualRouter, RPCDispatcher } from '..';
 
 export class RPCServiceRegistry extends AppSingleton {
