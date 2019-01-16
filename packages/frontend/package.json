@@ -12,6 +12,14 @@
       "test": "jest"
     },
     "dependencies": {
-      "@h4bff/core": "*"
+      "@h4bff/core": "*",
+      "react": "^16.6.3",
+      "react-dom": "^16.6.3",
+      "react-router": "^3.2.1"
+    },
+    "devDependencies": {
+      "@types/react": "^16.7.7",
+      "@types/react-dom": "^16.0.10",
+      "@types/react-router": "^3.0.19"
     }
   }
