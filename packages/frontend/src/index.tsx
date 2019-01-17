@@ -5,17 +5,18 @@ import { Router, Route, RouteComponentProps, browserHistory } from 'react-router
 export type H4Route = {
   path: string;
   component: (rp: RouteComponentProps<any, any>) => JSX.Element;
-  h4Routes?: Array<H4Route>;
 };
 
-export function RouteWithSubRoutes(props: { route: H4Route }) {
-  console.log('tochak', props.route);
+export type RP = RouteComponentProps<H4Route, any>;
+
+export function RouteWithSubRoutes(route: H4Route) {
   return (
     <Route
-      path={props.route.path}
+      key={route.path}
+      path={route.path}
       component={props => (
         // pass the sub-routes down to keep nesting
-        <props.route.component {...props} h4Routes={props.route.h4Routes} />
+        <route.component {...props} />
       )}
     />
   );
@@ -32,14 +33,7 @@ export class H4Router extends AppSingleton {
   }
 
   generateRouterJSX() {
-    console.log(this.routes);
-    return (
-      <Router history={browserHistory}>
-        {this.routes.map((route, i) => {
-          console.log(route);
-          return <RouteWithSubRoutes key={i} route={route} />;
-        })}
-      </Router>
-    );
+    let routesJsx = this.routes.map(RouteWithSubRoutes);
+    return <Router history={browserHistory}>{routesJsx}</Router>;
   }
 }
