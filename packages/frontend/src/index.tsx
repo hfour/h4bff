@@ -9,19 +9,6 @@ export type H4Route = {
 
 export type RP = RouteComponentProps<H4Route, any>;
 
-export function RouteWithSubRoutes(route: H4Route) {
-  return (
-    <Route
-      key={route.path}
-      path={route.path}
-      component={props => (
-        // pass the sub-routes down to keep nesting
-        <route.component {...props} />
-      )}
-    />
-  );
-}
-
 /**
  * Frontend router.
  */
@@ -33,7 +20,14 @@ export class H4Router extends AppSingleton {
   }
 
   generateRouterJSX() {
-    let routesJsx = this.routes.map(RouteWithSubRoutes);
-    return <Router history={browserHistory}>{routesJsx}</Router>;
+    return (
+      <Router history={browserHistory}>
+        <Route path="/" component={props => props.children}>
+          {this.routes.map(route => (
+            <Route key={route.path} path={route.path} component={route.component} />
+          ))}
+        </Route>
+      </Router>
+    );
   }
 }
