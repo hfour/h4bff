@@ -21,7 +21,7 @@ export let NestedAppsPlugin = (app: App) => {
   });
 
   // Child 1
-  let child1 = app.inheritWithSingletonContext();
+  let child1 = app.createSubApp();
   const child1TestSingleton = child1.getSingleton(TestSingleton);
   child1.getSingleton(ContextualRouter).get('/app/child1', (_req, res) => {
     res.end('child 1 app says: ' + child1TestSingleton.printMessage('1'));
@@ -30,7 +30,7 @@ export let NestedAppsPlugin = (app: App) => {
   child1.getSingleton(RPCServiceRegistry).add('test1', TestService);
 
   // Child 2
-  let child2 = app.inheritWithSingletonContext();
+  let child2 = app.createSubApp();
   const child2TestSingleton = child2.getSingleton(TestSingleton);
   child2.getSingleton(ContextualRouter).get('/app/child2', (_req, res) => {
     res.end('child 2 app says: ' + child2TestSingleton.printMessage('2'));

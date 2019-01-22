@@ -43,7 +43,7 @@ export class App {
     return new ServiceContext(this);
   }
 
-  inheritWithSingletonContext() {
+  createSubApp() {
     let singletonLocator = new Locator(this, s => '__appSingleton' in s, { parent: this.singletonLocator });
     return new App(singletonLocator);
   }
