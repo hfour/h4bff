@@ -1,13 +1,14 @@
 import * as express from 'express';
 import { App } from '@h4bff/core';
 import { ContextualRouter } from '@h4bff/backend';
-
 import { FilesPlugin } from './files-plugin';
+import { NestedAppsPlugin } from './nestedApps-plugin';
 //import { Database } from './database';
 
 export default class MyApp extends App {
   loadPlugins() {
     this.load(FilesPlugin);
+    this.load(NestedAppsPlugin);
   }
 
   start() {
