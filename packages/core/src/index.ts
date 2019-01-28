@@ -49,6 +49,8 @@ export class App {
   }
 }
 
+type ContextListener = (sc: ServiceContext, error: Error | null) => PromiseLike<void>;
+
 export class ServiceContext {
   private _locator: Locator<ServiceContext> | null = null;
 
@@ -60,6 +62,17 @@ export class ServiceContext {
   }
 
   constructor(private app: App) {}
+
+  private listeners: ContextListener[] = [];
+
+  onContextComplete(listener: ContextListener) {
+    this.listeners.push(listener);
+  }
+
+  // When the context is done dispose of it
+  disposeContext = (err: Error | null) => {
+    return Promise.all(this.listeners.map(l => l(this, err))).then(() => void 0);
+  };
 
   getService<T extends BaseService>(SvcClass: ConstructorOrFactory<ServiceContext, T>): T {
     return this.locator.get(SvcClass);

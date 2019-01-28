@@ -1,12 +1,11 @@
-import { AppSingleton, App } from '@h4bff/core';
-import { RPCEvents } from '../rpc';
+import { AppSingleton, App, ServiceContext } from '@h4bff/core';
 import { TransactionProvider } from './transactionProvider';
 
 export class TransactionCleaner extends AppSingleton {
   constructor(app: App) {
     super(app);
-    app.getSingleton(RPCEvents).onRequestComplete((reqContext, error) => {
-      return reqContext.getService(TransactionProvider).onDispose(error);
+    app.getSingleton(ServiceContext).onContextComplete((sc, error) => {
+      return sc.getService(TransactionProvider).onDispose(error);
     });
   }
 }
