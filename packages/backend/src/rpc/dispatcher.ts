@@ -1,5 +1,5 @@
 import * as Promise from 'bluebird';
-import { BaseService } from '@h4bff/core';
+import { BaseService, ServiceContextEvents } from '@h4bff/core';
 import { RPCServiceRegistry } from './serviceRegistry';
 import { RequestInfo } from '../router';
 
@@ -36,32 +36,36 @@ export class RPCDispatcher extends BaseService {
     // TODO emit fail, for e.g. audit logger, instead of locator onDispose
     // this.app.getSingleton(RPCEvents).emit('fail', ...)
 
-    this.context.disposeContext(e).then(() => {
-      if (typeof (e as any).code === 'number') {
-        return this.jsonFail((e as any).code, e.message);
-      } else if ((e as any).isJoi) {
-        console.error(`Validation failed for "${this.rpcPath}":`);
-        (e as any).details.forEach((err: any) => console.error(` \-> ${err.message}`));
-        return this.jsonFail(400, 'Technical error, the request was malformed.');
-      } else {
-        console.error(e);
-        return this.jsonFail(500, 'Something bad happened.');
-      }
-    });
+    this.getSingleton(ServiceContextEvents)
+      .disposeContext(this.context, e)
+      .then(() => {
+        if (typeof (e as any).code === 'number') {
+          return this.jsonFail((e as any).code, e.message);
+        } else if ((e as any).isJoi) {
+          console.error(`Validation failed for "${this.rpcPath}":`);
+          (e as any).details.forEach((err: any) => console.error(` \-> ${err.message}`));
+          return this.jsonFail(400, 'Technical error, the request was malformed.');
+        } else {
+          console.error(e);
+          return this.jsonFail(500, 'Something bad happened.');
+        }
+      });
   }
 
   private success(data: any, code: number = 200) {
     // TODO emit success, for e.g. audit logger, instead of locator onDispose
     // this.app.getSingleton(RPCEvents).emit('success', ...)
     console.log('success');
-    this.context.disposeContext(null).then(() => {
-      this.res.status(code).json({
-        code,
-        result: data,
-        error: null,
-        version: 2,
+    this.getSingleton(ServiceContextEvents)
+      .disposeContext(this.context, null)
+      .then(() => {
+        this.res.status(code).json({
+          code,
+          result: data,
+          error: null,
+          version: 2,
+        });
       });
-    });
   }
 
   /**

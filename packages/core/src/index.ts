@@ -49,7 +49,15 @@ export class App {
   }
 }
 
-type ContextListener = (sc: ServiceContext, error: Error | null) => PromiseLike<void>;
+export class AppSingleton {
+  protected static __appSingleton = true;
+
+  constructor(protected app: App) {}
+
+  getSingleton<T>(Klass: ConstructorOrFactory<App, T>): T {
+    return this.app.getSingleton(Klass);
+  }
+}
 
 export class ServiceContext {
   private _locator: Locator<ServiceContext> | null = null;
@@ -63,17 +71,6 @@ export class ServiceContext {
 
   constructor(private app: App) {}
 
-  private listeners: ContextListener[] = [];
-
-  onContextComplete(listener: ContextListener) {
-    this.listeners.push(listener);
-  }
-
-  // When the context is done dispose of it
-  disposeContext = (err: Error | null) => {
-    return Promise.all(this.listeners.map(l => l(this, err))).then(() => void 0);
-  };
-
   getService<T extends BaseService>(SvcClass: ConstructorOrFactory<ServiceContext, T>): T {
     return this.locator.get(SvcClass);
   }
@@ -81,6 +78,20 @@ export class ServiceContext {
   getSingleton<T extends AppSingleton>(SingletonClass: ConstructorOrFactory<App, T>): T {
     return this.app.getSingleton(SingletonClass);
   }
+}
+
+export type ContextListener = (sCtx: ServiceContext, error: Error | null) => PromiseLike<void>;
+
+export class ServiceContextEvents extends AppSingleton {
+  private listeners: ContextListener[] = [];
+
+  onContextDisposed(listener: ContextListener) {
+    this.listeners.push(listener);
+  }
+
+  disposeContext: ContextListener = (sCtx, err) => {
+    return Promise.all(this.listeners.map(l => l(sCtx, err))).then(() => {});
+  };
 }
 
 export class BaseService {
@@ -174,15 +185,5 @@ export class Locator<Context> {
 
   withNewContext(ctx: Context) {
     return new Locator(ctx, this.isClass, { overrides: this.overrides });
-  }
-}
-
-export class AppSingleton {
-  protected static __appSingleton = true;
-
-  constructor(protected app: App) {}
-
-  getSingleton<T>(Klass: ConstructorOrFactory<App, T>): T {
-    return this.app.getSingleton(Klass);
   }
 }
