@@ -1,2 +1,2 @@
-export * from './contextualRouter';
+export * from './contextualWrapper';
 export * from './requestInfo';
