@@ -5,12 +5,12 @@ export type ConstructorOrFactory<U, T> = ClassFactory<U, T> | ClassConstructor<U
 export type PublicInterface<T> = { [K in keyof T]: T[K] };
 
 export class App {
-  singletonLocator: Locator<any>;
+  singletonLocator: Locator<this>;
+  parentApp: App | null;
 
-  constructor(parent?: App) {
-    this.singletonLocator = parent
-      ? new Locator(this, s => '__appSingleton' in s, { parent: parent.singletonLocator })
-      : new Locator(this, s => '__appSingleton' in s);
+  constructor(opts: { parentApp?: App } = {}) {
+    this.parentApp = opts.parentApp ? opts.parentApp : null;
+    this.singletonLocator = new Locator(this, s => '__appSingleton' in s);
   }
 
   /**
@@ -18,7 +18,55 @@ export class App {
    */
   serviceLocator = new Locator(this.createServiceContext(), s => '__baseService' in s);
 
+  /**
+   * Walks through parents and returns an existing singleton instance. Call
+   * this method ONLY if you KNOW that the instance exists.
+   */
+  private getExistingSingleton<T>(Klass: ConstructorOrFactory<App, T>): T {
+    if (this.hasOwnSingleton(Klass)) {
+      return this.singletonLocator.get(Klass);
+    } else {
+      if (!this.parentApp) {
+        // this should not happen, because prior to calling this method,
+        // we check if there's an instance.
+        throw new Error('Finished searching through parents but couldnt find the singleton instance');
+      }
+      return this.parentApp.getExistingSingleton(Klass);
+    }
+  }
+
+  /**
+   * Checks if this App instance has the given singleton initialized
+   * in itself.
+   */
+  private hasOwnSingleton<T>(Klass: ConstructorOrFactory<App, T>) {
+    return this.singletonLocator.has(Klass);
+  }
+
+  /**
+   * Checks if this or any of the parent apps has an instance of the
+   * given singleton initialized.
+   */
+  private hasSingleton<T>(Klass: ConstructorOrFactory<App, T>): boolean {
+    if (this.hasOwnSingleton(Klass)) {
+      return true;
+    } else {
+      if (!this.parentApp) {
+        return false;
+      } else {
+        return this.parentApp.hasSingleton(Klass);
+      }
+    }
+  }
+
+  /**
+   * Returns an instance of the singleton, if it exists somewhere here or
+   * in some of the parent apps. If it doesn't it's created in this app.
+   */
   getSingleton<T>(Klass: ConstructorOrFactory<App, T>): T {
+    if (this.hasSingleton(Klass)) {
+      return this.getExistingSingleton(Klass);
+    }
     return this.singletonLocator.get(Klass);
   }
 
@@ -33,8 +81,12 @@ export class App {
     return this.serviceLocator.override(Klass, Klass2);
   }
 
-  load<T>(Klass: ConstructorOrFactory<App, T>) {
-    this.singletonLocator.get(Klass);
+  /**
+   * Loads the plugin, which forces its initialization.
+   */
+  load<T>(Klass: ConstructorOrFactory<App, T>): void {
+    this.getSingleton(Klass); // force initialization;
+    return;
   }
 
   loadPlugins() {
@@ -45,8 +97,15 @@ export class App {
     return new ServiceContext(this);
   }
 
-  createSubApp() {
-    return new App(this);
+  /**
+   * When instatiating singletons, child applications look in their parents
+   * for already instantiated singletons, returning them if they exists.
+   *
+   * Services and the service context are not affected by parent / child
+   * hierarchies.
+   */
+  createChildApp() {
+    return new App({ parentApp: this });
   }
 }
 
@@ -116,7 +175,6 @@ export class BaseService {
 
 export class Locator<Context> {
   private instances: Map<Function, any> = new Map();
-  private parent: Locator<Context> | null = null;
   private overrides: Map<Function, Function> = new Map();
 
   constructor(
@@ -124,11 +182,9 @@ export class Locator<Context> {
     private isClass: (v: ConstructorOrFactory<Context, any>) => boolean,
     options?: {
       overrides?: Map<Function, Function>;
-      parent?: Locator<Context>;
     },
   ) {
     options = options || {};
-    this.parent = options.parent || this.parent;
     this.overrides = options.overrides || this.overrides;
   }
 
@@ -141,23 +197,8 @@ export class Locator<Context> {
     else return f(this.arg);
   }
 
-  private existOnParent<T>(f: ConstructorOrFactory<Context, T>): boolean {
-    if (this.parent) {
-      return this.parent.instances.has(f) || this.parent.existOnParent(f);
-    }
-    return false;
-  }
-
-  private getFromParent<T>(f: ConstructorOrFactory<Context, T>): T {
-    if (this.parent) {
-      if (this.parent.instances.has(f)) {
-        return this.parent.instances.get(f);
-      } else {
-        return this.parent.getFromParent(f);
-      }
-    }
-    // we are at the root, but no component is found
-    throw Error('There is no parent locator to look into.');
+  has<T>(f: ConstructorOrFactory<Context, T>): boolean {
+    return this.instances.has(f) || this.overrides.has(f);
   }
 
   get<T>(f: ConstructorOrFactory<Context, T>): T {
@@ -165,9 +206,6 @@ export class Locator<Context> {
       f = this.overrides.get(f) as any;
     }
     if (!this.instances.has(f)) {
-      if (this.existOnParent(f)) {
-        return this.getFromParent(f);
-      }
       this.instances.set(f, this.instantiate(f));
     }
     return this.instances.get(f) as T;
