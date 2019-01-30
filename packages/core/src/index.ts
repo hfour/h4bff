@@ -5,10 +5,12 @@ export type ConstructorOrFactory<U, T> = ClassFactory<U, T> | ClassConstructor<U
 export type PublicInterface<T> = { [K in keyof T]: T[K] };
 
 export class App {
-  private singletonLocator: Locator<this>;
+  singletonLocator: Locator<any>;
 
-  constructor(singletonLocator?: Locator<any>) {
-    this.singletonLocator = singletonLocator || new Locator(this, s => '__appSingleton' in s);
+  constructor(parent?: App) {
+    this.singletonLocator = parent
+      ? new Locator(this, s => '__appSingleton' in s, { parent: parent.singletonLocator })
+      : new Locator(this, s => '__appSingleton' in s);
   }
 
   /**
@@ -44,8 +46,7 @@ export class App {
   }
 
   createSubApp() {
-    let singletonLocator = new Locator(this, s => '__appSingleton' in s, { parent: this.singletonLocator });
-    return new App(singletonLocator);
+    return new App(this);
   }
 }
 
