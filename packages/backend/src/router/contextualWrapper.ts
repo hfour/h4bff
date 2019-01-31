@@ -2,7 +2,10 @@ import * as Express from 'express';
 import { AppSingleton, ServiceContext, App } from '@h4bff/core';
 import { RequestInfo } from './requestInfo';
 
-export class ContextualWrapper extends AppSingleton {
+/**
+ * Ties each request / response pair to a specific service context.
+ */
+export class RequestContextProvider extends AppSingleton {
   router = Express();
 
   private contexts = new WeakMap<Express.Request, ServiceContext>();

@@ -1,7 +1,7 @@
 import * as Promise from 'bluebird';
 import { Request, Response } from 'express';
 import { App, BaseService, AppSingleton } from '@h4bff/core';
-import { ContextualWrapper } from '../router';
+import { RequestContextProvider } from '../router';
 import { RPCDispatcher } from '../rpc';
 
 export class RPCServiceRegistry extends AppSingleton {
@@ -32,7 +32,7 @@ export class RPCServiceRegistry extends AppSingleton {
   }
 
   routeHandler = (req: Request, res: Response): void | Promise<void> => {
-    let dispatcher = this.getSingleton(ContextualWrapper)
+    let dispatcher = this.getSingleton(RequestContextProvider)
       .getContext(req, res)
       .getService(RPCDispatcher);
     return dispatcher.call();
