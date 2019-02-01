@@ -1,4 +1,4 @@
-import { anydbSQL } from 'anydb-sql-2';
+import { create } from 'anydb-sql-2';
 import * as migrations from 'anydb-sql-2-migrations';
 import * as Promise from 'bluebird';
 import { AppSingleton } from '@h4bff/core';
@@ -6,7 +6,7 @@ import { AppSingleton } from '@h4bff/core';
 export class Database extends AppSingleton {
   private migrations: migrations.MigrationTask[] = [];
 
-  db = anydbSQL({
+  db = create({
     url: process.env['POSTGRES_URL'],
     connections: { min: 2, max: Number(process.env['DB_MAX_CONNS'] || '20') },
   });
