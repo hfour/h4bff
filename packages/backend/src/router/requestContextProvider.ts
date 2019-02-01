@@ -1,6 +1,6 @@
 import * as Express from 'express';
 import { AppSingleton, ServiceContext, App } from '@h4bff/core';
-import { RequestInfo } from './requestInfo';
+import { RequestInfo } from '@h4bff/backend/src/router/requestInfo';
 
 /**
  * Ties each request / response pair to a specific service context.

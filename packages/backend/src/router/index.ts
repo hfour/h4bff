@@ -1,2 +1,2 @@
-export * from './contextualWrapper';
+export * from './requestContextProvider';
 export * from './requestInfo';
