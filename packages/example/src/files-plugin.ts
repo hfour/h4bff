@@ -24,13 +24,6 @@ export class FilesStorage extends AppSingleton {
 
   constructor(app: App) {
     super(app);
-
-    this.app.getSingleton(Database).addMigration(
-      this.filesTbl
-        .create()
-        .ifNotExists()
-        .toQuery().text,
-    );
   }
 }
 

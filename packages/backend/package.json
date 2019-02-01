@@ -16,6 +16,7 @@
     "bluebird": "3.5.1",
     "express": "4.16.4",
     "body-parser": "1.18.3",
+    "anydb-sql-2-migrations": "^3.0.2",
     "@h4bff/core": "*"
   },
   "devDependencies": {
