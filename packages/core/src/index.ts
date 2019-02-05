@@ -98,6 +98,22 @@ export class App {
   }
 
   /**
+   * Creates a service context, executes the provided function and disposes
+   * of the context afterwards. Disposal happens regardless of exceptions.
+   */
+  withServiceContext<T>(f: (createdCtx: ServiceContext) => PromiseLike<T>): PromiseLike<T> {
+    let serviceContext = this.createServiceContext();
+    let ctxEvents = this.getSingleton(ServiceContextEvents);
+    return Promise.resolve().then(
+      () => f(serviceContext).then(res => ctxEvents.disposeContext(serviceContext, null).then(() => res)),
+      error =>
+        ctxEvents.disposeContext(serviceContext, error).then(() => {
+          throw error;
+        }),
+    );
+  }
+
+  /**
    * When instatiating singletons, child applications look in their parents
    * for already instantiated singletons, returning them if they exists.
    *
