@@ -1,16 +1,14 @@
-import * as bodyParser from 'body-parser';
 import * as Promise from 'bluebird';
 import { Request, Response } from 'express';
 import { App, BaseService, AppSingleton } from '@h4bff/core';
-import { ContextualRouter, RPCDispatcher } from '..';
+import { RequestContextProvider } from '../router';
+import { RPCDispatcher } from '../rpc';
 
 export class RPCServiceRegistry extends AppSingleton {
-  private router = this.app.getSingleton(ContextualRouter);
-  private services: { [key: string]: typeof BaseService } = {};
+  services: { [key: string]: typeof BaseService } = {};
 
   constructor(app: App) {
     super(app);
-    this.router.post('/rpc', bodyParser.json(), this.routeHandler.bind(this));
   }
 
   add(namespace: string, svc: typeof BaseService) {
@@ -33,10 +31,10 @@ export class RPCServiceRegistry extends AppSingleton {
     return this.services[serviceAlias];
   }
 
-  routeHandler(req: Request, res: Response): void | Promise<void> {
-    let dispatcher = this.getSingleton(ContextualRouter)
+  routeHandler = (req: Request, res: Response): void | Promise<void> => {
+    let dispatcher = this.getSingleton(RequestContextProvider)
       .getContext(req, res)
       .getService(RPCDispatcher);
     return dispatcher.call();
-  }
+  };
 }

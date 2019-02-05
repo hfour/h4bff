@@ -1,2 +1,2 @@
-export * from './contextualRouter';
+export * from './requestContextProvider';
 export * from './requestInfo';

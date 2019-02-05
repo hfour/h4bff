@@ -1,7 +1,6 @@
 import * as Promise from 'bluebird';
-import { BaseService } from '@h4bff/core';
+import { BaseService, ServiceContextEvents } from '@h4bff/core';
 import { RPCServiceRegistry } from './serviceRegistry';
-import { RPCEvents } from './events';
 import { RequestInfo } from '../router';
 
 export class RPCDispatcher extends BaseService {
@@ -37,8 +36,8 @@ export class RPCDispatcher extends BaseService {
     // TODO emit fail, for e.g. audit logger, instead of locator onDispose
     // this.app.getSingleton(RPCEvents).emit('fail', ...)
 
-    this.getSingleton(RPCEvents)
-      .requestComplete(this, e)
+    this.getSingleton(ServiceContextEvents)
+      .disposeContext(this.context, e)
       .then(() => {
         if (typeof (e as any).code === 'number') {
           return this.jsonFail((e as any).code, e.message);
@@ -57,8 +56,8 @@ export class RPCDispatcher extends BaseService {
     // TODO emit success, for e.g. audit logger, instead of locator onDispose
     // this.app.getSingleton(RPCEvents).emit('success', ...)
     console.log('success');
-    this.getSingleton(RPCEvents)
-      .requestComplete(this, null)
+    this.getSingleton(ServiceContextEvents)
+      .disposeContext(this.context, null)
       .then(() => {
         this.res.status(code).json({
           code,

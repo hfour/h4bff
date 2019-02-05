@@ -2,7 +2,7 @@ import { mapSeries } from 'bluebird';
 import * as Promise from 'bluebird';
 import { Table } from 'anydb-sql-2';
 import { v4 as uuid } from 'uuid';
-import { Database, TransactionProvider, ContextualRouter, RPCServiceRegistry } from '@h4bff/backend';
+import { Database, TransactionProvider, RequestContextProvider, RPCServiceRegistry } from '@h4bff/backend';
 import { BaseService, App, AppSingleton } from '@h4bff/core';
 
 interface File {
@@ -24,13 +24,6 @@ export class FilesStorage extends AppSingleton {
 
   constructor(app: App) {
     super(app);
-
-    this.app.getSingleton(Database).addMigration(
-      this.filesTbl
-        .create()
-        .ifNotExists()
-        .toQuery().text,
-    );
   }
 }
 
@@ -52,7 +45,7 @@ export class FilePermissions extends AppSingleton {
 }
 
 export let FilesRouter = (app: App) => {
-  let router = app.getSingleton(ContextualRouter);
+  let router = app.getSingleton(RequestContextProvider).router;
 
   router.get('/files/:fileId', (req, res) => {
     res.end('heres file ' + req.params['fileId']);
