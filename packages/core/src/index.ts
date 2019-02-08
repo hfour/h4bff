@@ -154,7 +154,7 @@ export class App {
         throw error;
       });
     try {
-      return f(serviceContext).then(happyHandler, sadHandler);
+      return Promise.resolve(f(serviceContext)).then(happyHandler, sadHandler);
     } catch (e) {
       return sadHandler(e);
     }
