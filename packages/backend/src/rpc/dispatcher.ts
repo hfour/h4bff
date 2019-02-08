@@ -55,7 +55,6 @@ export class RPCDispatcher extends BaseService {
   private success(data: any, code: number = 200) {
     // TODO emit success, for e.g. audit logger, instead of locator onDispose
     // this.app.getSingleton(RPCEvents).emit('success', ...)
-    console.log('success');
     this.getSingleton(ServiceContextEvents)
       .disposeContext(this.context, null)
       .then(() => {
@@ -83,7 +82,6 @@ export class RPCDispatcher extends BaseService {
 
   call() {
     let { req } = this;
-    console.log('calling', req.query.method);
 
     if (!req.query.method) {
       return this.jsonFail(400, '"method" query parameter not found');
