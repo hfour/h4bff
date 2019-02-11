@@ -80,7 +80,7 @@ export class RPCDispatcher extends BaseService {
     return [s.slice(0, lastDotIndex), s.slice(lastDotIndex + 1)];
   }
 
-  call() {
+  private handleRequest() {
     let { req } = this;
 
     if (!req.query.method) {
@@ -106,5 +106,13 @@ export class RPCDispatcher extends BaseService {
     return promiseWrapper
       .then(() => serviceMethod.call(serviceInstance, req.body.params) as Promise<any>)
       .then(result => this.success(result), error => this.fail(error));
+  }
+
+  call() {
+    const rpcMiddlewareChain = this.getSingleton(RPCServiceRegistry).middlewareChain;
+    if (rpcMiddlewareChain) {
+      return Promise.resolve(rpcMiddlewareChain(this.context, this.handleRequest.bind(this)));
+    }
+    return this.handleRequest.bind(this);
   }
 }
