@@ -1,11 +1,14 @@
 import * as Promise from 'bluebird';
 import { Request, Response } from 'express';
-import { App, BaseService, AppSingleton } from '@h4bff/core';
+import { App, BaseService, AppSingleton, ServiceContext } from '@h4bff/core';
 import { RequestContextProvider } from '../router';
 import { RPCDispatcher } from '../rpc';
 
+export type RPCServiceMiddleware = (sCtx: ServiceContext, next: () => void | PromiseLike<void>) => PromiseLike<void>;
+
 export class RPCServiceRegistry extends AppSingleton {
   services: { [key: string]: typeof BaseService } = {};
+  middlewares: RPCServiceMiddleware[] = [];
 
   constructor(app: App) {
     super(app);
@@ -16,6 +19,10 @@ export class RPCServiceRegistry extends AppSingleton {
       throw new Error('Namespace ' + namespace + ' already in use!');
     }
     this.services[namespace] = svc;
+  }
+
+  addMiddleware(middleware: RPCServiceMiddleware) {
+    this.middlewares.push(middleware);
   }
 
   exists(serviceAlias: string, method: string) {

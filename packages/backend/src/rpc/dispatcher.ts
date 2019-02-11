@@ -2,6 +2,7 @@ import * as Promise from 'bluebird';
 import { BaseService, ServiceContextEvents } from '@h4bff/core';
 import { RPCServiceRegistry } from './serviceRegistry';
 import { RequestInfo } from '../router';
+import * as composeMiddlewares from 'koa-compose';
 
 export class RPCDispatcher extends BaseService {
   get res() {
@@ -80,7 +81,7 @@ export class RPCDispatcher extends BaseService {
     return [s.slice(0, lastDotIndex), s.slice(lastDotIndex + 1)];
   }
 
-  call() {
+  handleRequest() {
     let { req } = this;
 
     if (!req.query.method) {
@@ -106,5 +107,10 @@ export class RPCDispatcher extends BaseService {
     return promiseWrapper
       .then(() => serviceMethod.call(serviceInstance, req.body.params) as Promise<any>)
       .then(result => this.success(result), error => this.fail(error));
+  }
+
+  call() {
+    let chain = composeMiddlewares(this.getSingleton(RPCServiceRegistry).middlewares);
+    return Promise.resolve(chain(this.context, this.handleRequest.bind(this)));
   }
 }
