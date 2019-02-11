@@ -20,6 +20,19 @@ export class RPCDispatcher extends BaseService {
     return this.getSingleton(RPCServiceRegistry);
   }
 
+  /**
+   * When given 'serviceAlias.method' string, it splits it to ['serviceAlias', 'method'].
+   *
+   * If the string has more than one dot, the serviceAlias consumes all parts of the name
+   * except for the last one:
+   *
+   * 'path.with.more.dots' => ['path.with.more', 'dots']
+   */
+  get serviceNameMethod() {
+    const lastDotIndex = this.rpcPath.lastIndexOf('.');
+    return [this.rpcPath.slice(0, lastDotIndex), this.rpcPath.slice(lastDotIndex + 1)];
+  }
+
   private jsonFail(code: number, message: string, data: any = null) {
     this.res.status(code).json({
       code,
@@ -67,19 +80,6 @@ export class RPCDispatcher extends BaseService {
       });
   }
 
-  /**
-   * When given 'serviceAlias.method' string, it splits it to ['serviceAlias', 'method'].
-   *
-   * If the string has more than one dot, the serviceAlias consumes all parts of the name
-   * except for the last one:
-   *
-   * 'path.with.more.dots' => ['path.with.more', 'dots']
-   */
-  private getServiceNameMethod(s: string): [string, string] {
-    const lastDotIndex = s.lastIndexOf('.');
-    return [s.slice(0, lastDotIndex), s.slice(lastDotIndex + 1)];
-  }
-
   private handleRequest() {
     let { req } = this;
 
@@ -90,7 +90,7 @@ export class RPCDispatcher extends BaseService {
       return this.jsonFail(400, '"params" not found, send an empty object in case of no parameters');
     }
 
-    const [serviceAlias, method] = this.getServiceNameMethod(req.query.method);
+    const [serviceAlias, method] = this.serviceNameMethod;
 
     if (!this.rpcRegistry.exists(serviceAlias, method)) {
       return this.jsonFail(404, 'Method not found');
