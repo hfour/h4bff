@@ -1,12 +1,34 @@
 import { AppSingleton } from '@h4bff/core';
 import * as React from 'react';
-import { Router, Route, RouteComponentProps } from 'react-router';
-import { browserHistory } from './history'
+import { Router, Route, RouteComponentProps, Switch } from 'react-router';
+import { browserHistory } from './history';
 
 export type H4Route = {
   path: string;
   component: (rp: RouteComponentProps<any, any>) => JSX.Element;
 };
+
+export type H4Redirect = {
+  //maybe something is missing, except for "from" and "to", check with react-router
+  from: string;
+  to: string;
+};
+
+export type H4RouteNew = {
+  path: string;
+  component: React.Component;
+};
+
+export type H4RouteWithJSX = {
+  path: string;
+  component: JSX.Element;
+};
+
+export type Container = {
+  path: string;
+  component: JSX.Element;
+  children: JSX.Element[];//or react components..
+}
 
 export type RP = RouteComponentProps<any, any>;
 
@@ -17,19 +39,26 @@ export class H4Router extends AppSingleton {
   routes: Array<H4Route> = [];
 
   add(route: H4Route) {
-    console.log('add route' , route.component.name)
+    console.log('add route', route.component.name);
     this.routes.push(route);
   }
 
   generateRouterJSX() {
+    console.log('GENERATING ROUTER JSX');
     return (
       <Router history={browserHistory}>
-        <Route path="/" component={(props: any) => props.children}>
-          {this.routes.map(route => (
-            <Route key={route.path} path={route.path} component={route.component} />
-          ))}
+        <Route path="/">
+          <Switch>
+            {this.routes.map(route => (
+              <Route key={route.path} path={route.path} component={route.component} />
+            ))}
+          </Switch>
         </Route>
       </Router>
     );
   }
 }
+
+export * from './routeProvider';
+export * from './mainRouter';
+export * from './rootRoute';
