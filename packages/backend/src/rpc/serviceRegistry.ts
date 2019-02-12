@@ -1,5 +1,4 @@
 import * as Promise from 'bluebird';
-import * as composeMiddlewares from 'koa-compose';
 import { Request, Response } from 'express';
 import { App, BaseService, AppSingleton, ServiceContext } from '@h4bff/core';
 import { RequestContextProvider } from '../router';
@@ -9,8 +8,6 @@ export type RPCServiceMiddleware = (sCtx: ServiceContext, next: () => PromiseLik
 
 export class RPCServiceRegistry extends AppSingleton {
   services: { [key: string]: typeof BaseService } = {};
-  middlewares: RPCServiceMiddleware[] = [];
-  middlewareChain: composeMiddlewares.ComposedMiddleware<ServiceContext> | null = null;
 
   constructor(app: App) {
     super(app);
@@ -21,11 +18,6 @@ export class RPCServiceRegistry extends AppSingleton {
       throw new Error('Namespace ' + namespace + ' already in use!');
     }
     this.services[namespace] = svc;
-  }
-
-  addMiddleware(middleware: RPCServiceMiddleware) {
-    this.middlewares.push(middleware);
-    this.middlewareChain = composeMiddlewares(this.middlewares);
   }
 
   exists(serviceAlias: string, method: string) {

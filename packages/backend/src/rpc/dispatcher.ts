@@ -2,6 +2,7 @@ import * as Promise from 'bluebird';
 import { BaseService, ServiceContextEvents } from '@h4bff/core';
 import { RPCServiceRegistry } from './serviceRegistry';
 import { RequestInfo } from '../router';
+import { RPCMiddlewareContainer } from './middleware';
 
 export class RPCDispatcher extends BaseService {
   get res() {
@@ -80,7 +81,7 @@ export class RPCDispatcher extends BaseService {
       });
   }
 
-  private handleRequest() {
+  handleRequest() {
     let { req } = this;
 
     if (!req.query.method) {
@@ -108,11 +109,7 @@ export class RPCDispatcher extends BaseService {
       .then(result => this.success(result), error => this.fail(error));
   }
 
-  call() {
-    const rpcMiddlewareChain = this.getSingleton(RPCServiceRegistry).middlewareChain;
-    if (rpcMiddlewareChain) {
-      return Promise.resolve(rpcMiddlewareChain(this.context, this.handleRequest.bind(this)));
-    }
-    return this.handleRequest.bind(this);
-  }
+  call = () => {
+    return this.getSingleton(RPCMiddlewareContainer).call(this);
+  };
 }
