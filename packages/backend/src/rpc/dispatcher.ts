@@ -34,6 +34,20 @@ export class RPCDispatcher extends BaseService {
     return [this.rpcPath.slice(0, lastDotIndex), this.rpcPath.slice(lastDotIndex + 1)];
   }
 
+  get serviceClass() {
+    const [serviceAlias] = this.serviceNameMethod;
+    return this.rpcRegistry.get(serviceAlias);
+  }
+
+  get serviceInstance() {
+    return this.getService(this.serviceClass);
+  }
+
+  get serviceMethod() {
+    const method = this.serviceNameMethod[1];
+    return (this.serviceInstance as any)[method] as Function;
+  }
+
   private jsonFail(code: number, message: string, data: any = null) {
     this.res.status(code).json({
       code,
@@ -97,15 +111,10 @@ export class RPCDispatcher extends BaseService {
       return this.jsonFail(404, 'Method not found');
     }
 
-    const ServiceClass = this.rpcRegistry.get(serviceAlias);
-
-    const serviceInstance = this.getService(ServiceClass);
-    const serviceMethod = (serviceInstance as any)[method] as Function;
-
     // in case the method is not a promise, we don't want the error to bubble-up
     const promiseWrapper = Promise.resolve();
     return promiseWrapper
-      .then(() => serviceMethod.call(serviceInstance, req.body.params) as Promise<any>)
+      .then(() => this.serviceMethod.call(this.serviceInstance, req.body.params) as Promise<any>)
       .then(result => this.success(result), error => this.fail(error));
   }
 

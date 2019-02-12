@@ -26,7 +26,7 @@ export class RPCServiceRegistry extends AppSingleton {
       return false;
     }
     const serviceMethod = (ServiceClass.prototype as any)[method];
-    return typeof serviceMethod === 'function'; // && serviceMethod.__exposed;
+    return typeof serviceMethod === 'function';
   }
 
   get(serviceAlias: string) {
