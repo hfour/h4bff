@@ -366,6 +366,9 @@ export class Locator<Context> {
   }
 
   override<T>(f: ConstructorOrFactory<Context, T>, g: ConstructorOrFactory<Context, T>) {
+    if (this.instances.has(f)) {
+      console.warn(`Warning: by overriding ${f.name}, you will be shadowing an already instantiated class.`);
+    }
     this.overrides.set(f, g);
   }
 
