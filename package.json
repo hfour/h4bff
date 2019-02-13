@@ -1,5 +1,5 @@
 {
-  "name": "h4b2-monorepo",
+  "name": "h4bff",
   "version": "1.0.0",
   "description": "End-to-end framework and inversion of control container for building modular web apps based on Plug-In architecture.",
   "main": "doesnt-exist",
@@ -14,9 +14,9 @@
   "author": "Andrej T.",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/TokyoFarmer/h4b2/issues"
+    "url": "https://github.com/hfour/h4bff/issues"
   },
-  "homepage": "https://github.com/TokyoFarmer/h4b2#readme",
+  "homepage": "https://github.com/hfour/h4bff#readme",
   "private": true,
   "workspaces": [
     "packages/*"
