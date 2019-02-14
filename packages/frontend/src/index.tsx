@@ -2,7 +2,6 @@ import { AppSingleton } from '@h4bff/core';
 import * as React from 'react';
 import { Router, Route, RouteComponentProps, Switch } from 'react-router';
 import { browserHistory } from './history';
-import { RouteParameters } from './mainRouter';
 
 export type H4Route = {
   path: string;
@@ -14,22 +13,6 @@ export type H4Redirect = {
   from: string;
   to: string;
 };
-
-export type H4RouteNew = {
-  path: string;
-  component: React.Component;
-};
-
-export type H4RouteWithJSX = {
-  path: string;
-  component: (rp: RouteParameters) => JSX.Element;
-};
-
-export type Container = {
-  path: string;
-  component: JSX.Element;
-  children: JSX.Element[];//or react components..
-}
 
 export type RP = RouteComponentProps<any, any>;
 
@@ -62,4 +45,3 @@ export class H4Router extends AppSingleton {
 
 export * from './routeProvider';
 export * from './mainRouter';
-export * from './rootRoute';
