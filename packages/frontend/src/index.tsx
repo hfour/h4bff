@@ -2,6 +2,7 @@ import { AppSingleton } from '@h4bff/core';
 import * as React from 'react';
 import { Router, Route, RouteComponentProps, Switch } from 'react-router';
 import { browserHistory } from './history';
+import { RouteParameters } from './mainRouter';
 
 export type H4Route = {
   path: string;
@@ -21,7 +22,7 @@ export type H4RouteNew = {
 
 export type H4RouteWithJSX = {
   path: string;
-  component: JSX.Element;
+  component: (rp: RouteParameters) => JSX.Element;
 };
 
 export type Container = {
