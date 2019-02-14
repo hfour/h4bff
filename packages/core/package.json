@@ -1,14 +1,17 @@
 {
-    "name": "@h4bff/core",
-    "version": "1.0.0",
-    "description": "Core module",
-    "main": "build/index.js",
-    "types": "build/index.d.ts",
-    "license": "MIT",
-    "private": true,
-    "scripts": {
-      "build": "tsc -p tsconfig.json",
-      "watch": "tsc -w",
-      "test": "jest"
-    }
+  "name": "@h4bff/core",
+  "version": "1.0.0",
+  "description": "H4BFF, the core: dependency injection, overrides, apps singletons and services.",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "files": [
+    "build/**/*"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "prepublish": "yarn build",
+    "build": "tsc -p tsconfig.json",
+    "watch": "tsc -w",
+    "test": "jest"
   }
+}
