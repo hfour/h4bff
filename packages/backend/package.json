@@ -1,12 +1,18 @@
 {
   "name": "@h4bff/backend",
   "version": "1.0.0",
-  "description": "Backend framework",
+  "description": "H4BFF, the backend: database, RPC and other backend services and singletons.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
+  "files": [
+    "build/**/*"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "MIT",
-  "private": true,
   "scripts": {
+    "prepublish": "yarn build && echo 'Write tests! Ok for now.'",
     "build": "tsc -p tsconfig.json",
     "watch": "tsc -w",
     "test": "jest"

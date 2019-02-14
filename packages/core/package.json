@@ -7,9 +7,12 @@
   "files": [
     "build/**/*"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "MIT",
   "scripts": {
-    "prepublish": "yarn build",
+    "prepublish": "yarn build && yarn test",
     "build": "tsc -p tsconfig.json",
     "watch": "tsc -w",
     "test": "jest"
