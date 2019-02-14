@@ -29,6 +29,10 @@ class TxMock extends BaseService {
 describe('fp', () => {
   it('works', () => {
     let app = new App();
+
+    // because instantiating Database will throw if this is undefined
+    process.env.POSTGRES_URL = 'postgres://user:password@localhost:5432/database'
+
     app.overrideService(TransactionProvider, TxMock);
     //app.overrideSingleton(Database, DbMock);
     app.overrideService(UserService, class X extends BaseService {});
