@@ -44,4 +44,6 @@ export class H4Router extends AppSingleton {
 }
 
 export * from './routeProvider';
-export * from './mainRouter';
+export * from './router';
+export * from './link';
+export * from './navlink';

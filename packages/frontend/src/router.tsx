@@ -4,6 +4,11 @@ import { RouteProvider } from './routeProvider';
 import { reaction, observable, action } from 'mobx';
 import { observer } from 'mobx-react';
 import * as pathToRegexp from 'path-to-regexp';
+import * as React from 'react';
+import { History } from 'history';
+import { matchPath } from './utils';
+
+export const HistoryContext = React.createContext((null as any) as History); //blah - "as any as History" - kaka!
 
 export type RouteParameters = { [key: string]: string } | null;
 export type UIElement = ((rp: RouteParameters) => JSX.Element) | null;
@@ -16,7 +21,7 @@ interface H4Route {
 /**
  * Frontend route provider. Listens to change of the location and updates it.
  */
-export class MainRouter extends AppSingleton {
+export class Router extends AppSingleton {
   @observable
   private currentComponentJSX: UIElement = null;
   @observable
@@ -34,7 +39,7 @@ export class MainRouter extends AppSingleton {
   private setCurrentComponentOrRedirect() {
     const routeProvider = this.getSingleton(RouteProvider);
     const pathname = routeProvider.location.pathname;
-    const matchedRedirect = this.redirects.find(redirect => this.matchPath(pathname, redirect.from));
+    const matchedRedirect = this.redirects.find(redirect => matchPath(pathname, redirect.from));
     if (matchedRedirect) {
       routeProvider.browserHistory.push(matchedRedirect.to);
     } else {
@@ -48,12 +53,13 @@ export class MainRouter extends AppSingleton {
 
   //Instance = observer(() => <Provider provides={history}>{this.currentComponentJSX(params)}</Provider>);
 
-  Instance = observer(() => (this.currentComponentJSX ? this.currentComponentJSX(this.routeParams) : null));
-
-  matchPath = (currentPath: string, redirectFrom: string) => {
-    const regexp = pathToRegexp(redirectFrom);
-    return regexp.exec(currentPath) != null;
-  };
+  Instance = observer(() =>
+    this.currentComponentJSX
+      ? //<HistoryContext.Provider value={this.getSingleton(RouteProvider).browserHistory}>
+        this.currentComponentJSX(this.routeParams)
+      : //</HistoryContext.Provider>
+        null,
+  );
 
   addRoute(path: string, component: (rp: RouteParameters) => JSX.Element) {
     console.log('add route', path);
