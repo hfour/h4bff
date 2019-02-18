@@ -3,6 +3,7 @@ import { BaseService, ServiceContextEvents } from '@h4bff/core';
 import { RPCServiceRegistry } from './serviceRegistry';
 import { RequestInfo } from '../router';
 import { RPCMiddlewareContainer } from './middleware';
+import { isCustomResponse } from './response';
 
 export class RPCDispatcher extends BaseService {
   get res() {
@@ -57,13 +58,11 @@ export class RPCDispatcher extends BaseService {
         message,
       },
       version: 2,
+      backendError: true,
     });
   }
 
   private fail(e: Error) {
-    // TODO emit fail, for e.g. audit logger, instead of locator onDispose
-    // this.app.getSingleton(RPCEvents).emit('fail', ...)
-
     this.getSingleton(ServiceContextEvents)
       .disposeContext(this.context, e)
       .then(() => {
@@ -81,17 +80,19 @@ export class RPCDispatcher extends BaseService {
   }
 
   private success(data: any, code: number = 200) {
-    // TODO emit success, for e.g. audit logger, instead of locator onDispose
-    // this.app.getSingleton(RPCEvents).emit('success', ...)
     this.getSingleton(ServiceContextEvents)
       .disposeContext(this.context, null)
       .then(() => {
-        this.res.status(code).json({
-          code,
-          result: data,
-          error: null,
-          version: 2,
-        });
+        if (isCustomResponse(data)) {
+          data.sendToHTTPResponse(this.res, code);
+        } else {
+          this.res.status(code).json({
+            code,
+            result: data,
+            error: null,
+            version: 2,
+          });
+        }
       });
   }
 
