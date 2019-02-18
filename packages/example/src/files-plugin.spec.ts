@@ -31,7 +31,7 @@ describe('fp', () => {
     let app = new App();
 
     // because instantiating Database will throw if this is undefined
-    process.env.POSTGRES_URL = 'postgres://user:password@localhost:5432/database'
+    process.env.POSTGRES_URL = 'postgres://user:password@localhost:5432/database';
 
     app.overrideService(TransactionProvider, TxMock);
     //app.overrideSingleton(Database, DbMock);
