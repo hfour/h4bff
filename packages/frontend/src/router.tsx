@@ -8,7 +8,11 @@ import * as React from 'react';
 import { History } from 'history';
 import { matchPath } from './utils';
 
-export const HistoryContext = React.createContext((null as any) as History); //blah - "as any as History" - kaka!
+export const HistoryContext = React.createContext((null as any) as HistoryContextProps); //blah - "as any as HistoryContextProps" - kaka!
+export interface HistoryContextProps {
+  history: History;
+  app: App;
+}
 
 export type RouteParameters = { [key: string]: string } | null;
 export type UIElement = ((rp: RouteParameters) => JSX.Element) | null;
@@ -44,22 +48,15 @@ export class Router extends AppSingleton {
       routeProvider.browserHistory.push(matchedRedirect.to);
     } else {
       const matchedRoute = this.routes.find(route => route.match(pathname) !== null);
-      if (matchedRoute && this.currentComponentJSX !== matchedRoute.component) {
+      if (matchedRoute) {
+        // add && this.currentComponentJSX !== matchedRoute.component
         this.currentComponentJSX = matchedRoute.component;
         this.routeParams = matchedRoute.match(pathname);
       }
     }
   }
 
-  //Instance = observer(() => <Provider provides={history}>{this.currentComponentJSX(params)}</Provider>);
-
-  Instance = observer(() =>
-    this.currentComponentJSX
-      ? //<HistoryContext.Provider value={this.getSingleton(RouteProvider).browserHistory}>
-        this.currentComponentJSX(this.routeParams)
-      : //</HistoryContext.Provider>
-        null,
-  );
+  Instance = observer(() => (this.currentComponentJSX ? this.currentComponentJSX(this.routeParams) : null));
 
   addRoute(path: string, component: (rp: RouteParameters) => JSX.Element) {
     console.log('add route', path);
@@ -67,8 +64,10 @@ export class Router extends AppSingleton {
 
     const keys: pathToRegexp.Key[] = [];
     const reg = pathToRegexp(path, keys);
-    const match = (path: string) => {
-      const r = path.match(reg);
+    const match = (pathToMatch: string) => {
+      console.log('path: ', path, ' reg:  ', reg);
+      const r = pathToMatch.match(reg);
+      console.log('matched regex ', r);
       if (r === null) {
         return null;
       }
@@ -80,6 +79,7 @@ export class Router extends AppSingleton {
       return params;
     };
     this.routes.push({ match, component });
+    console.log('all routes', this.routes);
     this.setCurrentComponentOrRedirect();
   }
 
@@ -89,5 +89,24 @@ export class Router extends AppSingleton {
 
     this.redirects.push(newRedirect);
     this.setCurrentComponentOrRedirect(); //check whether you can observe this
+  }
+}
+
+interface MainRouterProps {
+  app: App;
+}
+
+@observer
+export class MainRouter extends React.Component<MainRouterProps, {}> {
+  render() {
+    const app = this.props.app;
+    const routeProvider = app.getSingleton(RouteProvider);
+    console.log('MAIN ROUTER PROVIDING');
+    console.log(routeProvider.browserHistory.location);
+    return (
+      <HistoryContext.Provider value={{ history: routeProvider.browserHistory, app: app }}>
+        {this.props.children}
+      </HistoryContext.Provider>
+    );
   }
 }

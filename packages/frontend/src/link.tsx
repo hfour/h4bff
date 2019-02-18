@@ -39,14 +39,14 @@ export class Link extends React.Component<LinkProps, any> {
     return (
       <HistoryContext.Consumer>
         {context => {
-          if (!context) {
+          if (!context || !context.history) {
             throw new Error('You should not use <Link> outside a <HistoryContext>');
           }
+          const history = context.history;
+          const location = typeof to === 'string' ? createLocation(to, null, undefined, history.location) : to;
+          const href = location ? history.createHref(location) : '';
 
-          const location = typeof to === 'string' ? createLocation(to, null, undefined, context.location) : to;
-          const href = location ? context.createHref(location) : '';
-
-          return <a {...rest} onClick={event => this.handleClick(event, context)} href={href} ref={innerRef} />;
+          return <a {...rest} onClick={event => this.handleClick(event, history)} href={href} ref={innerRef} />;
         }}
       </HistoryContext.Consumer>
     );
