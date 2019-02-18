@@ -5,7 +5,7 @@
   "main": "doesnt-exist",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TokyoFarmer/h4b2.git"
+    "url": "git+https://github.com/hfour/h4bff.git"
   },
   "keywords": [
     "plugin",
