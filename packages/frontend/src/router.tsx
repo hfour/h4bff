@@ -8,10 +8,10 @@ import * as React from 'react';
 import { History } from 'history';
 import { matchPath } from './utils';
 
-export const HistoryContext = React.createContext((null as any) as HistoryContextProps); //blah - "as any as HistoryContextProps" - kaka!
+export const HistoryContext = React.createContext((null as any) as HistoryContextProps); //todo emil - blah - "as any as HistoryContextProps" - kaka!
 export interface HistoryContextProps {
   history: History;
-  app: App;
+  path: string;
 }
 
 export type RouteParameters = { [key: string]: string } | null;
@@ -104,7 +104,7 @@ export class MainRouter extends React.Component<MainRouterProps, {}> {
     console.log('MAIN ROUTER PROVIDING');
     console.log(routeProvider.browserHistory.location);
     return (
-      <HistoryContext.Provider value={{ history: routeProvider.browserHistory, app: app }}>
+      <HistoryContext.Provider value={{ history: routeProvider.browserHistory, path: routeProvider.location.pathname }}>
         {this.props.children}
       </HistoryContext.Provider>
     );
