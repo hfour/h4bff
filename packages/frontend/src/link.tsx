@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Location, LocationDescriptor, History, createLocation } from 'history';
 import { HistoryContext } from './router';
 import { matchPath } from './utils';
+import classNames from 'classnames';
 import { observer } from 'mobx-react';
 
 export interface LinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
@@ -20,9 +21,6 @@ export interface LinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement>
  */
 @observer
 export class Link extends React.Component<LinkProps, {}> {
-  joinClassnames = (...classnames: (string | undefined)[]) => {
-    return classnames.filter(i => i).join(' ');
-  };
 
   isModifiedEvent(event: any) {
     return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
@@ -41,7 +39,8 @@ export class Link extends React.Component<LinkProps, {}> {
 
       const method = this.props.replace ? history.replace : history.push;
 
-      method(this.props.to as any); //todo emil find way not to cast to any?
+      // the parameter are matching, but due to some TS problems, it's unable to resolve properly.
+      method(this.props.to as any);
     }
   }
 
@@ -53,15 +52,13 @@ export class Link extends React.Component<LinkProps, {}> {
             throw new Error('You should not use <Link> outside a <HistoryContext>');
           }
 
-          const currentPath = context.path;
+          const currentLocation = context.location;
           const { innerRef, replace, to, activeClassName, ...rest } = this.props; // eslint-disable-line no-unused-vars
           const path = typeof to === 'object' ? to.pathname : to;
           const escapedPath = path && path.replace(/([.+*?=^!:${}()[\]|/\\])/g, '\\$1');
-          const isActive = !!activeClassName && !!escapedPath ? matchPath(currentPath, escapedPath) : false;
+          const isActive = escapedPath ? matchPath(currentLocation, escapedPath) : false;
 
-          const className = isActive
-            ? this.joinClassnames(this.props.className, activeClassName)
-            : this.props.className;
+          const className = classNames(this.props.className, { isActive: activeClassName });
           const style = isActive ? { ...this.props.style, ...this.props.activeStyle } : this.props.style;
 
           const history = context.history;
@@ -70,13 +67,13 @@ export class Link extends React.Component<LinkProps, {}> {
 
           return (
             <a
+              {...rest}
               aria-current={(isActive && 'page') || undefined}
               className={className}
               style={style}
               onClick={event => this.handleClick(event, history)}
               href={href}
               ref={innerRef}
-              {...rest}
             />
           );
         }}

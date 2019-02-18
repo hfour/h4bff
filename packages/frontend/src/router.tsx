@@ -8,13 +8,13 @@ import * as React from 'react';
 import { History } from 'history';
 import { matchPath } from './utils';
 
-export const HistoryContext = React.createContext((null as any) as HistoryContextProps); //todo emil - blah - "as any as HistoryContextProps" - kaka!
+export const HistoryContext = React.createContext({} as HistoryContextProps);
 export interface HistoryContextProps {
   history: History;
-  path: string;
+  location: string;
 }
 
-export type RouteParameters = { [key: string]: string } | null;
+export type RouteParameters<Param extends { [key: string]: string } = {}> = Param;
 export type UIElement = ((rp: RouteParameters) => JSX.Element) | null;
 
 interface H4Route {
@@ -29,7 +29,7 @@ export class Router extends AppSingleton {
   @observable
   private currentComponentJSX: UIElement = null;
   @observable
-  private routeParams: RouteParameters = null;
+  private routeParams: RouteParameters = {};
   private routes: Array<H4Route> = [];
   private redirects: Array<H4Redirect> = [];
 
@@ -72,7 +72,7 @@ export class Router extends AppSingleton {
         return null;
       }
 
-      let params: RouteParameters = {};
+      let params: any = {};
       for (let k = 0; k < keys.length; ++k) {
         params[keys[k].name] = r[k + 1];
       }
@@ -104,7 +104,7 @@ export class MainRouter extends React.Component<MainRouterProps, {}> {
     console.log('MAIN ROUTER PROVIDING');
     console.log(routeProvider.browserHistory.location);
     return (
-      <HistoryContext.Provider value={{ history: routeProvider.browserHistory, path: routeProvider.location.pathname }}>
+      <HistoryContext.Provider value={{ history: routeProvider.browserHistory, location: routeProvider.location.pathname }}>
         {this.props.children}
       </HistoryContext.Provider>
     );
