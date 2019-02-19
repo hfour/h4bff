@@ -8,12 +8,6 @@ export type H4Route = {
   component: (rp: RouteComponentProps<any, any>) => JSX.Element;
 };
 
-export type H4Redirect = {
-  //maybe something is missing, except for "from" and "to", check with react-router
-  from: string;
-  to: string;
-};
-
 export type RP = RouteComponentProps<any, any>;
 
 /**
@@ -28,7 +22,6 @@ export class H4Router extends AppSingleton {
   }
 
   generateRouterJSX() {
-    console.log('GENERATING ROUTER JSX');
     return (
       <Router history={browserHistory}>
         <Route path="/">

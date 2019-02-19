@@ -22,14 +22,17 @@ interface H4Route {
   component: UIElement;
 }
 
+export interface H4Redirect {
+  from: string;
+  to: string;
+}
+
 /**
  * Frontend route provider. Listens to change of the location and updates it.
  */
 export class Router extends AppSingleton {
-  @observable
-  private currentComponentJSX: UIElement = null;
-  @observable
-  private routeParams: RouteParameters = {};
+  @observable private currentComponentJSX: UIElement = null;
+  @observable private routeParams: RouteParameters = {};
   private routes: Array<H4Route> = [];
   private redirects: Array<H4Redirect> = [];
 
@@ -48,8 +51,7 @@ export class Router extends AppSingleton {
       routeProvider.browserHistory.push(matchedRedirect.to);
     } else {
       const matchedRoute = this.routes.find(route => route.match(pathname) !== null);
-      if (matchedRoute) {
-        // add && this.currentComponentJSX !== matchedRoute.component
+      if (matchedRoute && this.currentComponentJSX !== matchedRoute.component) {
         this.currentComponentJSX = matchedRoute.component;
         this.routeParams = matchedRoute.match(pathname);
       }
@@ -59,15 +61,14 @@ export class Router extends AppSingleton {
   Instance = observer(() => (this.currentComponentJSX ? this.currentComponentJSX(this.routeParams) : null));
 
   addRoute(path: string, component: (rp: RouteParameters) => JSX.Element) {
-    console.log('add route', path);
     //TODO, Emil: validate route - whether it starts with "/", and check for colisions with other routes in the same lvl
 
+    //pathToRegex doesnt handle '/*' for mathing anything, so we have to replace it with a param with 0 or more occurences.
+    const newPath = path.replace('/*', '/:matchAllParam*');
     const keys: pathToRegexp.Key[] = [];
-    const reg = pathToRegexp(path, keys);
+    const reg = pathToRegexp(newPath, keys);
     const match = (pathToMatch: string) => {
-      console.log('path: ', path, ' reg:  ', reg);
       const r = pathToMatch.match(reg);
-      console.log('matched regex ', r);
       if (r === null) {
         return null;
       }
@@ -79,14 +80,11 @@ export class Router extends AppSingleton {
       return params;
     };
     this.routes.push({ match, component });
-    console.log('all routes', this.routes);
     this.setCurrentComponentOrRedirect();
   }
 
   addRedirect(newRedirect: H4Redirect) {
-    console.log('add redirect', newRedirect.from);
     //TODO, Emil: validate route - whether it starts with "/", and check for colisions with other routes in the same lvl
-
     this.redirects.push(newRedirect);
     this.setCurrentComponentOrRedirect(); //check whether you can observe this
   }
@@ -99,12 +97,11 @@ interface MainRouterProps {
 @observer
 export class MainRouter extends React.Component<MainRouterProps, {}> {
   render() {
-    const app = this.props.app;
-    const routeProvider = app.getSingleton(RouteProvider);
-    console.log('MAIN ROUTER PROVIDING');
-    console.log(routeProvider.browserHistory.location);
+    const routeProvider = this.props.app.getSingleton(RouteProvider);
     return (
-      <HistoryContext.Provider value={{ history: routeProvider.browserHistory, location: routeProvider.location.pathname }}>
+      <HistoryContext.Provider
+        value={{ history: routeProvider.browserHistory, location: routeProvider.location.pathname }}
+      >
         {this.props.children}
       </HistoryContext.Provider>
     );

@@ -4,6 +4,7 @@ import { HistoryContext } from './router';
 import { matchPath } from './utils';
 import classNames from 'classnames';
 import { observer } from 'mobx-react';
+import * as _ from 'lodash';
 
 export interface LinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
   to: LocationDescriptor;
@@ -17,11 +18,10 @@ export interface LinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement>
 }
 
 /**
- * Link that is aware of the history and current path.
+ * Link that is aware of the history and current location.
  */
 @observer
 export class Link extends React.Component<LinkProps, {}> {
-
   isModifiedEvent(event: any) {
     return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
   }
@@ -38,9 +38,13 @@ export class Link extends React.Component<LinkProps, {}> {
       event.preventDefault();
 
       const method = this.props.replace ? history.replace : history.push;
-
-      // the parameter are matching, but due to some TS problems, it's unable to resolve properly.
-      method(this.props.to as any);
+      const to = this.props.to;
+      // we have to do this because typescript cannot handle properly 2 different methods with the same name, but different argument.
+      if (_.isString(to)) {
+        method(to);
+      } else {
+        method(to);
+      }
     }
   }
 
@@ -54,7 +58,7 @@ export class Link extends React.Component<LinkProps, {}> {
 
           const currentLocation = context.location;
           const { innerRef, replace, to, activeClassName, ...rest } = this.props; // eslint-disable-line no-unused-vars
-          const path = typeof to === 'object' ? to.pathname : to;
+          const path = _.isString(to) ? to : to.pathname;
           const escapedPath = path && path.replace(/([.+*?=^!:${}()[\]|/\\])/g, '\\$1');
           const isActive = escapedPath ? matchPath(currentLocation, escapedPath) : false;
 
