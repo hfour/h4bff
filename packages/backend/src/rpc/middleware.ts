@@ -9,11 +9,17 @@ export type RPCMiddleware = (dispatcher: RPCDispatcher, next: () => Promise<any>
  */
 export class RPCMiddlewareContainer extends AppSingleton {
   call = (dispatcher: RPCDispatcher) => {
-    return Promise.resolve(dispatcher.handleRequest());
+    return Promise.resolve().then(() => dispatcher.handleRequest());
   };
 
   addMiddleware(middleware: RPCMiddleware) {
     let oldCall = this.call;
-    this.call = (dispatcher: RPCDispatcher) => middleware.call(null, dispatcher, () => oldCall(dispatcher));
+    this.call = (dispatcher: RPCDispatcher) => {
+      try {
+        return middleware.call(null, dispatcher, () => oldCall(dispatcher));
+      } catch (e) {
+        return Promise.reject(e);
+      }
+    };
   }
 }
