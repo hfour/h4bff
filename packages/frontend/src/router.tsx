@@ -5,8 +5,9 @@ import { reaction, observable, action } from 'mobx';
 import { observer } from 'mobx-react';
 import * as pathToRegexp from 'path-to-regexp';
 import * as React from 'react';
-import { History } from 'history';
+import { History, Location } from 'history';
 import { matchPath } from './utils';
+import * as queryString from 'query-string';
 
 export const HistoryContext = React.createContext({} as HistoryContextProps);
 export interface HistoryContextProps {
@@ -14,11 +15,12 @@ export interface HistoryContextProps {
   location: string;
 }
 
-export type RouteParameters<Param extends { [key: string]: string } = {}> = Param;
+export type Params = { [key: string]: string } | { queryParams?: { [key: string]: string } };
+export type RouteParameters<T extends Params = {}> = T;
 export type UIElement = ((rp: RouteParameters) => JSX.Element) | null;
 
 interface H4Route {
-  match: (path: string) => RouteParameters;
+  match: (location: Location) => RouteParameters;
   component: UIElement;
 }
 
@@ -45,30 +47,41 @@ export class Router extends AppSingleton {
   @action
   private setCurrentComponentOrRedirect() {
     const routeProvider = this.getSingleton(RouteProvider);
-    const pathname = routeProvider.location.pathname;
-    const matchedRedirect = this.redirects.find(redirect => matchPath(pathname, redirect.from));
+    const location = routeProvider.location;
+    const matchedRedirect = this.redirects.find(redirect => matchPath(location.pathname, redirect.from));
     if (matchedRedirect) {
       routeProvider.browserHistory.push(matchedRedirect.to);
     } else {
-      const matchedRoute = this.routes.find(route => route.match(pathname) !== null);
-      if (matchedRoute && this.currentComponentJSX !== matchedRoute.component) {
+      const matchedRoute = this.routes.find(route => route.match(location) !== null);
+      if (matchedRoute) {
         this.currentComponentJSX = matchedRoute.component;
-        this.routeParams = matchedRoute.match(pathname);
+        this.routeParams = matchedRoute.match(location);
       }
     }
   }
 
-  Instance = observer(() => (this.currentComponentJSX ? this.currentComponentJSX(this.routeParams) : null));
+  Instance = observer(() => {
+    return this.currentComponentJSX ? this.currentComponentJSX(this.routeParams) : null;
+  });
 
-  addRoute(path: string, component: (rp: RouteParameters) => JSX.Element) {
+  /**
+   * Open points;
+   * - check for duplicate routes?  -> unshift (proposed)
+   * - validate routes when adding route/redirect
+   * - include it in UI kit  -> UI kit da ima provider
+   * - tests
+   * - doc and example
+   */
+
+  addRoute = (path: string, component: (rp: RouteParameters) => JSX.Element) => {
     //TODO, Emil: validate route - whether it starts with "/", and check for colisions with other routes in the same lvl
 
     //pathToRegex doesnt handle '/*' for mathing anything, so we have to replace it with a param with 0 or more occurences.
-    const newPath = path.replace('/*', '/:matchAllParam*');
+    const newPath = path.replace('/*', '/:placeholderForMathingAnyRoute*');
     const keys: pathToRegexp.Key[] = [];
     const reg = pathToRegexp(newPath, keys);
-    const match = (pathToMatch: string) => {
-      const r = pathToMatch.match(reg);
+    const match = (location: Location) => {
+      const r = location.pathname.match(reg);
       if (r === null) {
         return null;
       }
@@ -77,11 +90,13 @@ export class Router extends AppSingleton {
       for (let k = 0; k < keys.length; ++k) {
         params[keys[k].name] = r[k + 1];
       }
+      params['queryParams'] = queryString.parse(location.search);
+
       return params;
     };
     this.routes.push({ match, component });
     this.setCurrentComponentOrRedirect();
-  }
+  };
 
   addRedirect(newRedirect: H4Redirect) {
     //TODO, Emil: validate route - whether it starts with "/", and check for colisions with other routes in the same lvl

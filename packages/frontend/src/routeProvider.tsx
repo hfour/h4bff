@@ -15,12 +15,6 @@ export class RouteProvider extends AppSingleton {
     this.browserHistory = createBrowserHistory();
     this.location = this.browserHistory.location;
 
-    this.browserHistory.listen(location =>
-      runInAction(() => {
-        console.log('IN ROUTER PROVIDER ', location.pathname);
-        console.log('ITS THE FINAL LALA IN ROUTER PROVIDER, ', this.browserHistory.location.pathname);
-        this.location = location;
-      }),
-    );
+    this.browserHistory.listen(location => runInAction(() => (this.location = location)));
   }
 }
