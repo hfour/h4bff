@@ -115,14 +115,13 @@ export class RPCDispatcher extends BaseService {
 
     // in case the method is not a promise, we don't want the error to bubble-up
     const promiseWrapper = Promise.resolve();
-    return promiseWrapper
-      .then(() => this.serviceMethod.call(this.serviceInstance, req.body.params) as Promise<any>)
-      .then(this.success);
+    return promiseWrapper.then(() => this.serviceMethod.call(this.serviceInstance, req.body.params) as Promise<any>);
   }
 
   call = () => {
     return this.getSingleton(RPCMiddlewareContainer)
       .call(this)
+      .then(this.success)
       .catch(this.fail);
   };
 }
