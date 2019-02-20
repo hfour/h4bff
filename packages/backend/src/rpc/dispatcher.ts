@@ -62,13 +62,14 @@ export class RPCDispatcher extends BaseService {
     });
   }
 
-  private fail(e: Error) {
+  private fail = (e: Error) => {
     this.getSingleton(ServiceContextEvents)
       .disposeContext(this.context, e)
       .then(() => {
         if (typeof (e as any).code === 'number') {
           return this.jsonFail((e as any).code, e.message);
         } else if ((e as any).isJoi) {
+          // TODO: Joi specific handling, get rid of it
           console.error(`Validation failed for "${this.rpcPath}":`);
           (e as any).details.forEach((err: any) => console.error(` \-> ${err.message}`));
           return this.jsonFail(400, 'Technical error, the request was malformed.');
@@ -77,9 +78,9 @@ export class RPCDispatcher extends BaseService {
           return this.jsonFail(500, 'Something bad happened.');
         }
       });
-  }
+  };
 
-  private success(data: any, code: number = 200) {
+  private success = (data: any, code: number = 200) => {
     this.getSingleton(ServiceContextEvents)
       .disposeContext(this.context, null)
       .then(() => {
@@ -94,7 +95,7 @@ export class RPCDispatcher extends BaseService {
           });
         }
       });
-  }
+  };
 
   handleRequest() {
     let { req } = this;
@@ -114,12 +115,12 @@ export class RPCDispatcher extends BaseService {
 
     // in case the method is not a promise, we don't want the error to bubble-up
     const promiseWrapper = Promise.resolve();
-    return promiseWrapper
-      .then(() => this.serviceMethod.call(this.serviceInstance, req.body.params) as Promise<any>)
-      .then(result => this.success(result), error => this.fail(error));
+    return promiseWrapper.then(() => this.serviceMethod.call(this.serviceInstance, req.body.params) as Promise<any>);
   }
 
   call = () => {
-    return this.getSingleton(RPCMiddlewareContainer).call(this);
+    return this.getSingleton(RPCMiddlewareContainer)
+      .call(this)
+      .then(this.success, this.fail);
   };
 }
