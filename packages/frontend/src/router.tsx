@@ -1,4 +1,4 @@
-import { App, AppSingleton } from '@h4bff/core';
+import { App } from '@h4bff/core';
 import { H4Redirect } from '.';
 import { RouteProvider } from './routeProvider';
 import { reaction, observable, action } from 'mobx';
@@ -8,6 +8,7 @@ import * as React from 'react';
 import { History, Location } from 'history';
 import { matchPath } from './utils';
 import * as queryString from 'query-string';
+import * as _ from 'lodash';
 
 export const HistoryContext = React.createContext({} as HistoryContextProps);
 export interface HistoryContextProps {
@@ -30,23 +31,35 @@ export interface H4Redirect {
 }
 
 /**
- * Frontend route provider. Listens to change of the location and updates it.
+ * Frontend nestable router. Reacts to change of the url pathname and renders the suitable component.
+ *
+ * If several routes are matched, only the lastly added will be rendered.
+ * All routes are strictly matched. For rendering a container route, just suffix it with "/*", so it will match any of the child routes.
+ *
  */
-export class Router extends AppSingleton {
+export class Router {
+  //todo emil - remove "AppSingleton" if it shouldnt be nestable!
+  /**
+   * have this in some BC:
+   * Pros for having it nestable:
+   * - each router can/will match only one route. If we want to match several components, we have to either have several routers, or rework the matching
+   *
+   * Cons for having it nestable:
+   * - you might want to have some highly distributed component that reacts on certain route.
+   */
   @observable private currentComponentJSX: UIElement = null;
   @observable private routeParams: RouteParameters = {};
   private routes: Array<H4Route> = [];
   private redirects: Array<H4Redirect> = [];
 
-  constructor(app: App) {
-    super(app);
-    reaction(() => this.getSingleton(RouteProvider).location.pathname, () => this.setCurrentComponentOrRedirect());
-    this.setCurrentComponentOrRedirect(); //check whether you can observe this, and not call it explicitly.
+  constructor(private app: App) {
+    reaction(() => this.app.getSingleton(RouteProvider).location.pathname, () => this.setCurrentComponentOrRedirect());
+    this.setCurrentComponentOrRedirect(); //check whether you can observe this, and not call it explicitly. Maybe make it "get computed", and use it in the observer
   }
 
   @action
-  private setCurrentComponentOrRedirect() {
-    const routeProvider = this.getSingleton(RouteProvider);
+  private setCurrentComponentOrRedirect = () => {
+    const routeProvider = this.app.getSingleton(RouteProvider);
     const location = routeProvider.location;
     const matchedRedirect = this.redirects.find(redirect => matchPath(location.pathname, redirect.from));
     if (matchedRedirect) {
@@ -58,19 +71,25 @@ export class Router extends AppSingleton {
         this.routeParams = matchedRoute.match(location);
       }
     }
-  }
+  };
 
   Instance = observer(() => {
     return this.currentComponentJSX ? this.currentComponentJSX(this.routeParams) : null;
   });
 
   /**
-   * Open points;
-   * - check for duplicate routes?  -> unshift (proposed)
+   * Open points:
+   *
    * - validate routes when adding route/redirect
    * - include it in UI kit  -> UI kit da ima provider
    * - tests
    * - doc and example
+   */
+
+  /**
+   * Tests for:
+   * - use the tests for documentation! have a similar (if not the same) documentation as the pathToRegex library
+   * - whether the latest added route will be rendered, given there are multiple matches
    */
 
   addRoute = (path: string, component: (rp: RouteParameters) => JSX.Element) => {
@@ -94,15 +113,15 @@ export class Router extends AppSingleton {
 
       return params;
     };
-    this.routes.push({ match, component });
+    this.routes.unshift({ match, component });
     this.setCurrentComponentOrRedirect();
   };
 
-  addRedirect(newRedirect: H4Redirect) {
+  addRedirect = (newRedirect: H4Redirect) => {
     //TODO, Emil: validate route - whether it starts with "/", and check for colisions with other routes in the same lvl
-    this.redirects.push(newRedirect);
+    this.redirects.unshift(newRedirect);
     this.setCurrentComponentOrRedirect(); //check whether you can observe this
-  }
+  };
 }
 
 interface MainRouterProps {
