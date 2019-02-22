@@ -1,4 +1,4 @@
-import { App } from '@h4bff/core';
+import { App, AppSingleton } from '@h4bff/core';
 import { H4Redirect } from '.';
 import { RouteProvider } from './routeProvider';
 import { reaction, observable, action } from 'mobx';
@@ -38,7 +38,6 @@ export interface H4Redirect {
  *
  */
 export class Router {
-  //todo emil - remove "AppSingleton" if it shouldnt be nestable!
   /**
    * have this in some BC:
    * Pros for having it nestable:
@@ -73,15 +72,15 @@ export class Router {
     }
   };
 
-  Instance = observer(() => {
+  RenderInstance = observer(() => {
     return this.currentComponentJSX ? this.currentComponentJSX(this.routeParams) : null;
   });
 
   /**
    * Open points:
    *
-   * - validate routes when adding route/redirect
-   * - include it in UI kit  -> UI kit da ima provider
+   * - validate routes when adding route/redirect (LATER)
+   * - include it in UI kit  -> UI kit should have globarl variable for providing a link
    * - tests
    * - doc and example
    */
@@ -95,7 +94,7 @@ export class Router {
   addRoute = (path: string, component: (rp: RouteParameters) => JSX.Element) => {
     //TODO, Emil: validate route - whether it starts with "/", and check for colisions with other routes in the same lvl
 
-    //pathToRegex doesnt handle '/*' for mathing anything, so we have to replace it with a param with 0 or more occurences.
+    //pathToRegex doesnt handle '/*' for mathing anything, so we have to replace it with an aptly-named param with 0 or more occurences.
     const newPath = path.replace('/*', '/:placeholderForMathingAnyRoute*');
     const keys: pathToRegexp.Key[] = [];
     const reg = pathToRegexp(newPath, keys);
@@ -140,4 +139,25 @@ export class MainRouter extends React.Component<MainRouterProps, {}> {
       </HistoryContext.Provider>
     );
   }
+}
+
+
+export class MainRouterNew extends AppSingleton {
+  @observable routers: Router[] = [];
+
+  addRouter(router: Router) {
+    this.routers.push(router);
+  }
+
+
+  RenderInstance = observer(() => {
+    const routeProvider = this.getSingleton(RouteProvider);
+    return (
+      <HistoryContext.Provider
+        value={{ history: routeProvider.browserHistory, location: routeProvider.location.pathname }}
+      >
+        {this.routers.map(router => router.RenderInstance)}
+      </HistoryContext.Provider>
+    );
+  });
 }
