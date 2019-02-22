@@ -29,6 +29,7 @@ export let NestedAppsPlugin = (app: App) => {
   });
   // Register RPC for child 1
   child1.getSingleton(RPCServiceRegistry).add('test1', TestService);
+  ctxRouter.post('/child1-api/rpc', child1.getSingleton(RPCServiceRegistry).routeHandler);
 
   // Child 2
   let child2 = app.createChildApp();
@@ -36,9 +37,11 @@ export let NestedAppsPlugin = (app: App) => {
   child2.getSingleton(AppRouter).get('/app/child2', (_req, res) => {
     res.end('child 2 app says: ' + child2TestSingleton.printMessage('2'));
   });
-  // Register RPC for child 1
+  // Register RPC for child 2
   child2.getSingleton(RPCServiceRegistry).add('test2', TestService);
+  ctxRouter.post('/child2-api/rpc', child2.getSingleton(RPCServiceRegistry).routeHandler);
 
   // Register RPC for root app
   app.getSingleton(RPCServiceRegistry).add('testRoot', TestService);
+  ctxRouter.post('/root-api/rpc', app.getSingleton(RPCServiceRegistry).routeHandler);
 };
