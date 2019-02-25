@@ -1,4 +1,4 @@
-import * as Express from 'express';
+import { Request, Response } from 'express';
 import { BaseService } from '@h4bff/core';
 
 /**
@@ -6,13 +6,13 @@ import { BaseService } from '@h4bff/core';
  * once per service request.
  */
 export class RequestInfo extends BaseService {
-  req!: Express.Request;
-  res!: Express.Response;
+  req!: Request;
+  res!: Response;
 
   /**
    * @internal
    */
-  _setRequestResponse(req: Express.Request, res: Express.Response) {
+  _setRequestResponse(req: Request, res: Response) {
     this.req = req;
     this.res = res;
   }

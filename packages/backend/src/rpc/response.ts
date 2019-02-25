@@ -47,10 +47,16 @@ export class ErrorLikeResult implements CustomResponse, IRPCErrorLikeResult {
   }
 }
 
+/**
+ * Represents custom response.
+ */
 export interface CustomResponse {
   sendToHTTPResponse(res: Response, code: number): void;
 }
 
+/**
+ * Checks if a given response implements the {@link CustomResponse} interface.
+ */
 export function isCustomResponse(data: any): data is CustomResponse {
   return data != null && typeof data.sendToHTTPResponse === 'function';
 }
