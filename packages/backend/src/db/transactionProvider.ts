@@ -4,15 +4,20 @@ import { BaseService, ServiceContext } from '@h4bff/core';
 import { Database } from './database';
 import { TransactionCleaner } from './transactionCleaner';
 
+/**
+ * Provides transaction instance to support transactional behavior within service context.
+ * It there is no existing transaction present in the current service context, it creates it.
+ * Can be used within a service implementation or where there is a {@link ServiceContext} instance available.
+ */
 export class TransactionProvider extends BaseService {
   private db = this.getSingleton(Database).db;
   private pool = this.db.getPool();
+  private _tx: Transaction | null = null;
 
   constructor(context: ServiceContext) {
     super(context);
     this.getSingleton(TransactionCleaner);
   }
-  private _tx: Transaction | null = null;
 
   get tx() {
     if (!this._tx) this._tx = this.db.begin();
@@ -24,6 +29,11 @@ export class TransactionProvider extends BaseService {
     return this.pool;
   }
 
+  /**
+   * Gets called on context disposal and makes sure that the transaction
+   * is disposed properly. If an error occured it rollbacks the transaction,
+   * otherwise it commits it.
+   */
   onDispose(error: Error | null) {
     if (this._tx) {
       let tx = this._tx;
