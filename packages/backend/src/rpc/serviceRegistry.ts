@@ -51,7 +51,7 @@ export class RPCServiceRegistry extends AppSingleton {
    * It binds the request and response to a service context and forwards the
    * request to the {@link RPCDispatcher}.
    */
-  routeHandler = (req: Request, res: Response): void | Promise<void> => {
+  routeHandler = (req: Request, res: Response): Promise<void> => {
     let dispatcher = this.getSingleton(RequestContextProvider)
       .getContext(req, res)
       .getService(RPCDispatcher);
