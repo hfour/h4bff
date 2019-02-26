@@ -1,8 +1,8 @@
 import * as express from 'express';
-import { App } from '@h4bff/core';
+import { Container } from '@h4bff/core';
 /**
  * Router.
  */
-export function AppRouter(_app: App) {
+export function AppRouter(_app: Container) {
   return express();
 }

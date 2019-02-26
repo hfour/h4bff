@@ -1,4 +1,4 @@
-import { App, AppSingleton, BaseService } from '@h4bff/core';
+import { Container, AppSingleton, BaseService } from '@h4bff/core';
 import { RPCServiceRegistry } from '@h4bff/backend';
 import { AppRouter } from './router';
 
@@ -14,15 +14,15 @@ export class TestService extends BaseService {
   }
 }
 
-export let NestedAppsPlugin = (app: App) => {
+export let NestedAppsPlugin = (container: Container) => {
   // Root
-  const ctxRouter = app.getSingleton(AppRouter);
+  const ctxRouter = container.getSingleton(AppRouter);
   ctxRouter.get('/app/root', (_req, res) => {
     res.end('root app');
   });
 
   // Child 1
-  let child1 = app.createChildApp();
+  let child1 = container.createChildContainer();
   const child1TestSingleton = child1.getSingleton(TestSingleton);
   child1.getSingleton(AppRouter).get('/app/child1', (_req, res) => {
     res.end('child 1 app says: ' + child1TestSingleton.printMessage('1'));
@@ -32,7 +32,7 @@ export let NestedAppsPlugin = (app: App) => {
   ctxRouter.post('/child1-api/rpc', child1.getSingleton(RPCServiceRegistry).routeHandler);
 
   // Child 2
-  let child2 = app.createChildApp();
+  let child2 = container.createChildContainer();
   const child2TestSingleton = child2.getSingleton(TestSingleton);
   child2.getSingleton(AppRouter).get('/app/child2', (_req, res) => {
     res.end('child 2 app says: ' + child2TestSingleton.printMessage('2'));
@@ -42,6 +42,6 @@ export let NestedAppsPlugin = (app: App) => {
   ctxRouter.post('/child2-api/rpc', child2.getSingleton(RPCServiceRegistry).routeHandler);
 
   // Register RPC for root app
-  app.getSingleton(RPCServiceRegistry).add('testRoot', TestService);
-  ctxRouter.post('/root-api/rpc', app.getSingleton(RPCServiceRegistry).routeHandler);
+  container.getSingleton(RPCServiceRegistry).add('testRoot', TestService);
+  ctxRouter.post('/root-api/rpc', container.getSingleton(RPCServiceRegistry).routeHandler);
 };

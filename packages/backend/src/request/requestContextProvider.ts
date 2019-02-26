@@ -1,5 +1,5 @@
 import * as Express from 'express';
-import { AppSingleton, ServiceContext, App, ServiceContextEvents } from '@h4bff/core';
+import { AppSingleton, ServiceContext, Container, ServiceContextEvents } from '@h4bff/core';
 import { RequestInfo } from './';
 
 /**
@@ -8,9 +8,9 @@ import { RequestInfo } from './';
 export class RequestContextProvider extends AppSingleton {
   private contexts = new WeakMap<Express.Request, ServiceContext>();
 
-  constructor(app: App) {
-    super(app);
-    app.getSingleton(ServiceContextEvents).onContextDisposed((sc, _error) => {
+  constructor(container: Container) {
+    super(container);
+    container.getSingleton(ServiceContextEvents).onContextDisposed((sc, _error) => {
       return this.onDispose(sc);
     });
   }
@@ -22,7 +22,7 @@ export class RequestContextProvider extends AppSingleton {
   public getContext(req: Express.Request, res: Express.Response) {
     let result = this.contexts.get(req);
     if (!result) {
-      result = this.app.createServiceContext();
+      result = this.container.createServiceContext();
       result.getService(RequestInfo)._setRequestResponse(req, res);
       this.contexts.set(req, result);
     }
@@ -48,7 +48,7 @@ export class RequestContextProvider extends AppSingleton {
     res: Express.Response,
     f: (createdContext: ServiceContext) => PromiseLike<T>,
   ): PromiseLike<T> {
-    return this.app.withServiceContext(ctx => {
+    return this.container.withServiceContext(ctx => {
       ctx.getService(RequestInfo)._setRequestResponse(req, res);
       return f(ctx);
     });

@@ -3,7 +3,7 @@ import * as Promise from 'bluebird';
 import { Table } from 'anydb-sql-2';
 import { v4 as uuid } from 'uuid';
 import { Database, TransactionProvider, RPCServiceRegistry } from '@h4bff/backend';
-import { BaseService, App, AppSingleton } from '@h4bff/core';
+import { BaseService, Container, AppSingleton } from '@h4bff/core';
 import { AppRouter } from './router';
 
 interface File {
@@ -13,7 +13,7 @@ interface File {
 }
 
 export class FilesStorage extends AppSingleton {
-  private db = this.app.getSingleton(Database).db;
+  private db = this.container.getSingleton(Database).db;
   filesTbl = this.db.define({
     name: 'files',
     columns: {
@@ -23,8 +23,8 @@ export class FilesStorage extends AppSingleton {
     },
   }) as Table<'files', File>;
 
-  constructor(app: App) {
-    super(app);
+  constructor(container: Container) {
+    super(container);
   }
 }
 
@@ -32,8 +32,8 @@ export class UserService extends BaseService {}
 
 export class FilePermissions extends AppSingleton {
   private allowances: Array<(user: UserService) => Promise<boolean>> = [];
-  constructor(app: App) {
-    super(app);
+  constructor(container: Container) {
+    super(container);
   }
 
   addPermission(p: (user: UserService) => Promise<boolean>) {
@@ -45,8 +45,8 @@ export class FilePermissions extends AppSingleton {
   }
 }
 
-export let FilesRouter = (app: App) => {
-  let router = app.getSingleton(AppRouter);
+export let FilesRouter = (container: Container) => {
+  let router = container.getSingleton(AppRouter);
 
   router.get('/files/:fileId', (req, res) => {
     res.end('heres file ' + req.params['fileId']);
@@ -83,10 +83,10 @@ export class Files extends BaseService {
   }
 }
 
-export let FilesPlugin = (app: App) => {
-  app.load(FilesRouter); // Routes
+export let FilesPlugin = (container: Container) => {
+  container.load(FilesRouter); // Routes
 
   // RPC
-  const rpc = app.getSingleton(RPCServiceRegistry);
+  const rpc = container.getSingleton(RPCServiceRegistry);
   rpc.add('files', Files);
 };

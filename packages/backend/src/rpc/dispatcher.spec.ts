@@ -1,5 +1,5 @@
 import * as Promise from 'bluebird';
-import { App, BaseService, ServiceContextEvents } from '@h4bff/core';
+import { Container, BaseService, ServiceContextEvents } from '@h4bff/core';
 import { Request, Response } from 'express';
 import { RequestInfo } from '../request';
 import { RPCDispatcher } from './dispatcher';
@@ -23,16 +23,16 @@ describe('RPCDispatcher', () => {
 
   describe('handleRequest', () => {
     it(`should respond with error if method is not found in the request qyery params`, () => {
-      let app = new App();
+      let container = new Container();
       // prepare request / response
-      app.overrideService(
+      container.overrideService(
         RequestInfo,
         class MockRequestInfo extends RequestInfo {
           req = mockRequest();
           res = mockResponse();
         },
       );
-      const sCtx = app.createServiceContext();
+      const sCtx = container.createServiceContext();
       let rpcDispatcher = sCtx.getService(RPCDispatcher);
       let requestInfo = sCtx.getService(RequestInfo);
 
@@ -52,16 +52,16 @@ describe('RPCDispatcher', () => {
     });
 
     it(`should respond with error if body params are not found in the request`, () => {
-      let app = new App();
+      let container = new Container();
       // prepare request / response
-      app.overrideService(
+      container.overrideService(
         RequestInfo,
         class MockRequestInfo extends RequestInfo {
           req = mockRequest('test.method');
           res = mockResponse();
         },
       );
-      const sCtx = app.createServiceContext();
+      const sCtx = container.createServiceContext();
       let rpcDispatcher = sCtx.getService(RPCDispatcher);
       let requestInfo = sCtx.getService(RequestInfo);
 
@@ -81,9 +81,9 @@ describe('RPCDispatcher', () => {
     });
 
     it(`should respond with error if method does't exist on the service`, () => {
-      let app = new App();
+      let container = new Container();
       // prepare request / response
-      app.overrideService(
+      container.overrideService(
         RequestInfo,
         class MockRequestInfo extends RequestInfo {
           req = mockRequest('test.method', {});
@@ -91,7 +91,7 @@ describe('RPCDispatcher', () => {
         },
       );
       // prepare mock service
-      app.getSingleton(RPCServiceRegistry).add(
+      container.getSingleton(RPCServiceRegistry).add(
         'test',
         class TestService extends BaseService {
           none() {
@@ -99,7 +99,7 @@ describe('RPCDispatcher', () => {
           }
         },
       );
-      const sCtx = app.createServiceContext();
+      const sCtx = container.createServiceContext();
       let rpcDispatcher = sCtx.getService(RPCDispatcher);
       let requestInfo = sCtx.getService(RequestInfo);
 
@@ -121,9 +121,9 @@ describe('RPCDispatcher', () => {
 
   describe('RPC call execution', () => {
     it('should respond with success and dispose context in normal circumstances', () => {
-      let app = new App();
+      let container = new Container();
       // prepare request / response
-      app.overrideService(
+      container.overrideService(
         RequestInfo,
         class MockRequestInfo extends RequestInfo {
           req = mockRequest('test.method', {});
@@ -131,20 +131,20 @@ describe('RPCDispatcher', () => {
         },
       );
       // mock middleware call
-      app.overrideSingleton(
+      container.overrideSingleton(
         RPCMiddlewareContainer,
         class MockRPCMiddlewareContainer extends RPCMiddlewareContainer {
           call = jest.fn(() => Promise.resolve('data'));
         },
       );
       // mock disposeContext call
-      app.overrideSingleton(
+      container.overrideSingleton(
         ServiceContextEvents,
         class MockServiceContextEvents extends ServiceContextEvents {
           disposeContext = jest.fn(() => Promise.resolve());
         },
       );
-      const sCtx = app.createServiceContext();
+      const sCtx = container.createServiceContext();
       let rpcDispatcher = sCtx.getService(RPCDispatcher);
       let requestInfo = sCtx.getService(RequestInfo);
 
@@ -156,14 +156,14 @@ describe('RPCDispatcher', () => {
           error: null,
           version: 2,
         });
-        expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
+        expect(container.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
       });
     });
 
     it('should respond with custom success response and dispose context for specific results', () => {
-      let app = new App();
+      let container = new Container();
       // prepare request / response
-      app.overrideService(
+      container.overrideService(
         RequestInfo,
         class MockRequestInfo extends RequestInfo {
           req = mockRequest('test.method', {});
@@ -174,33 +174,33 @@ describe('RPCDispatcher', () => {
       let mockData = {
         sendToHTTPResponse: jest.fn(() => Promise.resolve('test')),
       };
-      app.overrideSingleton(
+      container.overrideSingleton(
         RPCMiddlewareContainer,
         class MockRPCMiddlewareContainer extends RPCMiddlewareContainer {
           call = jest.fn(() => Promise.resolve(mockData));
         },
       );
       // mock disposeContext call
-      app.overrideSingleton(
+      container.overrideSingleton(
         ServiceContextEvents,
         class MockServiceContextEvents extends ServiceContextEvents {
           disposeContext = jest.fn(() => Promise.resolve());
         },
       );
-      const sCtx = app.createServiceContext();
+      const sCtx = container.createServiceContext();
       let rpcDispatcher = sCtx.getService(RPCDispatcher);
       let requestInfo = sCtx.getService(RequestInfo);
 
       return rpcDispatcher.call().then(() => {
-        expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
+        expect(container.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         expect(mockData.sendToHTTPResponse).toHaveBeenCalledWith(requestInfo.res, 200);
       });
     });
 
     it('should respond with error response when the RPC call fails', () => {
-      let app = new App();
+      let container = new Container();
       // prepare request / response
-      app.overrideService(
+      container.overrideService(
         RequestInfo,
         class MockRequestInfo extends RequestInfo {
           req = mockRequest('test.method', {});
@@ -208,25 +208,25 @@ describe('RPCDispatcher', () => {
         },
       );
       // mock middleware call and prepare erroneous response
-      app.overrideSingleton(
+      container.overrideSingleton(
         RPCMiddlewareContainer,
         class MockRPCMiddlewareContainer extends RPCMiddlewareContainer {
           call = jest.fn(() => Promise.reject({ code: 403, message: 'error' }));
         },
       );
       // mock disposeContext call
-      app.overrideSingleton(
+      container.overrideSingleton(
         ServiceContextEvents,
         class MockServiceContextEvents extends ServiceContextEvents {
           disposeContext = jest.fn(() => Promise.resolve());
         },
       );
-      const sCtx = app.createServiceContext();
+      const sCtx = container.createServiceContext();
       let rpcDispatcher = sCtx.getService(RPCDispatcher);
       let requestInfo = sCtx.getService(RequestInfo);
 
       return rpcDispatcher.call().then(() => {
-        expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
+        expect(container.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         expect(requestInfo.res.status).toHaveBeenCalledWith(403);
         expect(requestInfo.res.json).toHaveBeenCalledWith({
           code: 403,
@@ -242,9 +242,9 @@ describe('RPCDispatcher', () => {
     });
 
     it('should respond with validation error response when the RPC call fails with validation data', () => {
-      let app = new App();
+      let container = new Container();
       // prepare request / response
-      app.overrideService(
+      container.overrideService(
         RequestInfo,
         class MockRequestInfo extends RequestInfo {
           req = mockRequest('test.method', {});
@@ -252,25 +252,25 @@ describe('RPCDispatcher', () => {
         },
       );
       // mock middleware call and prepare erroneous response
-      app.overrideSingleton(
+      container.overrideSingleton(
         RPCMiddlewareContainer,
         class MockRPCMiddlewareContainer extends RPCMiddlewareContainer {
           call = jest.fn(() => Promise.reject({ isJoi: true, details: [] }));
         },
       );
       // mock disposeContext call
-      app.overrideSingleton(
+      container.overrideSingleton(
         ServiceContextEvents,
         class MockServiceContextEvents extends ServiceContextEvents {
           disposeContext = jest.fn(() => Promise.resolve());
         },
       );
-      const sCtx = app.createServiceContext();
+      const sCtx = container.createServiceContext();
       let rpcDispatcher = sCtx.getService(RPCDispatcher);
       let requestInfo = sCtx.getService(RequestInfo);
 
       return rpcDispatcher.call().then(() => {
-        expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
+        expect(container.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         expect(requestInfo.res.status).toHaveBeenCalledWith(400);
         expect(requestInfo.res.json).toHaveBeenCalledWith({
           code: 400,
@@ -286,9 +286,9 @@ describe('RPCDispatcher', () => {
     });
 
     it('should respond with 500 error response when the RPC call fails with unknown error', () => {
-      let app = new App();
+      let container = new Container();
       // prepare request / response
-      app.overrideService(
+      container.overrideService(
         RequestInfo,
         class MockRequestInfo extends RequestInfo {
           req = mockRequest('test.method', {});
@@ -296,25 +296,25 @@ describe('RPCDispatcher', () => {
         },
       );
       // mock middleware call and prepare erroneous response
-      app.overrideSingleton(
+      container.overrideSingleton(
         RPCMiddlewareContainer,
         class MockRPCMiddlewareContainer extends RPCMiddlewareContainer {
           call = jest.fn(() => Promise.reject('error'));
         },
       );
       // mock disposeContext call
-      app.overrideSingleton(
+      container.overrideSingleton(
         ServiceContextEvents,
         class MockServiceContextEvents extends ServiceContextEvents {
           disposeContext = jest.fn(() => Promise.resolve());
         },
       );
-      const sCtx = app.createServiceContext();
+      const sCtx = container.createServiceContext();
       let rpcDispatcher = sCtx.getService(RPCDispatcher);
       let requestInfo = sCtx.getService(RequestInfo);
 
       return rpcDispatcher.call().then(() => {
-        expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
+        expect(container.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         expect(requestInfo.res.status).toHaveBeenCalledWith(500);
         expect(requestInfo.res.json).toHaveBeenCalledWith({
           code: 500,

@@ -1,6 +1,6 @@
 import * as fp from './files-plugin';
 import { TransactionProvider } from '@h4bff/backend';
-import { App, BaseService } from '@h4bff/core';
+import { Container, BaseService } from '@h4bff/core';
 
 import * as Bromise from 'bluebird';
 import { UserService } from './files-plugin';
@@ -28,17 +28,17 @@ class TxMock extends BaseService {
 
 describe('fp', () => {
   it('works', () => {
-    let app = new App();
+    let container = new Container();
 
     // because instantiating Database will throw if this is undefined
     process.env.POSTGRES_URL = 'postgres://user:password@localhost:5432/database';
 
-    app.overrideService(TransactionProvider, TxMock);
-    //app.overrideSingleton(Database, DbMock);
-    app.overrideService(UserService, class X extends BaseService {});
-    app.load(fp.FilesPlugin);
+    container.overrideService(TransactionProvider, TxMock);
+    //container.overrideSingleton(Database, DbMock);
+    container.overrideService(UserService, class X extends BaseService {});
+    container.load(fp.FilesPlugin);
 
-    let mocked = app.createServiceContext().getService(fp.Files);
+    let mocked = container.createServiceContext().getService(fp.Files);
 
     return mocked.get({ id: '1' }).then(res => {
       console.log('Actual result', res);

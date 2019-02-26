@@ -4,26 +4,26 @@ export type ConstructorOrFactory<U, T> = ClassFactory<U, T> | ClassConstructor<U
 
 export type PublicInterface<T> = { [K in keyof T]: T[K] };
 
-export class App {
+export class Container {
   singletonLocator: Locator<this>;
-  parentApp: App | null;
+  parentContainer: Container | null;
 
   /**
-   * Represents an H4BFF application.
+   * Represents an H4BFF application container.
    *
-   * Applications are responsible for:
+   * Containers are responsible for:
    * - initializing and storing singletons;
-   * - creating and executing functions within service contexes;
-   * - managing singleton overrides (useful for tests)
+   * - creating and executing functions within service contexts;
+   * - managing singleton overrides (useful for tests);
    *
-   * Applications can have parents. When initializing singletons,
-   * we check the parent, grand-parent app etc. to see if the singleton
+   * Containers can have parents. When initializing singletons,
+   * we check the parent, grand-parent container etc. to see if the singleton
    * is already initialized, so we can return that instance. If a parent
-   * is not found, the singleton is initialized in the child app, *not*
-   * in a parent app.
+   * is not found, the singleton is initialized in the child container, *not*
+   * in a parent container.
    */
-  constructor(opts: { parentApp?: App } = {}) {
-    this.parentApp = opts.parentApp ? opts.parentApp : null;
+  constructor(opts: { parentContainer?: Container } = {}) {
+    this.parentContainer = opts.parentContainer ? opts.parentContainer : null;
     this.singletonLocator = new Locator(this, s => '__appSingleton' in s);
   }
 
@@ -36,24 +36,23 @@ export class App {
    * Walks through parents and returns an existing singleton instance. Call
    * this method ONLY if you KNOW that the instance exists.
    */
-  private getExistingSingleton<T>(Klass: ConstructorOrFactory<App, T>): T {
+  private getExistingSingleton<T>(Klass: ConstructorOrFactory<Container, T>): T {
     if (this.hasOwnSingleton(Klass)) {
       return this.singletonLocator.get(Klass);
     } else {
-      if (!this.parentApp) {
+      if (!this.parentContainer) {
         // this should not happen, because prior to calling this method,
         // we check if there's an instance.
         throw new Error('Finished searching through parents but couldnt find the singleton instance');
       }
-      return this.parentApp.getExistingSingleton(Klass);
+      return this.parentContainer.getExistingSingleton(Klass);
     }
   }
 
   /**
-   * Checks if this App instance has the given singleton initialized
-   * in itself.
+   * Checks if this Container instance has the given singleton initialized in itself.
    */
-  private hasOwnSingleton<T>(Klass: ConstructorOrFactory<App, T>) {
+  private hasOwnSingleton<T>(Klass: ConstructorOrFactory<Container, T>) {
     return this.singletonLocator.has(Klass);
   }
 
@@ -61,23 +60,23 @@ export class App {
    * Checks if this or any of the parent apps has an instance of the
    * given singleton initialized.
    */
-  private hasSingleton<T>(Klass: ConstructorOrFactory<App, T>): boolean {
+  private hasSingleton<T>(Klass: ConstructorOrFactory<Container, T>): boolean {
     if (this.hasOwnSingleton(Klass)) {
       return true;
     } else {
-      if (!this.parentApp) {
+      if (!this.parentContainer) {
         return false;
       } else {
-        return this.parentApp.hasSingleton(Klass);
+        return this.parentContainer.hasSingleton(Klass);
       }
     }
   }
 
   /**
    * Returns an instance of the singleton, if it exists somewhere here or
-   * in some of the parent apps. If it doesn't it's created in this app.
+   * in some of the parent containers. If it doesn't it's created in this container.
    */
-  getSingleton<T>(Klass: ConstructorOrFactory<App, T>): T {
+  getSingleton<T>(Klass: ConstructorOrFactory<Container, T>): T {
     if (this.hasSingleton(Klass)) {
       return this.getExistingSingleton(Klass);
     }
@@ -90,7 +89,10 @@ export class App {
    * specified class / fn, the override is used instead. The type of
    * the override must match that of the original class / fn.
    */
-  overrideSingleton<T>(Klass: ConstructorOrFactory<App, T>, Klass2: ConstructorOrFactory<App, PublicInterface<T>>) {
+  overrideSingleton<T>(
+    Klass: ConstructorOrFactory<Container, T>,
+    Klass2: ConstructorOrFactory<Container, PublicInterface<T>>,
+  ) {
     return this.singletonLocator.override(Klass, Klass2);
   }
 
@@ -112,16 +114,16 @@ export class App {
    *
    * Use this when you want to initialize a class somewhere
    * specific in the hierarchy of apps, for example in
-   * the parent app, to prevent it from being initalized
+   * the parent container, to prevent it from being initalized
    * in a child later on.
    */
-  load<T>(Klass: ConstructorOrFactory<App, T>): void {
+  load<T>(Klass: ConstructorOrFactory<Container, T>): void {
     this.getSingleton(Klass); // force initialization;
     return;
   }
 
   /**
-   * Override this method to load plugins in your app.
+   * Override this method to load plugins in your container.
    *
    * TODO: describe why it's important to load plugins
    * when configuring an application; also how it differs
@@ -161,7 +163,7 @@ export class App {
   }
 
   /**
-   * When instatiating singletons, child applications look in their parents
+   * When instatiating singletons, child containers look in their parents
    * for already instantiated singletons, returning them if they exists.
    *
    * Services and the service context are not affected by parent / child
@@ -170,8 +172,8 @@ export class App {
    * Use this when you want to initialize the same kind of a singleton
    * multiple times.
    */
-  createChildApp() {
-    return new App({ parentApp: this });
+  createChildContainer() {
+    return new Container({ parentContainer: this });
   }
 }
 
@@ -181,17 +183,17 @@ export class AppSingleton {
   /**
    * Derive from this class to create application singletons.
    *
-   * Singletons are initialized only once per application, although
-   * you can initialize different singletons of the same type in
-   * child applications.
+   * Singletons are initialized only once per application container.
+   * However, you can initialize different singletons of the same type in
+   * child application containers.
    */
-  constructor(protected app: App) {}
+  constructor(protected container: Container) {}
 
   /**
-   * A proxy for `app.getSingleton(Klass)`.
+   * A proxy for `container.getSingleton(Klass)`.
    */
-  getSingleton<T>(Klass: ConstructorOrFactory<App, T>): T {
-    return this.app.getSingleton(Klass);
+  getSingleton<T>(Klass: ConstructorOrFactory<Container, T>): T {
+    return this.container.getSingleton(Klass);
   }
 }
 
@@ -200,7 +202,7 @@ export class ServiceContext {
 
   get locator() {
     if (this._locator == null) {
-      this._locator = this.app.serviceLocator.withNewContext(this);
+      this._locator = this.container.serviceLocator.withNewContext(this);
     }
     return this._locator;
   }
@@ -222,7 +224,7 @@ export class ServiceContext {
    * See `ServiceContextEvents` for more info on doing things in
    * response to the creation / destruction of service contexes.
    */
-  constructor(private app: App) {}
+  constructor(private container: Container) {}
 
   /**
    * Initializes the class within the service context (itself.)
@@ -234,10 +236,10 @@ export class ServiceContext {
   }
 
   /**
-   * A proxy for `app.getSingleton(Klass)`.
+   * A proxy for `container.getSingleton(Klass)`.
    */
-  getSingleton<T extends AppSingleton>(SingletonClass: ConstructorOrFactory<App, T>): T {
-    return this.app.getSingleton(SingletonClass);
+  getSingleton<T extends AppSingleton>(SingletonClass: ConstructorOrFactory<Container, T>): T {
+    return this.container.getSingleton(SingletonClass);
   }
 }
 
@@ -259,7 +261,7 @@ export class ServiceContextEvents extends AppSingleton {
    * each time a request comes in. Before we return a response,
    * we want to close the DB transaction. What you'd do is:
    *
-   * `app.getSingleton(ServiceContextEvents).onContextDisposed(ctx => { ... ctx.getService(Txn).rm() })`
+   * `container.getSingleton(ServiceContextEvents).onContextDisposed(ctx => { ... ctx.getService(Txn).rm() })`
    *
    * Use this when you want to react to the destruction of any
    * service context.
@@ -290,7 +292,7 @@ export class BaseService {
    * Services are classes that are instantiated and operate
    * within an "isolated" service context, and are instantiated
    * separately within each context, as opposed to singletons
-   * which have only one instance within an App.
+   * which have only one instance within an Container.
    *
    * Examples of classes that should derive from `BaseService`:
    * * Request: holds a reference to the HTTP request that triggered
@@ -312,9 +314,9 @@ export class BaseService {
   }
 
   /**
-   * Proxy for `app.getSingleton(Klass)`.
+   * Proxy for `container.getSingleton(Klass)`.
    */
-  getSingleton<T extends AppSingleton>(SingletonClass: { new (sc: App): T }): T {
+  getSingleton<T extends AppSingleton>(SingletonClass: { new (sc: Container): T }): T {
     return this.context.getSingleton(SingletonClass);
   }
 }
