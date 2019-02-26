@@ -16,5 +16,26 @@
     "build": "tsc -p tsconfig.json",
     "watch": "tsc -w",
     "test": "jest"
+  },
+  "jest": {
+    "verbose": false,
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "tsconfig.json",
+        "isolatedModules": true
+      }
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    },
+    "testRegex": ".*\\.spec\\.ts",
+    "collectCoverageFrom": [
+      "src/**/*.ts"
+    ],
+    "coverageDirectory": "coverage"
   }
 }

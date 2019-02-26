@@ -31,5 +31,27 @@
     "@types/react-test-renderer": "^16.8.1",
     "react-test-renderer": "^16.8.4",
     "classnames": "^2.2.6"
+  },
+  "jest": {
+    "verbose": false,
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "tsconfig.json",
+        "isolatedModules": true
+      }
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": ".*\\.spec\\.tsx?",
+    "collectCoverageFrom": [
+      "src/**/*.tsx?"
+    ],
+    "coverageDirectory": "coverage"
   }
 }
