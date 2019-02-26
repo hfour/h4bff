@@ -37,6 +37,7 @@
     "build": "wsrun --stages -r build",
     "watch": "wsrun --stages -r --done-criteria='Watches established|Watching for file changes' watch",
     "test": "jest",
+    "test:coverage": "jest --coverage",
     "clean": "git clean -fdx packages/*/build",
     "prettier": "prettier --list-different **/*.ts '**/*.md' **/*.json",
     "prettier:fix": "prettier --write **/*.ts '**/*.md' **/*.json"
