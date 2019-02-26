@@ -36,10 +36,7 @@
     "transform": {
       "^.+\\.ts$": "ts-jest"
     },
-    "testRegex": "(.*\\.spec\\.ts|src/tests/index\\.ts)",
-    "testPathIgnorePatterns": [
-      "/node_modules/"
-    ],
+    "testRegex": ".*\\.spec\\.ts",
     "collectCoverageFrom": [
       "src/**/*.ts"
     ],
