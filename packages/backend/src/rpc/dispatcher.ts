@@ -53,7 +53,7 @@ export class RPCDispatcher extends BaseService {
   }
 
   private jsonFail(code: number, message: string, data: any = null) {
-    this.res.status(code).json({
+    return this.res.status(code).json({
       code,
       result: data,
       error: {
@@ -66,7 +66,7 @@ export class RPCDispatcher extends BaseService {
   }
 
   private fail = (e: Error) => {
-    this.getSingleton(ServiceContextEvents)
+    return this.getSingleton(ServiceContextEvents)
       .disposeContext(this.context, e)
       .then(() => {
         if (typeof (e as any).code === 'number') {
@@ -84,13 +84,13 @@ export class RPCDispatcher extends BaseService {
   };
 
   private success = (data: any, code: number = 200) => {
-    this.getSingleton(ServiceContextEvents)
+    return this.getSingleton(ServiceContextEvents)
       .disposeContext(this.context, null)
       .then(() => {
         if (isCustomResponse(data)) {
-          data.sendToHTTPResponse(this.res, code);
+          return data.sendToHTTPResponse(this.res, code);
         } else {
-          this.res.status(code).json({
+          return this.res.status(code).json({
             code,
             result: data,
             error: null,

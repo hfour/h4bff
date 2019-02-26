@@ -23,6 +23,7 @@ export class RPCFileResult implements CustomResponse, IRPCFileResult {
     res.setHeader('Content-disposition', `attachment; filename*=UTF-8\'\'${escapedFilename}`);
     res.write(this.buffer, 'binary');
     res.end(null, 'binary');
+    return res;
   }
 }
 
@@ -35,7 +36,7 @@ export class ErrorLikeResult implements CustomResponse, IRPCErrorLikeResult {
 
   sendToHTTPResponse(res: Response, _code: number) {
     // We're ignoring the success code sent here, and sending the code from the object.
-    res.status(this.code).json({
+    return res.status(this.code).json({
       code: this.code,
       result: this.result,
       error: {
