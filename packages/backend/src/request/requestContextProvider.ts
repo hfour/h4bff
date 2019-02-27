@@ -17,7 +17,7 @@ export class RequestContextProvider extends AppSingleton {
 
   /**
    * Returns the context bound to the provided request object.
-   * If it doesn't exists, it creates a new context and return.
+   * If there is not context bound to the request, it creates a new one.
    */
   public getContext(req: Express.Request, res: Express.Response) {
     let result = this.contexts.get(req);
