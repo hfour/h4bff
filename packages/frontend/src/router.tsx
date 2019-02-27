@@ -80,7 +80,6 @@ export class Router {
    * Open points:
    *
    * - validate routes when adding route/redirect (LATER)
-   * - include it in UI kit  -> UI kit should have globarl variable for providing a link
    * - tests
    * - doc and example
    */
@@ -92,10 +91,8 @@ export class Router {
    */
 
   addRoute = (path: string, component: (rp: RouteParameters) => JSX.Element) => {
-    //TODO, Emil: validate route - whether it starts with "/", and check for colisions with other routes in the same lvl
-
-    //pathToRegex doesnt handle '/*' for mathing anything, so we have to replace it with an aptly-named param with 0 or more occurences.
-    const newPath = path.replace('/*', '/:placeholderForMathingAnyRoute*');
+    //pathToRegex doesnt handle '/*' for matching anything, so we have to replace it with an aptly-named param with 0 or more occurences.
+    const newPath = path.replace('/*', '/:placeholderForMatchingAnyRoute*');
     const keys: pathToRegexp.Key[] = [];
     const reg = pathToRegexp(newPath, keys);
     const match = (location: Location) => {
@@ -117,38 +114,17 @@ export class Router {
   };
 
   addRedirect = (newRedirect: H4Redirect) => {
-    //TODO, Emil: validate route - whether it starts with "/", and check for colisions with other routes in the same lvl
     this.redirects.unshift(newRedirect);
     this.setCurrentComponentOrRedirect(); //check whether you can observe this
   };
 }
 
-interface MainRouterProps {
-  app: App;
-}
-
-@observer
-export class MainRouter extends React.Component<MainRouterProps, {}> {
-  render() {
-    const routeProvider = this.props.app.getSingleton(RouteProvider);
-    return (
-      <HistoryContext.Provider
-        value={{ history: routeProvider.browserHistory, location: routeProvider.location.pathname }}
-      >
-        {this.props.children}
-      </HistoryContext.Provider>
-    );
-  }
-}
-
-
-export class MainRouterNew extends AppSingleton {
+export class MainRouter extends AppSingleton {
   @observable routers: Router[] = [];
 
   addRouter(router: Router) {
     this.routers.push(router);
   }
-
 
   RenderInstance = observer(() => {
     const routeProvider = this.getSingleton(RouteProvider);
@@ -156,7 +132,9 @@ export class MainRouterNew extends AppSingleton {
       <HistoryContext.Provider
         value={{ history: routeProvider.browserHistory, location: routeProvider.location.pathname }}
       >
-        {this.routers.map(router => router.RenderInstance)}
+        {this.routers.map(router => (
+          <router.RenderInstance />
+        ))}
       </HistoryContext.Provider>
     );
   });
