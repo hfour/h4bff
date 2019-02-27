@@ -5,7 +5,7 @@ import { RPCDispatcher } from './dispatcher';
 export type RPCMiddleware = (dispatcher: RPCDispatcher, next: () => Promise<any>) => Promise<any>;
 
 /**
- * Container for RPC middlewares.
+ * AppContainer for RPC middlewares.
  */
 export class RPCMiddlewareContainer extends AppSingleton {
   call = (dispatcher: RPCDispatcher) => {

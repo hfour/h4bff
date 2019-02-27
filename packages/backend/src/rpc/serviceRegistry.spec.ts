@@ -1,4 +1,4 @@
-import { Container, BaseService } from '@h4bff/core';
+import { AppContainer, BaseService } from '@h4bff/core';
 import { RPCServiceRegistry } from './serviceRegistry';
 import { RPCDispatcher } from './dispatcher';
 import { Request, Response } from 'express';
@@ -6,7 +6,7 @@ import { Request, Response } from 'express';
 describe('RPCServiceRegistry', () => {
   describe('Registration', () => {
     it(`should register new RPC service`, () => {
-      let container = new Container();
+      let container = new AppContainer();
       let rpcServiceRegistry = container.getSingleton(RPCServiceRegistry);
       class TestService extends BaseService {}
       rpcServiceRegistry.add('test', TestService);
@@ -15,7 +15,7 @@ describe('RPCServiceRegistry', () => {
     });
 
     it(`should not allow to register a service under existing alias`, () => {
-      let container = new Container();
+      let container = new AppContainer();
       let rpcServiceRegistry = container.getSingleton(RPCServiceRegistry);
       class TestService extends BaseService {}
       rpcServiceRegistry.add('test', TestService);
@@ -25,7 +25,7 @@ describe('RPCServiceRegistry', () => {
 
   describe('Exist', () => {
     it(`should assert that a given method exists on a registered service`, () => {
-      let container = new Container();
+      let container = new AppContainer();
       let rpcServiceRegistry = container.getSingleton(RPCServiceRegistry);
       class TestService extends BaseService {
         test() {
@@ -37,7 +37,7 @@ describe('RPCServiceRegistry', () => {
     });
 
     it(`should assert that a given method does not exists on a registered service`, () => {
-      let container = new Container();
+      let container = new AppContainer();
       let rpcServiceRegistry = container.getSingleton(RPCServiceRegistry);
       class TestService extends BaseService {
         test() {
@@ -51,7 +51,7 @@ describe('RPCServiceRegistry', () => {
 
   describe('Route handling', () => {
     it('should forward to RPCDispatcher', () => {
-      let container = new Container();
+      let container = new AppContainer();
       container.overrideService(
         RPCDispatcher,
         class MockRPCDispatcher extends RPCDispatcher {

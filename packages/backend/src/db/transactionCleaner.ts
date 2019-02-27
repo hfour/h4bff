@@ -1,4 +1,4 @@
-import { AppSingleton, Container, ServiceContextEvents } from '@h4bff/core';
+import { AppSingleton, AppContainer, ServiceContextEvents } from '@h4bff/core';
 import { TransactionProvider } from './transactionProvider';
 
 /**
@@ -6,7 +6,7 @@ import { TransactionProvider } from './transactionProvider';
  * disposed properly when the corresponding {@link ServiceContext} is disposed.
  */
 export class TransactionCleaner extends AppSingleton {
-  constructor(container: Container) {
+  constructor(container: AppContainer) {
     super(container);
     container.getSingleton(ServiceContextEvents).onContextDisposed((sc, error) => {
       return sc.getService(TransactionProvider).onDispose(error);

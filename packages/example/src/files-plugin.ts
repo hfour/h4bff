@@ -3,7 +3,7 @@ import * as Promise from 'bluebird';
 import { Table } from 'anydb-sql-2';
 import { v4 as uuid } from 'uuid';
 import { Database, TransactionProvider, RPCServiceRegistry } from '@h4bff/backend';
-import { BaseService, Container, AppSingleton } from '@h4bff/core';
+import { BaseService, AppContainer, AppSingleton } from '@h4bff/core';
 import { AppRouter } from './router';
 
 interface File {
@@ -23,7 +23,7 @@ export class FilesStorage extends AppSingleton {
     },
   }) as Table<'files', File>;
 
-  constructor(container: Container) {
+  constructor(container: AppContainer) {
     super(container);
   }
 }
@@ -32,7 +32,7 @@ export class UserService extends BaseService {}
 
 export class FilePermissions extends AppSingleton {
   private allowances: Array<(user: UserService) => Promise<boolean>> = [];
-  constructor(container: Container) {
+  constructor(container: AppContainer) {
     super(container);
   }
 
@@ -45,7 +45,7 @@ export class FilePermissions extends AppSingleton {
   }
 }
 
-export let FilesRouter = (container: Container) => {
+export let FilesRouter = (container: AppContainer) => {
   let router = container.getSingleton(AppRouter);
 
   router.get('/files/:fileId', (req, res) => {
@@ -83,7 +83,7 @@ export class Files extends BaseService {
   }
 }
 
-export let FilesPlugin = (container: Container) => {
+export let FilesPlugin = (container: AppContainer) => {
   container.load(FilesRouter); // Routes
 
   // RPC

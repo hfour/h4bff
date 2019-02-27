@@ -1,5 +1,5 @@
 import * as Promise from 'bluebird';
-import { Container, BaseService, ServiceContextEvents } from '@h4bff/core';
+import { AppContainer, BaseService, ServiceContextEvents } from '@h4bff/core';
 import { Request, Response } from 'express';
 import { RequestInfo } from '../request';
 import { RPCDispatcher } from './dispatcher';
@@ -23,7 +23,7 @@ describe('RPCDispatcher', () => {
 
   describe('handleRequest', () => {
     it(`should respond with error if method is not found in the request qyery params`, () => {
-      let container = new Container();
+      let container = new AppContainer();
       // prepare request / response
       container.overrideService(
         RequestInfo,
@@ -52,7 +52,7 @@ describe('RPCDispatcher', () => {
     });
 
     it(`should respond with error if body params are not found in the request`, () => {
-      let container = new Container();
+      let container = new AppContainer();
       // prepare request / response
       container.overrideService(
         RequestInfo,
@@ -81,7 +81,7 @@ describe('RPCDispatcher', () => {
     });
 
     it(`should respond with error if method does't exist on the service`, () => {
-      let container = new Container();
+      let container = new AppContainer();
       // prepare request / response
       container.overrideService(
         RequestInfo,
@@ -121,7 +121,7 @@ describe('RPCDispatcher', () => {
 
   describe('RPC call execution', () => {
     it('should respond with success and dispose context in normal circumstances', () => {
-      let container = new Container();
+      let container = new AppContainer();
       // prepare request / response
       container.overrideService(
         RequestInfo,
@@ -161,7 +161,7 @@ describe('RPCDispatcher', () => {
     });
 
     it('should respond with custom success response and dispose context for specific results', () => {
-      let container = new Container();
+      let container = new AppContainer();
       // prepare request / response
       container.overrideService(
         RequestInfo,
@@ -198,7 +198,7 @@ describe('RPCDispatcher', () => {
     });
 
     it('should respond with error response when the RPC call fails', () => {
-      let container = new Container();
+      let container = new AppContainer();
       // prepare request / response
       container.overrideService(
         RequestInfo,
@@ -242,7 +242,7 @@ describe('RPCDispatcher', () => {
     });
 
     it('should respond with validation error response when the RPC call fails with validation data', () => {
-      let container = new Container();
+      let container = new AppContainer();
       // prepare request / response
       container.overrideService(
         RequestInfo,
@@ -286,7 +286,7 @@ describe('RPCDispatcher', () => {
     });
 
     it('should respond with 500 error response when the RPC call fails with unknown error', () => {
-      let container = new Container();
+      let container = new AppContainer();
       // prepare request / response
       container.overrideService(
         RequestInfo,

@@ -1,11 +1,11 @@
 import * as Promise from 'bluebird';
-import { Container } from '@h4bff/core';
+import { AppContainer } from '@h4bff/core';
 import { RPCDispatcher } from './dispatcher';
 import { RPCMiddlewareContainer } from './middleware';
 
 describe('RPCMiddlewareContainer', () => {
   it(`should execute RPC call normally when proper middleware added`, () => {
-    let container = new Container();
+    let container = new AppContainer();
     container.overrideService(
       RPCDispatcher,
       class MockRPCDispatcher extends RPCDispatcher {
@@ -30,7 +30,7 @@ describe('RPCMiddlewareContainer', () => {
   });
 
   it(`should execute RPC call normally when multiple middlewares added`, () => {
-    let container = new Container();
+    let container = new AppContainer();
     container.overrideService(
       RPCDispatcher,
       class MockRPCDispatcher extends RPCDispatcher {
@@ -58,7 +58,7 @@ describe('RPCMiddlewareContainer', () => {
   });
 
   it(`should execute RPC call normally when proper 'Around' middleware added`, () => {
-    let container = new Container();
+    let container = new AppContainer();
     container.overrideService(
       RPCDispatcher,
       class MockRPCDispatcher extends RPCDispatcher {
@@ -85,7 +85,7 @@ describe('RPCMiddlewareContainer', () => {
   });
 
   it(`should not return RPC result if middleware doesn't continue the call chain by returning next`, () => {
-    let container = new Container();
+    let container = new AppContainer();
     container.overrideService(
       RPCDispatcher,
       class MockRPCDispatcher extends RPCDispatcher {
@@ -110,7 +110,7 @@ describe('RPCMiddlewareContainer', () => {
   });
 
   it(`should reject the promise if error occurs in middleware`, () => {
-    let container = new Container();
+    let container = new AppContainer();
     container.overrideService(
       RPCDispatcher,
       class MockRPCDispatcher extends RPCDispatcher {

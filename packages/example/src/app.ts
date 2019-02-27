@@ -1,9 +1,9 @@
-import { Container } from '@h4bff/core';
+import { AppContainer } from '@h4bff/core';
 import { FilesPlugin } from './files-plugin';
 import { NestedAppsPlugin } from './nestedApps-plugin';
 import { AppRouter } from './router';
 
-export default class MyApp extends Container {
+export default class MyApp extends AppContainer {
   loadPlugins() {
     this.load(FilesPlugin);
     this.load(NestedAppsPlugin);

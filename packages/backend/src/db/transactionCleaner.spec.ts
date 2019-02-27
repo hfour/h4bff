@@ -1,11 +1,11 @@
-import { Container, ServiceContextEvents } from '@h4bff/core';
+import { AppContainer, ServiceContextEvents } from '@h4bff/core';
 import { TransactionCleaner } from './transactionCleaner';
 import { TransactionProvider } from './transactionProvider';
 
 describe('TransactionCleaner', () => {
   it(`should register 'dispose' callback on context disposal`, () => {
     // prepare  and mock ServiceContextEvents
-    let container = new Container();
+    let container = new AppContainer();
     let tcOnDisposeCallback;
     container.overrideSingleton(
       ServiceContextEvents,
@@ -22,7 +22,7 @@ describe('TransactionCleaner', () => {
 
   it(`should call 'onDispose' on the TransactionProvider when context is disposed`, () => {
     // prepare  and mock ServiceContextEvents and TransactionProvider
-    let container = new Container();
+    let container = new AppContainer();
     container.overrideSingleton(
       ServiceContextEvents,
       class MockServiceContextEvents extends ServiceContextEvents {

@@ -1,4 +1,4 @@
-import { Container, AppSingleton, BaseService, ServiceContext, ServiceContextEvents } from './';
+import { AppContainer, AppSingleton, BaseService, ServiceContext, ServiceContextEvents } from './';
 
 /**
  * Returns a random 8 char hex string.
@@ -12,7 +12,7 @@ function randomId() {
 }
 
 class Database extends AppSingleton {
-  constructor(container: Container, public id = randomId()) {
+  constructor(container: AppContainer, public id = randomId()) {
     super(container);
   }
 }
@@ -25,14 +25,14 @@ class UserProvider extends BaseService {
 
 describe('Instantiation', () => {
   it('#getSingleton should instantiate a singleton class once', () => {
-    let container = new Container();
+    let container = new AppContainer();
     let db1 = container.getSingleton(Database);
     let db2 = container.getSingleton(Database);
     expect(db1.id).toEqual(db2.id);
   });
 
   it('#getSingleton should instantiate a singleton factory once', () => {
-    let container = new Container();
+    let container = new AppContainer();
     let factoryFunc = () => container.getSingleton(Database);
     let db1 = container.getSingleton(factoryFunc);
     let db2 = container.getSingleton(factoryFunc);
@@ -40,11 +40,11 @@ describe('Instantiation', () => {
   });
 
   it('#load should force a singleton to instantitate', () => {
-    let container = new Container();
+    let container = new AppContainer();
     let dbDidInit: boolean = false;
     container.load(
       class MyDB extends Database {
-        constructor(container: Container) {
+        constructor(container: AppContainer) {
           super(container);
           dbDidInit = true;
         }
@@ -56,7 +56,7 @@ describe('Instantiation', () => {
 
 describe('Overrides', () => {
   it('#getSingleton should use and respect singleton overrides', () => {
-    let container = new Container();
+    let container = new AppContainer();
     container.overrideSingleton(
       Database,
       class MockDb extends Database {
@@ -68,7 +68,7 @@ describe('Overrides', () => {
   });
 
   it('#getService should use and respect service overrides', () => {
-    let container = new Container();
+    let container = new AppContainer();
     container.overrideService(
       UserProvider,
       class MockUserProvider extends UserProvider {
@@ -82,16 +82,16 @@ describe('Overrides', () => {
   });
 });
 
-describe('Container nesting', () => {
+describe('AppContainer nesting', () => {
   it('#getSingleton should find instantiated singletons in a parent container', () => {
-    let container = new Container();
+    let container = new AppContainer();
     let dbId = container.getSingleton(Database).id;
     let childApp = container.createChildContainer();
     expect(childApp.getSingleton(Database).id).toEqual(dbId);
   });
 
   it('#getSingleton should instantiate non-existing singletons in the child container, not parent', () => {
-    let parentApp = new Container();
+    let parentApp = new AppContainer();
     let childApp = parentApp.createChildContainer();
     let childDbId = childApp.getSingleton(Database).id;
     expect(parentApp.getSingleton(Database).id !== childDbId);
@@ -100,7 +100,7 @@ describe('Container nesting', () => {
 
 describe('Context disposal', () => {
   it('disposal callbacks should be called when the service context is destoyed', () => {
-    let container = new Container();
+    let container = new AppContainer();
     let ctxEvents = container.getSingleton(ServiceContextEvents);
     let onDisposeFn = jest.fn((_ctx: ServiceContext, _e: Error | null) => Promise.resolve());
     ctxEvents.onContextDisposed(onDisposeFn);
@@ -112,7 +112,7 @@ describe('Context disposal', () => {
   });
 
   it('disposal callbacks should be called even on thrown exception', () => {
-    let container = new Container();
+    let container = new AppContainer();
     let ctxEvents = container.getSingleton(ServiceContextEvents);
     let onDisposeFn = jest.fn((_ctx: ServiceContext, _e: Error | null) => Promise.resolve());
     ctxEvents.onContextDisposed(onDisposeFn);
@@ -129,7 +129,7 @@ describe('Context disposal', () => {
   });
 
   it('disposal callbacks should be called on rejected promises', () => {
-    let container = new Container();
+    let container = new AppContainer();
     let ctxEvents = container.getSingleton(ServiceContextEvents);
     let onDisposeFn = jest.fn((_ctx: ServiceContext, _e: Error | null) => Promise.resolve());
     ctxEvents.onContextDisposed(onDisposeFn);

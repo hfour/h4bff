@@ -1,4 +1,4 @@
-import { Container, AppSingleton, BaseService } from '@h4bff/core';
+import { AppContainer, AppSingleton, BaseService } from '@h4bff/core';
 import { RPCServiceRegistry } from '@h4bff/backend';
 import { AppRouter } from './router';
 
@@ -14,7 +14,7 @@ export class TestService extends BaseService {
   }
 }
 
-export let NestedAppsPlugin = (container: Container) => {
+export let NestedAppsPlugin = (container: AppContainer) => {
   // Root
   const ctxRouter = container.getSingleton(AppRouter);
   ctxRouter.get('/app/root', (_req, res) => {

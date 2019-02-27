@@ -1,4 +1,4 @@
-import { Container } from '@h4bff/core';
+import { AppContainer } from '@h4bff/core';
 import { TransactionProvider } from './transactionProvider';
 import { Database } from './database';
 import { AnydbSql, Transaction, AnyDBPool } from 'anydb-sql-2';
@@ -6,7 +6,7 @@ import { AnydbSql, Transaction, AnyDBPool } from 'anydb-sql-2';
 describe('TransactionProvider', () => {
   describe('Transaction and connection getters', () => {
     it(`should begin new transaction if there is no transaction created yet`, () => {
-      let container = new Container();
+      let container = new AppContainer();
       process.env.POSTGRES_URL = 'postgres://user:password@localhost:5432/database';
 
       // prepare Database mock
@@ -29,7 +29,7 @@ describe('TransactionProvider', () => {
     });
 
     it(`should return existing transaction as connection`, () => {
-      let container = new Container();
+      let container = new AppContainer();
       process.env.POSTGRES_URL = 'postgres://user:password@localhost:5432/database';
 
       // prepare Database mock
@@ -53,7 +53,7 @@ describe('TransactionProvider', () => {
     });
 
     it(`should return the pool as connection if there is not transaction created yet`, () => {
-      let container = new Container();
+      let container = new AppContainer();
       process.env.POSTGRES_URL = 'postgres://user:password@localhost:5432/database';
 
       // prepare Database mock
@@ -79,7 +79,7 @@ describe('TransactionProvider', () => {
 
   describe('onDispose', () => {
     it('should do nothing if there is no transaction yet', () => {
-      let container = new Container();
+      let container = new AppContainer();
       process.env.POSTGRES_URL = 'postgres://user:password@localhost:5432/database';
 
       // prepare Database mock
@@ -107,7 +107,7 @@ describe('TransactionProvider', () => {
     });
 
     it('should commit transaction if no error is present', () => {
-      let container = new Container();
+      let container = new AppContainer();
       process.env.POSTGRES_URL = 'postgres://user:password@localhost:5432/database';
 
       // prepare Database mock
@@ -136,7 +136,7 @@ describe('TransactionProvider', () => {
     });
 
     it('should rollback transaction if no error is present', () => {
-      let container = new Container();
+      let container = new AppContainer();
       process.env.POSTGRES_URL = 'postgres://user:password@localhost:5432/database';
 
       // prepare Database mock

@@ -1,10 +1,10 @@
-import { Container } from '@h4bff/core';
+import { AppContainer } from '@h4bff/core';
 import { RequestInfo } from './requestInfo';
 import { Request, Response } from 'express';
 
 describe('RequestInfo', () => {
   it('#_setRequestResponse should set request and response', () => {
-    let sCtx = new Container().createServiceContext();
+    let sCtx = new AppContainer().createServiceContext();
     let requestInfo = new RequestInfo(sCtx);
     let request = {} as Request;
     let response = {} as Response;

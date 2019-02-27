@@ -4,25 +4,25 @@ export type ConstructorOrFactory<U, T> = ClassFactory<U, T> | ClassConstructor<U
 
 export type PublicInterface<T> = { [K in keyof T]: T[K] };
 
-export class Container {
+/**
+ * Represents an H4BFF application container.
+ *
+ * Containers are responsible for:
+ * - initializing and storing singletons;
+ * - creating and executing functions within service contexts;
+ * - managing singleton overrides (useful for tests);
+ *
+ * Containers can have parents. When initializing singletons,
+ * we check the parent, grand-parent container etc. to see if the singleton
+ * is already initialized, so we can return that instance. If a parent
+ * is not found, the singleton is initialized in the child container, *not*
+ * in a parent container.
+ */
+export class AppContainer {
   singletonLocator: Locator<this>;
-  parentContainer: Container | null;
+  parentContainer: AppContainer | null;
 
-  /**
-   * Represents an H4BFF application container.
-   *
-   * Containers are responsible for:
-   * - initializing and storing singletons;
-   * - creating and executing functions within service contexts;
-   * - managing singleton overrides (useful for tests);
-   *
-   * Containers can have parents. When initializing singletons,
-   * we check the parent, grand-parent container etc. to see if the singleton
-   * is already initialized, so we can return that instance. If a parent
-   * is not found, the singleton is initialized in the child container, *not*
-   * in a parent container.
-   */
-  constructor(opts: { parentContainer?: Container } = {}) {
+  constructor(opts: { parentContainer?: AppContainer } = {}) {
     this.parentContainer = opts.parentContainer ? opts.parentContainer : null;
     this.singletonLocator = new Locator(this, s => '__appSingleton' in s);
   }
@@ -36,7 +36,7 @@ export class Container {
    * Walks through parents and returns an existing singleton instance. Call
    * this method ONLY if you KNOW that the instance exists.
    */
-  private getExistingSingleton<T>(Klass: ConstructorOrFactory<Container, T>): T {
+  private getExistingSingleton<T>(Klass: ConstructorOrFactory<AppContainer, T>): T {
     if (this.hasOwnSingleton(Klass)) {
       return this.singletonLocator.get(Klass);
     } else {
@@ -50,9 +50,9 @@ export class Container {
   }
 
   /**
-   * Checks if this Container instance has the given singleton initialized in itself.
+   * Checks if this AppContainer instance has the given singleton initialized in itself.
    */
-  private hasOwnSingleton<T>(Klass: ConstructorOrFactory<Container, T>) {
+  private hasOwnSingleton<T>(Klass: ConstructorOrFactory<AppContainer, T>) {
     return this.singletonLocator.has(Klass);
   }
 
@@ -60,7 +60,7 @@ export class Container {
    * Checks if this or any of the parent apps has an instance of the
    * given singleton initialized.
    */
-  private hasSingleton<T>(Klass: ConstructorOrFactory<Container, T>): boolean {
+  private hasSingleton<T>(Klass: ConstructorOrFactory<AppContainer, T>): boolean {
     if (this.hasOwnSingleton(Klass)) {
       return true;
     } else {
@@ -76,7 +76,7 @@ export class Container {
    * Returns an instance of the singleton, if it exists somewhere here or
    * in some of the parent containers. If it doesn't it's created in this container.
    */
-  getSingleton<T>(Klass: ConstructorOrFactory<Container, T>): T {
+  getSingleton<T>(Klass: ConstructorOrFactory<AppContainer, T>): T {
     if (this.hasSingleton(Klass)) {
       return this.getExistingSingleton(Klass);
     }
@@ -90,8 +90,8 @@ export class Container {
    * the override must match that of the original class / fn.
    */
   overrideSingleton<T>(
-    Klass: ConstructorOrFactory<Container, T>,
-    Klass2: ConstructorOrFactory<Container, PublicInterface<T>>,
+    Klass: ConstructorOrFactory<AppContainer, T>,
+    Klass2: ConstructorOrFactory<AppContainer, PublicInterface<T>>,
   ) {
     return this.singletonLocator.override(Klass, Klass2);
   }
@@ -117,7 +117,7 @@ export class Container {
    * the parent container, to prevent it from being initalized
    * in a child later on.
    */
-  load<T>(Klass: ConstructorOrFactory<Container, T>): void {
+  load<T>(Klass: ConstructorOrFactory<AppContainer, T>): void {
     this.getSingleton(Klass); // force initialization;
     return;
   }
@@ -173,30 +173,47 @@ export class Container {
    * multiple times.
    */
   createChildContainer() {
-    return new Container({ parentContainer: this });
+    return new AppContainer({ parentContainer: this });
   }
 }
 
+/**
+ * Derive from this class to create application singletons.
+ *
+ * Singletons are initialized only once per application container.
+ * However, you can initialize different singletons of the same type in
+ * child application containers.
+ */
 export class AppSingleton {
   protected static __appSingleton = true;
 
-  /**
-   * Derive from this class to create application singletons.
-   *
-   * Singletons are initialized only once per application container.
-   * However, you can initialize different singletons of the same type in
-   * child application containers.
-   */
-  constructor(protected container: Container) {}
+  constructor(protected container: AppContainer) {}
 
   /**
    * A proxy for `container.getSingleton(Klass)`.
    */
-  getSingleton<T>(Klass: ConstructorOrFactory<Container, T>): T {
+  getSingleton<T>(Klass: ConstructorOrFactory<AppContainer, T>): T {
     return this.container.getSingleton(Klass);
   }
 }
 
+/**
+ * Represents a transient context, that's usually created when an
+ * HTTP request comes, a new page is created or on similar events
+ * on which you want to create and later destroy some services.
+ *
+ * For example, if you want all services to exectute their queries
+ * within a single transaction, you'd create a service context and
+ * initialize a transaction inside it.
+ *
+ * Another example is handling access to the request that triggered
+ * the creation of the service context. You'll want to initialize
+ * a Request service on the service context which will get passed
+ * around.
+ *
+ * See `ServiceContextEvents` for more info on doing things in
+ * response to the creation / destruction of service contexes.
+ */
 export class ServiceContext {
   private _locator: Locator<ServiceContext> | null = null;
 
@@ -207,24 +224,7 @@ export class ServiceContext {
     return this._locator;
   }
 
-  /**
-   * Represents a transient context, that's usually created when an
-   * HTTP request comes, a new page is created or on similar events
-   * on which you want to create and later destroy some services.
-   *
-   * For example, if you want all services to exectute their queries
-   * within a single transaction, you'd create a service context and
-   * initialize a transaction inside it.
-   *
-   * Another example is handling access to the request that triggered
-   * the creation of the service context. You'll want to initialize
-   * a Request service on the service context which will get passed
-   * around.
-   *
-   * See `ServiceContextEvents` for more info on doing things in
-   * response to the creation / destruction of service contexes.
-   */
-  constructor(private container: Container) {}
+  constructor(private container: AppContainer) {}
 
   /**
    * Initializes the class within the service context (itself.)
@@ -238,7 +238,7 @@ export class ServiceContext {
   /**
    * A proxy for `container.getSingleton(Klass)`.
    */
-  getSingleton<T extends AppSingleton>(SingletonClass: ConstructorOrFactory<Container, T>): T {
+  getSingleton<T extends AppSingleton>(SingletonClass: ConstructorOrFactory<AppContainer, T>): T {
     return this.container.getSingleton(SingletonClass);
   }
 }
@@ -278,6 +278,24 @@ export class ServiceContextEvents extends AppSingleton {
   };
 }
 
+/**
+ * Derive from this class to create H4BFF services.
+ *
+ * Services are classes that are instantiated and operate
+ * within an "isolated" service context, and are instantiated
+ * separately within each context, as opposed to singletons
+ * which have only one instance within an AppContainer.
+ *
+ * Examples of classes that should derive from `BaseService`:
+ * * Request: holds a reference to the HTTP request that triggered
+ *   the service context creation
+ * * Transaction: a single transaction that's shared between
+ *   services that operate througout the duration of a single
+ *   request.
+ * * UserInfo: information about the current user (known through
+ *   req.session.id)
+ * etc.
+ */
 export class BaseService {
   protected static __baseService = true;
   static _factory: any;
@@ -286,24 +304,6 @@ export class BaseService {
     return this._factory;
   }
 
-  /**
-   * Derive from this class to create H4BFF services.
-   *
-   * Services are classes that are instantiated and operate
-   * within an "isolated" service context, and are instantiated
-   * separately within each context, as opposed to singletons
-   * which have only one instance within an Container.
-   *
-   * Examples of classes that should derive from `BaseService`:
-   * * Request: holds a reference to the HTTP request that triggered
-   *   the service context creation
-   * * Transaction: a single transaction that's shared between
-   *   services that operate througout the duration of a single
-   *   request.
-   * * UserInfo: information about the current user (known through
-   *   req.session.id)
-   * etc.
-   */
   constructor(protected context: ServiceContext) {}
 
   /**
@@ -316,23 +316,23 @@ export class BaseService {
   /**
    * Proxy for `container.getSingleton(Klass)`.
    */
-  getSingleton<T extends AppSingleton>(SingletonClass: { new (sc: Container): T }): T {
+  getSingleton<T extends AppSingleton>(SingletonClass: { new (sc: AppContainer): T }): T {
     return this.context.getSingleton(SingletonClass);
   }
 }
 
+/**
+ * Mostly for internal use.
+ *
+ * Used for locating instances of classes / factory functions,
+ * and for instantiating them if they don't exist.
+ *
+ * Provides overriding functionality (used for mocks in tests.)
+ */
 export class Locator<Context> {
   private instances: Map<Function, any> = new Map();
   private overrides: Map<Function, Function> = new Map();
 
-  /**
-   * Mostly for internal use.
-   *
-   * Used for locating instances of classes / factory functions,
-   * and for instantiating them if they don't exist.
-   *
-   * Provides overriding functionality (used for mocks in tests.)
-   */
   constructor(
     private locatorCtx: Context,
     private isClass: (v: ConstructorOrFactory<Context, any>) => boolean,

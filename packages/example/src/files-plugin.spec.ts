@@ -1,6 +1,6 @@
 import * as fp from './files-plugin';
 import { TransactionProvider } from '@h4bff/backend';
-import { Container, BaseService } from '@h4bff/core';
+import { AppContainer, BaseService } from '@h4bff/core';
 
 import * as Bromise from 'bluebird';
 import { UserService } from './files-plugin';
@@ -28,7 +28,7 @@ class TxMock extends BaseService {
 
 describe('fp', () => {
   it('works', () => {
-    let container = new Container();
+    let container = new AppContainer();
 
     // because instantiating Database will throw if this is undefined
     process.env.POSTGRES_URL = 'postgres://user:password@localhost:5432/database';

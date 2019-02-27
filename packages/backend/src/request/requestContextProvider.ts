@@ -1,5 +1,5 @@
 import * as Express from 'express';
-import { AppSingleton, ServiceContext, Container, ServiceContextEvents } from '@h4bff/core';
+import { AppSingleton, ServiceContext, AppContainer, ServiceContextEvents } from '@h4bff/core';
 import { RequestInfo } from './';
 
 /**
@@ -8,7 +8,7 @@ import { RequestInfo } from './';
 export class RequestContextProvider extends AppSingleton {
   private contexts = new WeakMap<Express.Request, ServiceContext>();
 
-  constructor(container: Container) {
+  constructor(container: AppContainer) {
     super(container);
     container.getSingleton(ServiceContextEvents).onContextDisposed((sc, _error) => {
       return this.onDispose(sc);
