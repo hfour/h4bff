@@ -33,4 +33,19 @@ export class RequestContextProvider extends AppSingleton {
   install(path: string, app: Express.Application) {
     app.use(path, this.router);
   }
+
+  /**
+   * Creates a service context for the provided req / res pair and
+   * automatically disposes of it when the promise finishes or throws.
+   */
+  withRequestContext<T>(
+    req: Express.Request,
+    res: Express.Response,
+    f: (createdContext: ServiceContext) => PromiseLike<T>,
+  ): PromiseLike<T> {
+    return this.app.withServiceContext(ctx => {
+      ctx.getService(RequestInfo)._setRequestResponse(req, res);
+      return f(ctx);
+    });
+  }
 }
