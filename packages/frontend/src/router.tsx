@@ -18,6 +18,7 @@ export interface HistoryContextProps {
 
 export type Params = { [key: string]: string } | { queryParams?: { [key: string]: string } };
 export type RouteParameters<T extends Params = {}> = T;
+export type RP = RouteParameters<any>;
 export type UIElement = ((rp: RouteParameters) => JSX.Element) | null;
 
 interface H4Route {
@@ -119,12 +120,25 @@ export class Router {
   };
 }
 
+/**
+ * Wrapper for the topmost router. It is singleton, which makes it accessible from throught the app, and
+ * is rendered within a history context provider.
+ */
 export class MainRouter extends AppSingleton {
-  @observable routers: Router[] = [];
+  @observable router: Router;
 
-  addRouter(router: Router) {
-    this.routers.push(router);
+  constructor(app: App) {
+    super(app);
+    this.router = new Router(app);
   }
+
+  addRoute = (path: string, component: (rp: RouteParameters) => JSX.Element) => {
+    return this.router.addRoute(path, component);
+  };
+
+  addRedirect = (newRedirect: H4Redirect) => {
+    return this.router.addRedirect(newRedirect);
+  };
 
   RenderInstance = observer(() => {
     const routeProvider = this.getSingleton(RouteProvider);
@@ -132,9 +146,7 @@ export class MainRouter extends AppSingleton {
       <HistoryContext.Provider
         value={{ history: routeProvider.browserHistory, location: routeProvider.location.pathname }}
       >
-        {this.routers.map(router => (
-          <router.RenderInstance />
-        ))}
+        <this.router.RenderInstance />
       </HistoryContext.Provider>
     );
   });

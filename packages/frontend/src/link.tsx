@@ -62,7 +62,12 @@ export class Link extends React.Component<LinkProps, {}> {
           const escapedPath = path && path.replace(/([.+*?=^!:${}()[\]|/\\])/g, '\\$1');
           const isActive = escapedPath ? matchPath(currentLocation, escapedPath) : false;
 
-          const className = classNames(this.props.className, { isActive: activeClassName });
+          let className;
+          if (isActive) {
+            className = classNames(this.props.className, activeClassName);
+          } else {
+            className = this.props.className;
+          }
           const style = isActive ? { ...this.props.style, ...this.props.activeStyle } : this.props.style;
 
           const history = context.history;
