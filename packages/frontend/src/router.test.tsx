@@ -4,43 +4,43 @@ import * as React from 'react';
 import { RouteProvider } from './routeProvider';
 import { Location } from 'history';
 import * as TestRenderer from 'react-test-renderer';
+import * as url from 'url';
 
 const lvlOnePage = jest.fn(() => <div>Example page</div>);
 const lvlTwoPage = jest.fn(() => <div>Sample page</div>);
 
 describe('router', () => {
+  let app: App;
+  const visitUrl = (path: string) => {
+    const router = app.getSingleton(MainRouter);
+    TestRenderer.create(<router.RenderInstance />);
+
+    const routeProvider = app.getSingleton(RouteProvider);
+    const parsedUrl = url.parse(path);
+
+    routeProvider.location = { pathname: parsedUrl.pathname, search: parsedUrl.search } as Location;
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
+    app = new App();
   });
-
-  //MATCHES
 
   describe('matching routes', () => {
     it('should match a basic route', () => {
-      let app = new App();
-
       let router = app.getSingleton(MainRouter);
       router.addRoute('/example', lvlOnePage);
 
-      TestRenderer.create(<router.RenderInstance />);
-
-      let routeProvider = app.getSingleton(RouteProvider);
-      routeProvider.location = { pathname: '/example' } as Location;
-
+      visitUrl('/example');
       expect(lvlOnePage).toBeCalled();
     });
 
     it('should match exact route', () => {
-      let app = new App();
-
       let router = app.getSingleton(MainRouter);
       router.addRoute('/example', lvlOnePage);
       router.addRoute('/example/route', lvlTwoPage);
 
-      TestRenderer.create(<router.RenderInstance />);
-
-      let routeProvider = app.getSingleton(RouteProvider);
-      routeProvider.location = { pathname: '/example/route' } as Location;
+      visitUrl('/example/route');
 
       //checks that the component at the partially matched routes is not rendered.
       expect(lvlOnePage).toBeCalledTimes(0);
@@ -48,45 +48,29 @@ describe('router', () => {
     });
 
     it('should match only the lastly added route if they have the same path', () => {
-      let app = new App();
-
       let router = app.getSingleton(MainRouter);
       router.addRoute('/example', lvlOnePage);
       router.addRoute('/example', lvlTwoPage);
 
-      TestRenderer.create(<router.RenderInstance />);
-
-      let routeProvider = app.getSingleton(RouteProvider);
-      routeProvider.location = { pathname: '/example' } as Location;
+      visitUrl('/example');
 
       expect(lvlOnePage).toBeCalledTimes(0);
       expect(lvlTwoPage).toBeCalled();
     });
 
     it('should match route ending with wildcard, if path is exact with the route', () => {
-      let app = new App();
-
       let router = app.getSingleton(MainRouter);
       router.addRoute('/example/*', lvlOnePage);
 
-      TestRenderer.create(<router.RenderInstance />);
-
-      let routeProvider = app.getSingleton(RouteProvider);
-      routeProvider.location = { pathname: '/example' } as Location;
-
+      visitUrl('/example');
       expect(lvlOnePage).toBeCalled();
     });
 
     it('should match route ending with wildcard, if path is larger than the route', () => {
-      let app = new App();
-
       let router = app.getSingleton(MainRouter);
       router.addRoute('/example/*', lvlOnePage);
 
-      TestRenderer.create(<router.RenderInstance />);
-
-      let routeProvider = app.getSingleton(RouteProvider);
-      routeProvider.location = { pathname: '/example/route' } as Location;
+      visitUrl('/example/route');
 
       expect(lvlOnePage).toBeCalled();
     });
@@ -94,15 +78,10 @@ describe('router', () => {
 
   describe('handling params', () => {
     it('should extract proper route params', () => {
-      let app = new App();
-
       let router = app.getSingleton(MainRouter);
       router.addRoute('/example/:paramone/:paramtwo', lvlOnePage);
 
-      TestRenderer.create(<router.RenderInstance />);
-
-      let routeProvider = app.getSingleton(RouteProvider);
-      routeProvider.location = { pathname: '/example/1/2' } as Location;
+      visitUrl('/example/1/2');
 
       let params = lvlOnePage.mock.calls[0];
       expect(params[0].paramone).toEqual('1');
@@ -110,15 +89,10 @@ describe('router', () => {
     });
 
     it('should extract proper query params', () => {
-      let app = new App();
-
       let router = app.getSingleton(MainRouter);
       router.addRoute('/example', lvlOnePage);
 
-      TestRenderer.create(<router.RenderInstance />);
-
-      let routeProvider = app.getSingleton(RouteProvider);
-      routeProvider.location = { pathname: '/example', search: 'first=1&second=2' } as Location;
+      visitUrl('/example?first=1&second=2');
 
       let params = lvlOnePage.mock.calls[0];
       expect(params[0].queryParams.first).toEqual('1');
@@ -126,15 +100,10 @@ describe('router', () => {
     });
 
     it('should extract both query and route params', () => {
-      let app = new App();
-
       let router = app.getSingleton(MainRouter);
       router.addRoute('/example/:paramone', lvlOnePage);
 
-      TestRenderer.create(<router.RenderInstance />);
-
-      let routeProvider = app.getSingleton(RouteProvider);
-      routeProvider.location = { pathname: '/example/p1', search: 'first=1&second=2' } as Location;
+      visitUrl('/example/p1?first=1&second=2');
 
       let params = lvlOnePage.mock.calls[0];
       expect(params[0].paramone).toEqual('p1');
@@ -143,47 +112,36 @@ describe('router', () => {
     });
   });
 
-  //REDIRECTS
-
   describe('handling redirects', () => {
     it('should perform a simple redirect', () => {
-      let app = new App();
-
       let router = app.getSingleton(MainRouter);
       router.addRedirect({ from: '/', to: '/example' });
 
-      let routeProvider = app.getSingleton(RouteProvider);
-      routeProvider.location = { pathname: '/' } as Location;
+      visitUrl('/');
 
-      TestRenderer.create(<router.RenderInstance />);
+      let routeProvider = app.getSingleton(RouteProvider);
       expect(routeProvider.location.pathname).toEqual('/example');
     });
 
     it('should perform a chained (double) redirect', () => {
-      let app = new App();
-
       let router = app.getSingleton(MainRouter);
       router.addRedirect({ from: '/', to: '/example' });
       router.addRedirect({ from: '/example', to: '/example/route' });
 
-      let routeProvider = app.getSingleton(RouteProvider);
-      routeProvider.location = { pathname: '/' } as Location;
+      visitUrl('/');
 
-      TestRenderer.create(<router.RenderInstance />);
+      let routeProvider = app.getSingleton(RouteProvider);
       expect(routeProvider.location.pathname).toEqual('/example/route');
     });
 
     it('should redirect to the lastly added route if both redirects have the same "from"', () => {
-      let app = new App();
-
       let router = app.getSingleton(MainRouter);
       router.addRedirect({ from: '/', to: '/example' });
       router.addRedirect({ from: '/', to: '/route' });
 
-      let routeProvider = app.getSingleton(RouteProvider);
-      routeProvider.location = { pathname: '/' } as Location;
+      visitUrl('/');
 
-      TestRenderer.create(<router.RenderInstance />);
+      let routeProvider = app.getSingleton(RouteProvider);
       expect(routeProvider.location.pathname).toEqual('/route');
     });
   });
