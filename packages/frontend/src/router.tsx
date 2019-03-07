@@ -39,14 +39,6 @@ export interface H4Redirect {
  *
  */
 export class Router {
-  /**
-   * have this in some BC:
-   * Pros for having it nestable:
-   * - each router can/will match only one route. If we want to match several components, we have to either have several routers, or rework the matching
-   *
-   * Cons for having it nestable:
-   * - you might want to have some highly distributed component that reacts on certain route.
-   */
   @observable private currentComponentJSX: UIElement = null;
   @observable private routeParams: RouteParameters = {};
   private routes: Array<H4Route> = [];

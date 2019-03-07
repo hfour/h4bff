@@ -16,7 +16,6 @@ export interface LinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement>
   replace?: boolean;
   innerRef?: (node: HTMLAnchorElement | null) => void;
 }
-
 /**
  * Link that is aware of the history and current location.
  */
