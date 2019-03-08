@@ -6,7 +6,7 @@ import { observer } from 'mobx-react';
 import * as pathToRegexp from 'path-to-regexp';
 import * as React from 'react';
 import { History, Location } from 'history';
-import { matchPath } from './routerUtils';
+import { matchPath, validatePath } from './routerUtils';
 import * as queryString from 'query-string';
 import * as _ from 'lodash';
 
@@ -41,12 +41,14 @@ export interface Redirect {
 export class Router {
   @observable private currentComponentJSX: UIElement = null;
   @observable private routeParams: RouteParameters = {};
-  private routes: Array<Route> = [];
-  private redirects: Array<Redirect> = [];
+  @observable private routes: Array<Route> = [];
+  @observable private redirects: Array<Redirect> = [];
 
   constructor(private app: App) {
-    reaction(() => this.app.getSingleton(RouteProvider).location.pathname, () => this.setCurrentComponentOrRedirect());
-    this.setCurrentComponentOrRedirect(); //check whether you can observe this, and not call it explicitly. Maybe make it "get computed", and use it in the observer
+    reaction(
+      () => [this.routes.length, this.redirects.length, this.app.getSingleton(RouteProvider).location.pathname],
+      () => this.setCurrentComponentOrRedirect(),
+    );
   }
 
   @action
@@ -68,8 +70,11 @@ export class Router {
   RenderInstance = observer(() => {
     return this.currentComponentJSX ? this.currentComponentJSX(this.routeParams) : null;
   });
-  
+
+  @action
   addRoute = (path: string, component: (rp: RouteParameters) => JSX.Element) => {
+    validatePath(path);
+
     //pathToRegex doesnt handle '/*' for matching anything, so we have to replace it with an aptly-named param with 0 or more occurences.
     const newPath = path.replace('/*', '/:placeholderForMatchingAnyRoute*');
     const keys: pathToRegexp.Key[] = [];
@@ -89,12 +94,13 @@ export class Router {
       return params;
     };
     this.routes.unshift({ match, component });
-    this.setCurrentComponentOrRedirect();
   };
 
+  @action
   addRedirect = (newRedirect: Redirect) => {
+    validatePath(newRedirect.from);
+    validatePath(newRedirect.to);
     this.redirects.unshift(newRedirect);
-    this.setCurrentComponentOrRedirect(); //check whether you can observe this
   };
 }
 

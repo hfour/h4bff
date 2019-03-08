@@ -1,6 +1,16 @@
 import * as pathToRegexp from 'path-to-regexp';
 
-export function matchPath(currentPath: string, redirectFrom: string) {
-  const regexp = pathToRegexp(redirectFrom);
+export function matchPath(currentPath: string, regexPathToMatch: string) {
+  const regexp = pathToRegexp(regexPathToMatch);
   return regexp.exec(currentPath) != null;
+}
+
+/**
+ * Currently just validates whether the path starts with "/",
+ * and throws error if it doesnt.
+ */
+export function validatePath(path: string) {
+  if (path.substring(0, 1) !== '/') {
+    throw new Error('Path has to start with "/"');
+  }
 }
