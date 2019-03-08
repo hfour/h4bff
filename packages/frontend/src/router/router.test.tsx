@@ -112,7 +112,7 @@ describe('router', () => {
     });
   });
 
-  describe('handling redirects', () => {
+  describe.only('handling redirects', () => {
     it('should perform a simple redirect', () => {
       let router = app.getSingleton(MainRouter);
       router.addRedirect({ from: '/', to: '/example' });
@@ -143,6 +143,36 @@ describe('router', () => {
 
       let routeProvider = app.getSingleton(RouteProvider);
       expect(routeProvider.location.pathname).toEqual('/route');
+    });
+
+    it('should redirect from url with query param', () => {
+      let router = app.getSingleton(MainRouter);
+      router.addRedirect({ from: '/example', to: '/redirected' });
+
+      visitUrl('/example?query=1');
+
+      let routeProvider = app.getSingleton(RouteProvider);
+      expect(routeProvider.location.pathname).toEqual('/redirected');
+    });
+
+    it('should redirect from url with route param', () => {
+      let router = app.getSingleton(MainRouter);
+      router.addRedirect({ from: '/example/:param', to: '/redirected' });
+
+      visitUrl('/example/1');
+
+      let routeProvider = app.getSingleton(RouteProvider);
+      expect(routeProvider.location.pathname).toEqual('/redirected');
+    });
+
+    it('should NOT redirect from url if route param doesnt match', () => {
+      let router = app.getSingleton(MainRouter);
+      router.addRedirect({ from: '/example/:param', to: '/redirected' });
+
+      visitUrl('/example');
+
+      let routeProvider = app.getSingleton(RouteProvider);
+      expect(routeProvider.location.pathname).toEqual('/example');
     });
   });
 });

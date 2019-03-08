@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Location, LocationDescriptor, History, createLocation } from 'history';
 import { HistoryContext } from './router';
-import { matchPath } from './utils';
+import { matchPath } from './routerUtils';
 import classNames from 'classnames';
 import { observer } from 'mobx-react';
 import * as _ from 'lodash';

@@ -1,12 +1,12 @@
 import { App, AppSingleton } from '@h4bff/core';
-import { H4Redirect } from '.';
+import { Redirect } from '.';
 import { RouteProvider } from './routeProvider';
 import { reaction, observable, action } from 'mobx';
 import { observer } from 'mobx-react';
 import * as pathToRegexp from 'path-to-regexp';
 import * as React from 'react';
 import { History, Location } from 'history';
-import { matchPath } from './utils';
+import { matchPath } from './routerUtils';
 import * as queryString from 'query-string';
 import * as _ from 'lodash';
 
@@ -21,12 +21,12 @@ export type RouteParameters<T extends Params = {}> = T;
 export type RP = RouteParameters<any>;
 export type UIElement = ((rp: RouteParameters) => JSX.Element) | null;
 
-interface H4Route {
+interface Route {
   match: (location: Location) => RouteParameters;
   component: UIElement;
 }
 
-export interface H4Redirect {
+export interface Redirect {
   from: string;
   to: string;
 }
@@ -41,8 +41,8 @@ export interface H4Redirect {
 export class Router {
   @observable private currentComponentJSX: UIElement = null;
   @observable private routeParams: RouteParameters = {};
-  private routes: Array<H4Route> = [];
-  private redirects: Array<H4Redirect> = [];
+  private routes: Array<Route> = [];
+  private redirects: Array<Redirect> = [];
 
   constructor(private app: App) {
     reaction(() => this.app.getSingleton(RouteProvider).location.pathname, () => this.setCurrentComponentOrRedirect());
@@ -68,21 +68,7 @@ export class Router {
   RenderInstance = observer(() => {
     return this.currentComponentJSX ? this.currentComponentJSX(this.routeParams) : null;
   });
-
-  /**
-   * Open points:
-   *
-   * - validate routes when adding route/redirect (LATER)
-   * - tests
-   * - doc and example
-   */
-
-  /**
-   * Tests for:
-   * - use the tests for documentation! have a similar (if not the same) documentation as the pathToRegex library
-   * - whether the latest added route will be rendered, given there are multiple matches
-   */
-
+  
   addRoute = (path: string, component: (rp: RouteParameters) => JSX.Element) => {
     //pathToRegex doesnt handle '/*' for matching anything, so we have to replace it with an aptly-named param with 0 or more occurences.
     const newPath = path.replace('/*', '/:placeholderForMatchingAnyRoute*');
@@ -106,7 +92,7 @@ export class Router {
     this.setCurrentComponentOrRedirect();
   };
 
-  addRedirect = (newRedirect: H4Redirect) => {
+  addRedirect = (newRedirect: Redirect) => {
     this.redirects.unshift(newRedirect);
     this.setCurrentComponentOrRedirect(); //check whether you can observe this
   };
@@ -128,7 +114,7 @@ export class MainRouter extends AppSingleton {
     return this.router.addRoute(path, component);
   };
 
-  addRedirect = (newRedirect: H4Redirect) => {
+  addRedirect = (newRedirect: Redirect) => {
     return this.router.addRedirect(newRedirect);
   };
 
