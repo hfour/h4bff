@@ -5,6 +5,9 @@ import { RequestInfo } from '../request';
 import { RPCMiddlewareContainer } from './middleware';
 import { isCustomResponse } from './response';
 
+/**
+ * Responsible for finding and executing the right RPC method based on the RPC mapping found in the {@link RPCServiceRegistry}.
+ */
 export class RPCDispatcher extends BaseService {
   get res() {
     return this.getService(RequestInfo).res;
@@ -50,7 +53,7 @@ export class RPCDispatcher extends BaseService {
   }
 
   private jsonFail(code: number, message: string, data: any = null) {
-    this.res.status(code).json({
+    return this.res.status(code).json({
       code,
       result: data,
       error: {
@@ -63,7 +66,7 @@ export class RPCDispatcher extends BaseService {
   }
 
   private fail = (e: Error) => {
-    this.getSingleton(ServiceContextEvents)
+    return this.getSingleton(ServiceContextEvents)
       .disposeContext(this.context, e)
       .then(() => {
         if (typeof (e as any).code === 'number') {
@@ -81,13 +84,13 @@ export class RPCDispatcher extends BaseService {
   };
 
   private success = (data: any, code: number = 200) => {
-    this.getSingleton(ServiceContextEvents)
+    return this.getSingleton(ServiceContextEvents)
       .disposeContext(this.context, null)
       .then(() => {
         if (isCustomResponse(data)) {
-          data.sendToHTTPResponse(this.res, code);
+          return data.sendToHTTPResponse(this.res, code);
         } else {
-          this.res.status(code).json({
+          return this.res.status(code).json({
             code,
             result: data,
             error: null,
@@ -97,6 +100,9 @@ export class RPCDispatcher extends BaseService {
       });
   };
 
+  /**
+   * Executes the genuine RPC method.
+   */
   handleRequest() {
     let { req } = this;
 
@@ -118,6 +124,10 @@ export class RPCDispatcher extends BaseService {
     return promiseWrapper.then(() => this.serviceMethod.call(this.serviceInstance, req.body.params) as Promise<any>);
   }
 
+  /**
+   * Executes the RPC middleware chain including the genuine RPC call.
+   * Handles both, success and error cases.
+   */
   call = () => {
     return this.getSingleton(RPCMiddlewareContainer)
       .call(this)

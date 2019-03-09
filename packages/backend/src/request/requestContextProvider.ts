@@ -24,7 +24,7 @@ export class RequestContextProvider extends AppSingleton {
   }
 
   /**
-   * Creates a service context for the provided req / res pair and
+   * Creates a service context for the provided request / response pair and
    * automatically disposes of it when the promise finishes or throws.
    */
   withRequestContext<T>(

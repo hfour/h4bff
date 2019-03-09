@@ -1,27 +1,37 @@
 import * as Promise from 'bluebird';
 import { Request, Response } from 'express';
-import { App, BaseService, AppSingleton, ServiceContext } from '@h4bff/core';
+import { BaseService, AppSingleton, ServiceContext } from '@h4bff/core';
 import { RequestContextProvider } from '../request';
 import { RPCDispatcher } from '../rpc';
 
+/**
+ * RPC service middleware.
+ */
 export type RPCServiceMiddleware = (sCtx: ServiceContext, next: () => PromiseLike<void>) => PromiseLike<void>;
 
+/**
+ * Responsible for holding the RPC service mapping.
+ */
 export class RPCServiceRegistry extends AppSingleton {
   services: { [key: string]: typeof BaseService } = {};
 
-  constructor(app: App) {
-    super(app);
-  }
-
-  add(namespace: string, svc: typeof BaseService) {
-    if (this.services[namespace] != null) {
-      throw new Error('Namespace ' + namespace + ' already in use!');
+  /**
+   * Adds new RPC service mapping.
+   * @param alias service alias
+   * @param service service constructor
+   */
+  add(alias: string, service: typeof BaseService) {
+    if (this.services[alias] != null) {
+      throw new Error('Namespace ' + alias + ' already in use!');
     }
-    this.services[namespace] = svc;
+    this.services[alias] = service;
   }
 
-  exists(serviceAlias: string, method: string) {
-    const ServiceClass = this.services[serviceAlias];
+  /**
+   * Checks if a given method exists on a RPC service given by its alias.
+   */
+  exists(alias: string, method: string) {
+    const ServiceClass = this.services[alias];
     if (!ServiceClass) {
       return false;
     }
@@ -29,11 +39,19 @@ export class RPCServiceRegistry extends AppSingleton {
     return typeof serviceMethod === 'function';
   }
 
+  /**
+   * Returns service for given alias.
+   */
   get(serviceAlias: string) {
     return this.services[serviceAlias];
   }
 
-  routeHandler = (req: Request, res: Response): void | Promise<void> => {
+  /**
+   * Middleware that adds RPC handling for given request and response.
+   * It binds the request and response to a service context and forwards the
+   * request to the {@link RPCDispatcher}.
+   */
+  routeHandler = (req: Request, res: Response): Promise<void | Response> => {
     let dispatcher = this.getSingleton(RequestContextProvider)
       .getContext(req, res)
       .getService(RPCDispatcher);
