@@ -3,6 +3,6 @@ import { App } from '@h4bff/core';
 /**
  * Router.
  */
-export function AppRouter(_app: App) {
+export function HttpRouter(_app: App) {
   return express();
 }
