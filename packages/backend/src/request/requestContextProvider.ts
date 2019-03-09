@@ -1,5 +1,5 @@
 import * as Express from 'express';
-import { AppSingleton, ServiceContext } from '@h4bff/core';
+import { AppSingleton, ServiceContext, App, ServiceContextEvents } from '@h4bff/core';
 import { RequestInfo } from './';
 
 /**
@@ -9,11 +9,18 @@ import { RequestInfo } from './';
 export class RequestContextProvider extends AppSingleton {
   private contexts = new WeakMap<Express.Request, ServiceContext>();
 
+  constructor(app: App) {
+    super(app);
+    app.getSingleton(ServiceContextEvents).onContextDisposed((sc, _error) => {
+      return this.onDispose(sc);
+    });
+  }
+
   /**
    * Creates a new service context and sets the req / res pair,
    * unless there's already one, in which case it's returned instead.
    */
-  getContext(req: Express.Request, res: Express.Response) {
+  public getContext(req: Express.Request, res: Express.Response) {
     let result = this.contexts.get(req);
     if (!result) {
       result = this.app.createServiceContext();
@@ -21,6 +28,16 @@ export class RequestContextProvider extends AppSingleton {
       this.contexts.set(req, result);
     }
     return result;
+  }
+
+  /**
+   * Gets called on context disposal and makes sure that the service context
+   * gets removed from the contexts map.
+   */
+  private onDispose(sc: ServiceContext) {
+    let req = sc.getService(RequestInfo).req;
+    this.contexts.delete(req);
+    return Promise.resolve();
   }
 
   /**

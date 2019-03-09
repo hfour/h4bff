@@ -2,8 +2,7 @@ import { Request, Response } from 'express';
 import { BaseService } from '@h4bff/core';
 
 /**
- * Keeps a request/response pair from Express, exactly
- * once per service request.
+ * Stores the current {@link Request} and {@link Response} objects.
  */
 export class RequestInfo extends BaseService {
   req!: Request;
