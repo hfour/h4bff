@@ -4,7 +4,7 @@ import { Table } from 'anydb-sql-2';
 import { v4 as uuid } from 'uuid';
 import { Database, TransactionProvider, RPCServiceRegistry } from '@h4bff/backend';
 import { BaseService, AppContainer, AppSingleton } from '@h4bff/core';
-import { AppRouter } from './router';
+import { HttpRouter } from './router';
 
 interface File {
   id: string;
@@ -46,7 +46,7 @@ export class FilePermissions extends AppSingleton {
 }
 
 export let FilesRouter = (container: AppContainer) => {
-  let router = container.getSingleton(AppRouter);
+  let router = container.getSingleton(HttpRouter);
 
   router.get('/files/:fileId', (req, res) => {
     res.end('heres file ' + req.params['fileId']);

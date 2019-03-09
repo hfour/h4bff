@@ -3,6 +3,6 @@ import { AppContainer } from '@h4bff/core';
 /**
  * Router.
  */
-export function AppRouter(_app: AppContainer) {
+export function HttpRouter(_app: AppContainer) {
   return express();
 }
