@@ -30,7 +30,8 @@
     "wsrun": "^3.6.2",
     "typescript": "^3.0.3",
     "typescript-workspace-plugin": "^2.0.1",
-    "prettier": "^1.15.3"
+    "prettier": "^1.15.3",
+    "path-to-regexp": "^3.0.0"
   },
   "scripts": {
     "build": "wsrun --stages -r build",

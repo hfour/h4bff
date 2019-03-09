@@ -1,17 +1,35 @@
 {
-    "name": "@h4bff/frontend",
-    "version": "1.0.0",
-    "description": "Frontend framework",
-    "main": "build/index.js",
-    "types": "build/index.d.ts",
-    "license": "MIT",
-    "private": true,
-    "scripts": {
-      "build": "tsc -p tsconfig.json",
-      "watch": "tsc -w",
-      "test": "jest"
-    },
-    "dependencies": {
-      "@h4bff/core": "*"
-    }
+  "name": "@h4bff/frontend",
+  "version": "1.0.0",
+  "description": "Frontend framework",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "watch": "tsc -w",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@h4bff/core": "*",
+    "lodash": "^4.17.5",
+    "mobx": "^4.6.0",
+    "mobx-react": "^5.4.2",
+    "query-string": "^6.2.0",
+    "react": "^16.7.7",
+    "react-dom": "^16.6.3",
+    "react-router": "^4.3.1"
+  },
+  "devDependencies": {
+    "@types/classnames": "^2.2.6",
+    "@types/lodash": "4.14.63",
+    "@types/query-string": "^6.2.0",
+    "@types/react": "16.7.13",
+    "@types/react-dom": "^16.0.10",
+    "@types/react-router": "^4.4.3",
+    "@types/react-test-renderer": "^16.8.1",
+    "react-test-renderer": "^16.8.4",
+    "classnames": "^2.2.6"
   }
+}
