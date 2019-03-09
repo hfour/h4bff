@@ -38,7 +38,7 @@ export interface Redirect {
  * All routes are strictly matched. For rendering a container route, just suffix it with "/*", so it will match any of the child routes.
  *
  */
-export class Router {
+class MobxRouter {
   @observable private currentComponentJSX: UIElement = null;
   @observable private routeParams: RouteParameters = {};
   @observable private routes: Array<Route> = [];
@@ -108,12 +108,12 @@ export class Router {
  * Wrapper for the topmost router. It is singleton, which makes it accessible from throught the app, and
  * is rendered within a history context provider.
  */
-export class MainRouter extends AppSingleton {
-  @observable router: Router;
+export class Router extends AppSingleton {
+  @observable router: MobxRouter;
 
   constructor(app: App) {
     super(app);
-    this.router = new Router(app);
+    this.router = new MobxRouter(app);
   }
 
   addRoute = (path: string, component: (rp: RouteParameters) => JSX.Element) => {
