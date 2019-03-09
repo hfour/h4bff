@@ -1,7 +1,7 @@
 import * as Promise from 'bluebird';
 import { Request, Response } from 'express';
 import { App, BaseService, AppSingleton, ServiceContext } from '@h4bff/core';
-import { RequestContextProvider } from '../router';
+import { RequestContextProvider } from '../request';
 import { RPCDispatcher } from '../rpc';
 
 export type RPCServiceMiddleware = (sCtx: ServiceContext, next: () => PromiseLike<void>) => PromiseLike<void>;

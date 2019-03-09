@@ -2,8 +2,9 @@ import { mapSeries } from 'bluebird';
 import * as Promise from 'bluebird';
 import { Table } from 'anydb-sql-2';
 import { v4 as uuid } from 'uuid';
-import { Database, TransactionProvider, RequestContextProvider, RPCServiceRegistry } from '@h4bff/backend';
+import { Database, TransactionProvider, RPCServiceRegistry } from '@h4bff/backend';
 import { BaseService, App, AppSingleton } from '@h4bff/core';
+import { HttpRouter } from './router';
 
 interface File {
   id: string;
@@ -45,7 +46,7 @@ export class FilePermissions extends AppSingleton {
 }
 
 export let FilesRouter = (app: App) => {
-  let router = app.getSingleton(RequestContextProvider).router;
+  let router = app.getSingleton(HttpRouter);
 
   router.get('/files/:fileId', (req, res) => {
     res.end('heres file ' + req.params['fileId']);
