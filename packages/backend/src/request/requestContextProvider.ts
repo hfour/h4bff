@@ -3,12 +3,17 @@ import { AppSingleton, ServiceContext } from '@h4bff/core';
 import { RequestInfo } from './';
 
 /**
- * Ties each request / response pair to a specific service context.
+ * Keeps a map of request / response pairs tied to their
+ * given service context.
  */
 export class RequestContextProvider extends AppSingleton {
   private contexts = new WeakMap<Express.Request, ServiceContext>();
 
-  public getContext(req: Express.Request, res: Express.Response) {
+  /**
+   * Creates a new service context and sets the req / res pair,
+   * unless there's already one, in which case it's returned instead.
+   */
+  getContext(req: Express.Request, res: Express.Response) {
     let result = this.contexts.get(req);
     if (!result) {
       result = this.app.createServiceContext();
