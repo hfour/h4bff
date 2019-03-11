@@ -1,6 +1,6 @@
 {
   "name": "@h4bff/frontend",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "H4BFF, the frontend: mobx router.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -26,10 +26,10 @@
     "react": "^16.7.7",
     "react-dom": "^16.6.3",
     "classnames": "^2.2.6",
-    "history":"^4.7.2",
-    "path-to-regexp":"^3.0.0",
+    "history": "^4.7.2",
+    "path-to-regexp": "^3.0.0",
     "@types/react": "^16.7.13",
-    "@types/history":"^4.7.2"
+    "@types/history": "^4.7.2"
   },
   "devDependencies": {
     "@types/classnames": "^2.2.6",
