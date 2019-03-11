@@ -1,7 +1,7 @@
 {
   "name": "@h4bff/frontend",
   "version": "1.0.0",
-  "description": "Frontend framework",
+  "description": "H4BFF, the frontend: mobx router.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "files": [
@@ -12,6 +12,7 @@
   },
   "license": "MIT",
   "scripts": {
+    "prepublish": "yarn build && yarn test",
     "build": "tsc -p tsconfig.json",
     "watch": "tsc -w",
     "test": "jest"
