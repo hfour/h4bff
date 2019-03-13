@@ -1,11 +1,12 @@
 {
   "name": "@h4bff/frontend",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "H4BFF, the frontend: mobx router.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "files": [
-    "build/**/*"
+    "build/**/*",
+    "src/**/*"
   ],
   "publishConfig": {
     "access": "public"
@@ -19,17 +20,17 @@
   },
   "dependencies": {
     "@h4bff/core": "*",
+    "@types/history": "^4.7.2",
+    "@types/react": "^16.7.13",
+    "classnames": "^2.2.6",
+    "history": "^4.7.2",
     "lodash": "^4.17.5",
     "mobx": "^4.6.0",
     "mobx-react": "^5.4.2",
+    "path-to-regexp": "^3.0.0",
     "query-string": "^6.2.0",
     "react": "^16.7.7",
-    "react-dom": "^16.6.3",
-    "classnames": "^2.2.6",
-    "history": "^4.7.2",
-    "path-to-regexp": "^3.0.0",
-    "@types/react": "^16.7.13",
-    "@types/history": "^4.7.2"
+    "react-dom": "^16.6.3"
   },
   "devDependencies": {
     "@types/classnames": "^2.2.6",
