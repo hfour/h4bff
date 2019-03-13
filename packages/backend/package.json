@@ -1,6 +1,6 @@
 {
   "name": "@h4bff/backend",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "H4BFF, the backend: database, RPC and other backend services and singletons.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -13,23 +13,23 @@
   },
   "license": "MIT",
   "scripts": {
-    "prepublish": "yarn build && echo 'Write tests! Ok for now.'",
+    "prepublish": "yarn build && yarn test",
     "build": "tsc -p tsconfig.json",
     "watch": "tsc -w",
     "test": "jest"
   },
   "dependencies": {
+    "@h4bff/core": "*",
     "anydb-sql-2": "^3.1.1",
-    "bluebird": "3.5.1",
-    "express": "4.16.4",
-    "body-parser": "1.18.3",
     "anydb-sql-2-migrations": "^3.0.2",
-    "@h4bff/core": "*"
+    "bluebird": "3.5.1",
+    "body-parser": "1.18.3",
+    "express": "4.16.4"
   },
   "devDependencies": {
     "@types/bluebird": "3.5.24",
-    "@types/express": "4.0.37",
-    "@types/body-parser": "1.16.3"
+    "@types/body-parser": "1.16.3",
+    "@types/express": "4.0.37"
   },
   "jest": {
     "verbose": false,
