@@ -314,7 +314,7 @@ export class BaseService {
   /**
    * Proxy for `app.getSingleton(Klass)`.
    */
-  getSingleton<T extends AppSingleton>(SingletonClass: { new (sc: App): T }): T {
+  getSingleton<T extends AppSingleton>(SingletonClass: ConstructorOrFactory<App, T>): T {
     return this.context.getSingleton(SingletonClass);
   }
 }
