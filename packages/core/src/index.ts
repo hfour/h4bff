@@ -236,7 +236,7 @@ export class ServiceContext {
   /**
    * A proxy for `app.getSingleton(Klass)`.
    */
-  getSingleton<T extends AppSingleton>(SingletonClass: ConstructorOrFactory<App, T>): T {
+  getSingleton<T>(SingletonClass: ConstructorOrFactory<App, T>): T {
     return this.app.getSingleton(SingletonClass);
   }
 }
@@ -314,7 +314,7 @@ export class BaseService {
   /**
    * Proxy for `app.getSingleton(Klass)`.
    */
-  getSingleton<T extends AppSingleton>(SingletonClass: ConstructorOrFactory<App, T>): T {
+  getSingleton<T>(SingletonClass: ConstructorOrFactory<App, T>): T {
     return this.context.getSingleton(SingletonClass);
   }
 }
