@@ -1,6 +1,6 @@
 {
   "name": "@h4bff/backend",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "H4BFF, the backend: database, RPC and other backend services and singletons.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
