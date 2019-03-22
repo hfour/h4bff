@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import * as contentDisposition from 'content-disposition';
 
 export interface IRPCFileResult {
   fileName: string;
@@ -18,9 +19,8 @@ export class RPCFileResult implements CustomResponse, IRPCFileResult {
   constructor(public fileName: string, public buffer: Buffer) {}
 
   sendToHTTPResponse(res: Response, code: number) {
-    const escapedFilename = encodeURIComponent(this.fileName);
     res.status(code);
-    res.setHeader('Content-disposition', `attachment; filename*=UTF-8\'\'${escapedFilename}`);
+    res.setHeader('Content-disposition', contentDisposition(this.fileName));
     res.write(this.buffer, 'binary');
     res.end(null, 'binary');
     return res;
