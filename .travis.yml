@@ -3,6 +3,14 @@ node_js:
   - "10"
 install:
   - yarn
-script:
-  - yarn build
-  - yarn test
+
+stages:
+  - pull request
+  - master
+jobs:
+  include:
+    - stage: pull request
+      script: yarn build && yarn test
+    - stage: master
+      if: branch = master AND type = push
+      script: yarn build && yarn docs && yarn docs:publish

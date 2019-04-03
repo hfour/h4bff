@@ -7,7 +7,8 @@ import { TransactionCleaner } from './transactionCleaner';
 /**
  * Provides transaction instance to support transactional behavior within service context.
  * It there is no existing transaction present in the current service context, it creates it.
- * Can be used within a service implementation or where there is a {@link ServiceContext} instance available.
+ * Can be used within a service implementation or where there is a
+ * {@link @h4bff/core#ServiceContext} instance available.
  */
 export class TransactionProvider extends BaseService {
   private db = this.getSingleton(Database).db;
