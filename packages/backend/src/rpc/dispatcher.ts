@@ -31,7 +31,7 @@ export class RPCDispatcher extends BaseService {
    * If the string has more than one dot, the serviceAlias consumes all parts of the name
    * except for the last one:
    *
-   * 'path.with.more.dots' => ['path.with.more', 'dots']
+   * 'path.with.more.dots' =\> ['path.with.more', 'dots']
    */
   get serviceNameMethod() {
     const lastDotIndex = this.rpcPath.lastIndexOf('.');
