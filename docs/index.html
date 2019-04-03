@@ -30,8 +30,14 @@
       };
     </script>
     <script src="_docsify/setup-mermaid.js"></script>
-    <script src="_docsify/docsify.js" defer></script>
+    <script src="_docsify/docsify.js"></script>
     <script src="_docsify/search.min.js"></script>
 
+    <script src="//unpkg.com/prismjs/components/prism-bash.min.js"></script>
+    <script src="//unpkg.com/prismjs/components/prism-typescript.min.js"></script>
+    <script src="//unpkg.com/prismjs/components/prism-tsx.min.js"></script>
+    <script src="//unpkg.com/prismjs/components/prism-javascript.min.js"></script>
+    <script src="//unpkg.com/prismjs/components/prism-python.min.js"></script>
+    <script src="//unpkg.com/prismjs/components/prism-json.min.js"></script>
   </body>
 </html>

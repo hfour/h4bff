@@ -40,4 +40,3 @@
       - [RouteProvider](/2-API/frontend/RouteProvider.md)
       - [Router](/2-API/frontend/Router.md)
       - [UIElement](/2-API/frontend/UIElement.md)
-  - [README](/README.md)
