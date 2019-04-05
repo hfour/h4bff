@@ -734,7 +734,6 @@ section.cover blockquote > p > a:hover {
   background-color: #f9f9f9;
   border-left: 2px solid #eee;
   font-family: Consolas, Inconsolata, Monaco, monospace;
-  font-size: 16px;
   margin: 0 0 1em 0;
   padding: 8px;
   padding: 0 10px 12px 0;
@@ -805,14 +804,13 @@ section.cover blockquote > p > a:hover {
   border-radius: 2px;
   display: block;
   font-family: Consolas, Inconsolata, Monaco, monospace;
-  font-size: 12px;
-  line-height: 1.1rem;
   max-width: inherit;
   overflow: inherit;
-  padding: 20px 0.8em 20px;
   position: relative;
   white-space: inherit;
+  padding: 1em 1em 0.5em 1em;
 }
+
 .markdown-section code::after,
 .markdown-section code::before {
   letter-spacing: 0.05rem;
@@ -821,4 +819,8 @@ code .token {
   -webkit-font-smoothing: initial;
   -moz-osx-font-smoothing: initial;
   min-height: 1.5rem;
+}
+
+code {
+  font-size: 14px;
 }
