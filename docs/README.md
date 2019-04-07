@@ -4,10 +4,8 @@
 
 </center>
 
-## H4's BFF: the backend and frontend framework
-
 Welcome to h4bff, a new kind of TypeScript web development framework. We aim is to provide developers with tools to
-write highly modular code by composing their app from multiple lugins
+write highly modular code by composing their app from multiple plugins.
 
 <style>
 #intro code {
@@ -86,8 +84,7 @@ sequenceDiagram
 
 </td></tr></table>
 
-H4BFF aims to offer some of the benefits and drawbacks from both approaches. Instead of micro-services, we write plugins
-that are then added to a single application.
+H4BFF aims to offer some of the benefits and drawbacks from both approaches.
 
 - Data integrity is easier. Multiple h4bff plugins can participate in a single database transaction, and if any of them
   fails it can signal the entire process to fail.
@@ -102,4 +99,9 @@ that are then added to a single application.
 - Because separation is easier, you can choose to separate apps into services when it makes sense to (like e.g. for
   scaling or data segregation reasons)
 
-  Interested in how this works? Check out our [Thinking in H4FF](1-Guides/Thinking-in-h4bff.md) article!
+Interested in how this works? Check out our [introduction][intro] to get more familiar with the
+framework's building blocks, then lets look at how we would build a comments plugin in the more
+in-depth [Thinking in H4FF][tih4bff] guide!
+
+[intro]: 1-Guides/Introduction.md
+[tinh4bff]: 1-Guides/Thinking-in-h4bff.md
