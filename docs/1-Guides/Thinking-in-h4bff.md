@@ -1,6 +1,7 @@
 # Thinking in h4bff
 
-While h4bff gives you the tools to write plugins, it doesn't specify how you might achieve a plugin friendly design. In this article we'll implement an example comments plugin to demonstrate how engineers can think about their design in terms of plugins when writing a new feature.
+While h4bff gives you the tools to write plugins, it doesn't specify how you might achieve a plugin friendly design. In this article we'll implement an example comments plugin to demonstrate how we
+can think about modularity in terms of plugins when writing a new feature.
 
 If you haven't checked out the two core elements of h4bff (Services and Singletons) yet, or you'd
 like a refresher, check out the [Introduction](Introduction.md) article first.
@@ -16,7 +17,7 @@ configuration options it offers. So lets try and write a simple README for this 
 
 # comments-plugin
 
-A h4bff plugin that lets you imple
+A h4bff plugin that implements commenting functionality
 
 ```
 

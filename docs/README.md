@@ -101,7 +101,7 @@ H4BFF aims to offer some of the benefits and drawbacks from both approaches.
 
 Interested in how this works? Check out our [introduction][intro] to get more familiar with the
 framework's building blocks, then lets look at how we would build a comments plugin in the more
-in-depth [Thinking in H4FF][tih4bff] guide!
+in-depth [Thinking in H4FF][tinh4bff] guide!
 
 [intro]: 1-Guides/Introduction.md
 [tinh4bff]: 1-Guides/Thinking-in-h4bff.md

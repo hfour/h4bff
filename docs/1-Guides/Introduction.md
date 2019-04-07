@@ -27,6 +27,21 @@ represented by singletons since they are created once per app instantiation).
 A plugin can request, or expose two types of components: Services and Singletons. Services live
 for a single HTTP Request, while singletons get instantiated and terminated with the app.
 
+
+<figure class="image">
+
+```mermaid
+graph LR
+    App --- Database
+    App --- Router
+    Router --- RPCServiceRegistry
+    RPCServiceRegistry --Request--> HelloService
+    RPCServiceRegistry --Request--> OthserService
+```
+
+<figcaption> A simple app with two services and a few singletons </figcaption>
+</figure>
+
 In the above example we add the HelloService to the RPC Service registry, which is a RPC
 endpoint installed at `/api`. The current implementation uses JSONRPC, however in the future we
 plan on supporting other mechanisms like GraphQL.
@@ -80,6 +95,8 @@ Lower level components use singleton classes to expose their functionalities too
 default database driver uses [anydb-sql][anydb-sql] to create a connection pool and to allow the
 user to define tables and [build typed SQL queries](https://node-sql-examples.github.io/), and
 exposes that functionality via the [Database][db] singleton.
+
+The Router as well as its RPCServiceRegistry at the API endpoint
 
 Our Hello plugin can take advantage of this mechanism to remember the users it has said hello to:
 

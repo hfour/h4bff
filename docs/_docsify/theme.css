@@ -824,3 +824,12 @@ code .token {
 code {
   font-size: 14px;
 }
+
+figcaption {
+  font-size: 15px;
+  color: #79828B;
+  padding: 12px 21px 12px 0;
+  line-height: 18px;
+  vertical-align: top;
+  text-align: center;
+}
