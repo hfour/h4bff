@@ -96,8 +96,6 @@ default database driver uses [anydb-sql][anydb-sql] to create a connection pool 
 user to define tables and [build typed SQL queries](https://node-sql-examples.github.io/), and
 exposes that functionality via the [Database][db] singleton.
 
-The Router as well as its RPCServiceRegistry at the API endpoint
-
 Our Hello plugin can take advantage of this mechanism to remember the users it has said hello to:
 
 ```typescript
@@ -128,7 +126,7 @@ class HelloService extends BaseService {
 ```
 
 Now that we are familiar with the two building blocks of H4BFF, we can build an example comments
-plugin. Check out the [Thinking in H4BFF][tihbff] article
+plugin in the [Thinking in H4BFF][tihbff] article.
 
 [BS.GS]: /2-API/core/BaseService#getService
 

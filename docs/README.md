@@ -25,8 +25,7 @@ class HelloService extends BaseService {
 }
 
 export function HelloPlugin(app: App) {
-  // Adds JSONRPC endpoint at '/api'
-  // with method `hello.sayHello`
+  // Add `hello.sayHello` method at '/api'
   app.getSingleton(RPCServiceRegistry)
      .add('hello', HelloService);
 }
@@ -46,7 +45,6 @@ class HelloApp extends App {
     this.getSingleton(HttpRouter).listen(8080);
   }
 }
-
 
 new HelloApp().start();
 ```
@@ -86,18 +84,15 @@ sequenceDiagram
 
 H4BFF aims to offer some of the benefits and drawbacks from both approaches.
 
-- Data integrity is easier. Multiple h4bff plugins can participate in a single database transaction, and if any of them
-  fails it can signal the entire process to fail.
+- Data integrity is easier. Multiple h4bff plugins can participate in a single database transaction, and if any of them fails it can signal the entire transaction to fail.
 
 - Deployment is easier. Its just a single application working with a single database.
 
 - Performance is simpler to reason about. No network latency unless you want it.
 
-- Separation is easier. A plugin can live in a single directory or a single npm package - its models, controllers
-  (services), database migrations, API endpoints and everything it needs to function as a single unit.
+- Separation is easier. A plugin can live in a single directory or a single npm package - its models, controllers (services), database migrations, API endpoints and everything it needs to function as a single unit.
 
-- Because separation is easier, you can choose to separate apps into services when it makes sense to (like e.g. for
-  scaling or data segregation reasons)
+- Although plugins can be more easily be separated into micro-services compared to typical monoliths, scaling is still more painful than in a microservice architecture. H4BFF is designed mainly for enterprise software style scaling, where multiple (possibly customized) deployments can run for different clients
 
 Interested in how this works? Check out our [introduction][intro] to get more familiar with the
 framework's building blocks, then lets look at how we would build a comments plugin in the more
