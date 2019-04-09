@@ -95,6 +95,13 @@ export class App {
   }
 
   /**
+   * Clears any defined singleton overrides.
+   */
+  clearSingletonOverrides() {
+    return this.singletonLocator.clearOverrides();
+  }
+
+  /**
    * Allows you to specify an alternative implementation for the
    * expected service. Each time someone tries to instantiate the
    * specified class / fn, the override is used instead. The type of
@@ -105,6 +112,13 @@ export class App {
     Klass2: ConstructorOrFactory<ServiceContext, PublicInterface<T>>,
   ) {
     return this.serviceLocator.override(Klass, Klass2);
+  }
+
+  /**
+   * Clears any defined service overrides.
+   */
+  clearServiceOverrides() {
+    return this.serviceLocator.clearOverrides();
   }
 
   /**
@@ -374,5 +388,9 @@ export class Locator<Context> {
 
   withNewContext(ctx: Context) {
     return new Locator(ctx, this.isClass, { overrides: this.overrides });
+  }
+
+  clearOverrides() {
+    this.overrides = new Map();
   }
 }

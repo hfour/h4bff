@@ -80,6 +80,33 @@ describe('Overrides', () => {
       return Promise.resolve();
     });
   });
+
+  it('#clearServiceOverrides should cause original services to instantiate', () => {
+    let app = new App();
+    app.overrideService(
+      UserProvider,
+      class MockUserProvider extends UserProvider {
+        id = 'mock-id';
+      },
+    );
+    app.clearServiceOverrides();
+    return app.withServiceContext(ctx => {
+      expect(ctx.getService(UserProvider)).toBeInstanceOf(UserProvider);
+      return Promise.resolve();
+    });
+  });
+
+  it('#clearSingletonOverrides should cause original singletons to instantiate', () => {
+    let app = new App();
+    app.overrideSingleton(
+      Database,
+      class MockDb extends Database {
+        id = 'mock-id';
+      },
+    );
+    app.clearSingletonOverrides();
+    expect(app.getSingleton(Database)).toBeInstanceOf(Database);
+  });
 });
 
 describe('App nesting', () => {
