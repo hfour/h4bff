@@ -13,7 +13,9 @@
   "dependencies": {
     "uuid": "^3.2.1",
     "@h4bff/core": "*",
-    "@h4bff/backend": "*"
+    "@h4bff/backend": "*",
+    "@toi/toi": "^1.0.8",
+    "@toi/toix": "^1.0.8"
   },
   "devDependencies": {
     "@types/uuid": "^3.4.3",
