@@ -84,13 +84,13 @@ sequenceDiagram
 
 H4BFF aims to offer some of the benefits and drawbacks from both approaches.
 
-- Data integrity is easier. Multiple h4bff plugins can participate in a single database transaction, and if any of them fails it can signal the entire transaction to fail.
+- Data integrity is easier than it is for microservices. Multiple h4bff plugins can participate in a single database transaction, and if any of them fails it can signal the entire transaction to fail.
 
-- Deployment is easier. Its just a single application working with a single database.
+- Deployment is straightforward. Like classic monoliths, its just a single application working with a single database.
 
-- Performance is simpler to reason about. No network latency unless you want it.
+- Performance is simple to reason about. There is no network latency and serialization overhead unless you want them.
 
-- Separation is easier. A plugin can live in a single directory or a single npm package - its models, controllers (services), database migrations, API endpoints and everything it needs to function as a single unit.
+- Code separation is easy to achieve. A plugin can live in a single directory or a single npm package - its models, controllers (services), database migrations, API endpoints and everything it needs to function as a single unit.
 
 - Although plugins can be more easily be separated into micro-services compared to typical monoliths, scaling is still more painful than in a microservice architecture. H4BFF is designed mainly for enterprise software style scaling, where multiple (possibly customized) deployments can run for different clients
 
