@@ -17,20 +17,6 @@ export class RequestContextProvider extends AppSingleton {
   }
 
   /**
-   * Creates a new service context and sets the req / res pair,
-   * unless there's already one, in which case it's returned instead.
-   */
-  public getContext(req: Express.Request, res: Express.Response) {
-    let result = this.contexts.get(req);
-    if (!result) {
-      result = this.app.createServiceContext();
-      result.getService(RequestInfo)._setRequestResponse(req, res);
-      this.contexts.set(req, result);
-    }
-    return result;
-  }
-
-  /**
    * Gets called on context disposal and makes sure that the service context
    * gets removed from the contexts map.
    */
