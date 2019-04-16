@@ -9,8 +9,8 @@ like a refresher, check out the [Introduction](Introduction.md) article first.
 
 ## Designing a comments plugin
 
-Our task is to design a comments plugin. As a plugin writing team, our customers are other teams
-that work on the main products.
+Our task is to design a comments plugin. As plugin writers, our customers / users are other teams
+that work on the main products. (On smaller teams these could be individual contributors or ourselves)
 
 ### Step 1: Consider the use cases to identify uknowns
 
@@ -156,7 +156,7 @@ works on a simple example. One way is to add a singleton called CommentsConfig w
 property for the user id getter:
 
 ```typescript
-class CommentsConfig extends AppSingleton {
+class CommentsSettings extends AppSingleton {
   getUserId: (service: BaseService) => string = () => {
     throw new Error('User ID provider not configured!');
   };
@@ -168,7 +168,7 @@ Now the application can configure a provider for the user id on start:
 ```typescript
 class MyApp extends App {
   loadPlugins() {
-    this.getSingleton(CommentsConfig).getUserId = svc => svc.getService(UserInfo).user.id;
+    this.getSingleton(CommentsSettings).getUserId = svc => svc.getService(UserInfo).user.id;
   }
 }
 ```
