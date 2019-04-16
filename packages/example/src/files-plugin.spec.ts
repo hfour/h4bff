@@ -38,10 +38,11 @@ describe('fp', () => {
     app.overrideService(UserService, class X extends BaseService {});
     app.load(fp.FilesPlugin);
 
-    let mocked = app.createServiceContext().getService(fp.Files);
-
-    return mocked.get({ id: '1' }).then(res => {
-      console.log('Actual result', res);
+    return app.withServiceContext(ctx => {
+      let mocked = ctx.getService(fp.Files);
+      return mocked.get({ id: '1' }).then(res => {
+        console.log('Actual result', res);
+      });
     });
   });
 });

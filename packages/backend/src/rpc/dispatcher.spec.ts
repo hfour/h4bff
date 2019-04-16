@@ -32,21 +32,22 @@ describe('RPCDispatcher', () => {
           res = mockResponse();
         },
       );
-      const sCtx = app.createServiceContext();
-      let rpcDispatcher = sCtx.getService(RPCDispatcher);
-      let requestInfo = sCtx.getService(RequestInfo);
+      return app.withServiceContext(sCtx => {
+        let rpcDispatcher = sCtx.getService(RPCDispatcher);
+        let requestInfo = sCtx.getService(RequestInfo);
 
-      return Promise.resolve(rpcDispatcher.handleRequest()).then(() => {
-        expect(requestInfo.res.status).toHaveBeenCalledWith(400);
-        expect(requestInfo.res.json).toHaveBeenCalledWith({
-          code: 400,
-          result: null,
-          error: {
+        return Promise.resolve(rpcDispatcher.handleRequest()).then(() => {
+          expect(requestInfo.res.status).toHaveBeenCalledWith(400);
+          expect(requestInfo.res.json).toHaveBeenCalledWith({
             code: 400,
-            message: '"method" query parameter not found',
-          },
-          version: 2,
-          backendError: true,
+            result: null,
+            error: {
+              code: 400,
+              message: '"method" query parameter not found',
+            },
+            version: 2,
+            backendError: true,
+          });
         });
       });
     });
@@ -61,21 +62,22 @@ describe('RPCDispatcher', () => {
           res = mockResponse();
         },
       );
-      const sCtx = app.createServiceContext();
-      let rpcDispatcher = sCtx.getService(RPCDispatcher);
-      let requestInfo = sCtx.getService(RequestInfo);
+      return app.withServiceContext(sCtx => {
+        let rpcDispatcher = sCtx.getService(RPCDispatcher);
+        let requestInfo = sCtx.getService(RequestInfo);
 
-      return Promise.resolve(rpcDispatcher.handleRequest()).then(() => {
-        expect(requestInfo.res.status).toHaveBeenCalledWith(400);
-        expect(requestInfo.res.json).toHaveBeenCalledWith({
-          code: 400,
-          result: null,
-          error: {
+        return Promise.resolve(rpcDispatcher.handleRequest()).then(() => {
+          expect(requestInfo.res.status).toHaveBeenCalledWith(400);
+          expect(requestInfo.res.json).toHaveBeenCalledWith({
             code: 400,
-            message: '"params" not found, send an empty object in case of no parameters',
-          },
-          version: 2,
-          backendError: true,
+            result: null,
+            error: {
+              code: 400,
+              message: '"params" not found, send an empty object in case of no parameters',
+            },
+            version: 2,
+            backendError: true,
+          });
         });
       });
     });
@@ -99,21 +101,22 @@ describe('RPCDispatcher', () => {
           }
         },
       );
-      const sCtx = app.createServiceContext();
-      let rpcDispatcher = sCtx.getService(RPCDispatcher);
-      let requestInfo = sCtx.getService(RequestInfo);
+      return app.withServiceContext(sCtx => {
+        let rpcDispatcher = sCtx.getService(RPCDispatcher);
+        let requestInfo = sCtx.getService(RequestInfo);
 
-      return Promise.resolve(rpcDispatcher.handleRequest()).then(() => {
-        expect(requestInfo.res.status).toHaveBeenCalledWith(404);
-        expect(requestInfo.res.json).toHaveBeenCalledWith({
-          code: 404,
-          result: null,
-          error: {
+        return Promise.resolve(rpcDispatcher.handleRequest()).then(() => {
+          expect(requestInfo.res.status).toHaveBeenCalledWith(404);
+          expect(requestInfo.res.json).toHaveBeenCalledWith({
             code: 404,
-            message: 'Method not found',
-          },
-          version: 2,
-          backendError: true,
+            result: null,
+            error: {
+              code: 404,
+              message: 'Method not found',
+            },
+            version: 2,
+            backendError: true,
+          });
         });
       });
     });
@@ -144,20 +147,26 @@ describe('RPCDispatcher', () => {
           disposeContext = jest.fn(() => Promise.resolve());
         },
       );
-      const sCtx = app.createServiceContext();
-      let rpcDispatcher = sCtx.getService(RPCDispatcher);
-      let requestInfo = sCtx.getService(RequestInfo);
 
-      return rpcDispatcher.call().then(() => {
-        expect(requestInfo.res.status).toHaveBeenCalledWith(200);
-        expect(requestInfo.res.json).toHaveBeenCalledWith({
-          code: 200,
-          result: 'data',
-          error: null,
-          version: 2,
+      return app
+        .withServiceContext(sCtx => {
+          let rpcDispatcher = sCtx.getService(RPCDispatcher);
+          let requestInfo = sCtx.getService(RequestInfo);
+
+          return rpcDispatcher.call().then(() => {
+            expect(requestInfo.res.status).toHaveBeenCalledWith(200);
+            expect(requestInfo.res.json).toHaveBeenCalledWith({
+              code: 200,
+              result: 'data',
+              error: null,
+              version: 2,
+            });
+          });
+        })
+        .then(() => {}, () => {})
+        .then(() => {
+          expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         });
-        expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
-      });
     });
 
     it('should respond with custom success response and dispose context for specific results', () => {
@@ -187,14 +196,20 @@ describe('RPCDispatcher', () => {
           disposeContext = jest.fn(() => Promise.resolve());
         },
       );
-      const sCtx = app.createServiceContext();
-      let rpcDispatcher = sCtx.getService(RPCDispatcher);
-      let requestInfo = sCtx.getService(RequestInfo);
 
-      return rpcDispatcher.call().then(() => {
-        expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
-        expect(mockData.sendToHTTPResponse).toHaveBeenCalledWith(requestInfo.res, 200);
-      });
+      return app
+        .withServiceContext(sCtx => {
+          let rpcDispatcher = sCtx.getService(RPCDispatcher);
+          let requestInfo = sCtx.getService(RequestInfo);
+
+          return rpcDispatcher.call().then(() => {
+            expect(mockData.sendToHTTPResponse).toHaveBeenCalledWith(requestInfo.res, 200);
+          });
+        })
+        .then(() => {}, () => {})
+        .then(() => {
+          expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
+        });
     });
 
     it('should respond with error response when the RPC call fails', () => {
@@ -221,24 +236,30 @@ describe('RPCDispatcher', () => {
           disposeContext = jest.fn(() => Promise.resolve());
         },
       );
-      const sCtx = app.createServiceContext();
-      let rpcDispatcher = sCtx.getService(RPCDispatcher);
-      let requestInfo = sCtx.getService(RequestInfo);
 
-      return rpcDispatcher.call().then(() => {
-        expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
-        expect(requestInfo.res.status).toHaveBeenCalledWith(403);
-        expect(requestInfo.res.json).toHaveBeenCalledWith({
-          code: 403,
-          result: null,
-          error: {
-            code: 403,
-            message: 'error',
-          },
-          version: 2,
-          backendError: true,
+      return app
+        .withServiceContext(sCtx => {
+          let rpcDispatcher = sCtx.getService(RPCDispatcher);
+          let requestInfo = sCtx.getService(RequestInfo);
+
+          return rpcDispatcher.call().then(() => {
+            expect(requestInfo.res.status).toHaveBeenCalledWith(403);
+            expect(requestInfo.res.json).toHaveBeenCalledWith({
+              code: 403,
+              result: null,
+              error: {
+                code: 403,
+                message: 'error',
+              },
+              version: 2,
+              backendError: true,
+            });
+          });
+        })
+        .then(() => {}, () => {})
+        .then(() => {
+          expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         });
-      });
     });
 
     it('should respond with validation error response when the RPC call fails with validation data', () => {
@@ -265,24 +286,30 @@ describe('RPCDispatcher', () => {
           disposeContext = jest.fn(() => Promise.resolve());
         },
       );
-      const sCtx = app.createServiceContext();
-      let rpcDispatcher = sCtx.getService(RPCDispatcher);
-      let requestInfo = sCtx.getService(RequestInfo);
 
-      return rpcDispatcher.call().then(() => {
-        expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
-        expect(requestInfo.res.status).toHaveBeenCalledWith(400);
-        expect(requestInfo.res.json).toHaveBeenCalledWith({
-          code: 400,
-          result: null,
-          error: {
-            code: 400,
-            message: 'Technical error, the request was malformed.',
-          },
-          version: 2,
-          backendError: true,
+      return app
+        .withServiceContext(sCtx => {
+          let rpcDispatcher = sCtx.getService(RPCDispatcher);
+          let requestInfo = sCtx.getService(RequestInfo);
+
+          return rpcDispatcher.call().then(() => {
+            expect(requestInfo.res.status).toHaveBeenCalledWith(400);
+            expect(requestInfo.res.json).toHaveBeenCalledWith({
+              code: 400,
+              result: null,
+              error: {
+                code: 400,
+                message: 'Technical error, the request was malformed.',
+              },
+              version: 2,
+              backendError: true,
+            });
+          });
+        })
+        .then(() => {}, () => {})
+        .then(() => {
+          expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         });
-      });
     });
 
     it('should respond with 500 error response when the RPC call fails with unknown error', () => {
@@ -309,24 +336,29 @@ describe('RPCDispatcher', () => {
           disposeContext = jest.fn(() => Promise.resolve());
         },
       );
-      const sCtx = app.createServiceContext();
-      let rpcDispatcher = sCtx.getService(RPCDispatcher);
-      let requestInfo = sCtx.getService(RequestInfo);
+      return app
+        .withServiceContext(sCtx => {
+          let rpcDispatcher = sCtx.getService(RPCDispatcher);
+          let requestInfo = sCtx.getService(RequestInfo);
 
-      return rpcDispatcher.call().then(() => {
-        expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
-        expect(requestInfo.res.status).toHaveBeenCalledWith(500);
-        expect(requestInfo.res.json).toHaveBeenCalledWith({
-          code: 500,
-          result: null,
-          error: {
-            code: 500,
-            message: 'Something bad happened.',
-          },
-          version: 2,
-          backendError: true,
+          return rpcDispatcher.call().then(() => {
+            expect(requestInfo.res.status).toHaveBeenCalledWith(500);
+            expect(requestInfo.res.json).toHaveBeenCalledWith({
+              code: 500,
+              result: null,
+              error: {
+                code: 500,
+                message: 'Something bad happened.',
+              },
+              version: 2,
+              backendError: true,
+            });
+          });
+        })
+        .then(() => {}, () => {})
+        .then(() => {
+          expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         });
-      });
     });
   });
 });

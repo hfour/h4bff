@@ -151,7 +151,7 @@ export class App {
    *
    * See the documentation for `ServiceContext` for more details.
    */
-  createServiceContext() {
+  private createServiceContext() {
     return new ServiceContext(this);
   }
 
@@ -284,6 +284,7 @@ export class ServiceContextEvents extends AppSingleton {
 
   /**
    * Triggers the destruction of the passed service context.
+   * @internal
    */
   disposeContext: ContextListener = (serviceCtx, err) => {
     return Promise.all(this.listeners.map(l => l(serviceCtx, err))).then(() => {});
