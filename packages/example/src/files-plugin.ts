@@ -1,6 +1,6 @@
 import { mapSeries } from 'bluebird';
 import * as Promise from 'bluebird';
-import { Table } from 'anydb-sql-2';
+import { Table } from 'anydb-sql-3';
 import { v4 as uuid } from 'uuid';
 import { Database, TransactionProvider, RPCServiceRegistry } from '@h4bff/backend';
 import { BaseService, App, AppSingleton } from '@h4bff/core';
@@ -69,7 +69,7 @@ export class Files extends BaseService {
     return this.db.filesTbl
       .insert(record)
       .execWithin(this.tx)
-      .thenReturn(record);
+      .thenReturn(record) as any; // TODO: Remove cast as any
   }
 
   /**

@@ -1,4 +1,5 @@
 import * as fp from './files-plugin';
+import { Transaction } from 'anydb-sql-3';
 import { TransactionProvider } from '@h4bff/backend';
 import { App, BaseService } from '@h4bff/core';
 
@@ -6,7 +7,7 @@ import * as Bromise from 'bluebird';
 import { UserService } from './files-plugin';
 
 class TxMock extends BaseService {
-  get tx() {
+  get tx(): Transaction {
     return {
       queryAsync: (<T>(query: { text: string; arguments: any[] }) => {
         console.log('TX QUERYASYNC', query);
@@ -18,9 +19,9 @@ class TxMock extends BaseService {
       commitAsync() {
         return null as any;
       },
-    };
+    } as any;
   }
-  conn: any;
+
   onDispose() {
     return Bromise.resolve();
   }

@@ -1,5 +1,4 @@
-import { create } from 'anydb-sql-2';
-import * as migrations from 'anydb-sql-2-migrations';
+import { anydbSQL, createMigration, MigrationTask } from 'anydb-sql-3';
 import * as Promise from 'bluebird';
 import { AppSingleton } from '@h4bff/core';
 
@@ -9,9 +8,9 @@ import { AppSingleton } from '@h4bff/core';
  * Additionally, it stores the db migration tasks and provides API for migrations.
  */
 export class Database extends AppSingleton {
-  private migrations: migrations.MigrationTask[] = [];
+  private migrations: MigrationTask[] = [];
 
-  db = create({
+  db = anydbSQL({
     url: process.env['POSTGRES_URL'],
     connections: { min: 2, max: Number(process.env['DB_MAX_CONNS'] || '20') },
   });
@@ -19,7 +18,7 @@ export class Database extends AppSingleton {
   /**
    * Ads new migration task.
    */
-  addMigrations(mig: migrations.MigrationTask[]) {
+  addMigrations(mig: MigrationTask[]) {
     this.migrations.push(...mig);
   }
 
@@ -34,23 +33,26 @@ export class Database extends AppSingleton {
    * Runs the migrations stored in the migration list.
    */
   runMigrations(): void | Promise<void> {
-    const sequence = migrations.create(this.db, this.migrations);
-    return sequence.run();
+    const sequence = createMigration(this.db, this.migrations);
+    // TODO: Remove cast to any
+    return sequence.run() as any;
   }
 
   /**
    * Runs "UP" database migration.
    */
-  upMigrations(opts: { silent: boolean }): Promise<void> {
-    const sequence = migrations.create(this.db, this.migrations);
-    return sequence.migrate(opts);
+  upMigrations(_opts: { silent: boolean }): Promise<void> {
+    const sequence = createMigration(this.db, this.migrations);
+    // TODO: Remove cast to any
+    return sequence.migrate() as any;
   }
 
   /**
    * Runs "DOWN" database migration.
    */
   downMigrations(): Promise<void> {
-    const sequence = migrations.create(this.db, this.migrations);
-    return sequence.drop();
+    const sequence = createMigration(this.db, this.migrations);
+    // TODO: Remove cast to any
+    return sequence.drop() as any;
   }
 }
