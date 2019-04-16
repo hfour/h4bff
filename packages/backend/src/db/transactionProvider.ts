@@ -1,5 +1,5 @@
 import * as Promise from 'bluebird';
-import { Transaction } from 'anydb-sql-2';
+import { Transaction } from 'anydb-sql-3';
 import { BaseService, ServiceContext } from '@h4bff/core';
 import { Database } from './database';
 import { TransactionCleaner } from './transactionCleaner';
@@ -11,7 +11,6 @@ import { TransactionCleaner } from './transactionCleaner';
  */
 export class TransactionProvider extends BaseService {
   private db = this.getSingleton(Database).db;
-  private pool = this.db.getPool();
   private _tx: Transaction | null = null;
 
   constructor(context: ServiceContext) {
@@ -24,25 +23,21 @@ export class TransactionProvider extends BaseService {
     return this._tx;
   }
 
-  get conn() {
-    if (this._tx) return this._tx;
-    return this.pool;
-  }
-
   /**
    * Gets called on context disposal and makes sure that the transaction
    * is disposed properly. If an error occured it rollbacks the transaction,
    * otherwise it commits it.
    */
-  onDispose(error: Error | null) {
+  onDispose(error: Error | null): Promise<any> {
     if (this._tx) {
       let tx = this._tx;
       this._tx = null;
 
       // TODO: get logger singleton in this TX provider, and log that the rollback could
       // not be performend (unless its "method rollback unavailable in state closed")
-      if (error) return tx.rollbackAsync().catch(() => {});
-      else return tx.commitAsync();
+      // TODO: Remove cast as any
+      if (error) return tx.rollbackAsync().catch(() => {}) as any;
+      else return tx.commitAsync() as any;
     }
     return Promise.resolve();
   }
