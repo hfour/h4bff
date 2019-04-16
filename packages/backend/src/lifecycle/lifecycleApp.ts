@@ -1,31 +1,9 @@
 import { App } from '@h4bff/core';
+import { Envaridator } from 'envaridator';
 import { EnvConfig } from './config';
 
-type PluginClass = { new (app: LifecycleApp): Plugin };
-
-export interface Lifecycle {
-  registerEnvironmentVars(): void;
-  init(): void;
-}
-
-/**
- * Plugins should be distinct parts that add a feature to the App.
- * Proper way to use them is to add them to a LifecycleApp, by including them in the overridden loadPlugins() method,
- * by calling registerPlugin(Plugin).
- */
-export abstract class Plugin implements Lifecycle {
-  /**
-   * Override this method to setup any envirionment variables the plugin might need.
-   */
-  registerEnvironmentVars() {}
-
-  /**
-   * Override this method to insert the plugins feature(s) in the App.
-   */
-  abstract init(): void;
-
-  constructor(protected app: App) {}
-}
+type EnvConfigClass = { new (app: App): EnvConfig };
+export type Plugin = { init: (app: App) => void; config?: EnvConfigClass }; //maybe we want more than one config? IDK..
 
 /**
  * Application extension that calls certain overridable (lifecycle) methods in a defined order, before
@@ -33,25 +11,20 @@ export abstract class Plugin implements Lifecycle {
  * The main idea is to differentiate between phases for loading the plugins, setting and validating the env variables,
  * create the configs, and init the app
  */
-export abstract class LifecycleApp extends App implements Lifecycle {
-  abstract registerEnvironmentVars(): void;
-  abstract loadPlugins(): void;
-  abstract start(): void;
+export abstract class LifecycleApp extends App {
+  //h4bff App shouldnt have loadPlugins
+  protected abstract getEnvConfig(): EnvConfigClass;
+  protected abstract registerPlugins(): Plugin[];
+  protected abstract init(): void;
+  protected abstract start(): void;
 
-  private pluginRegistry: Map<PluginClass, Plugin> = new Map();
-
-  constructor() {
-    super();
-    this.loadPlugins();
-    this.registerEnvironmentVars();
-    this.pluginRegistry.forEach(plugin => plugin.registerEnvironmentVars());
-  }
+  private pluginRegistry: Plugin[] = [];
 
   /**
    * Prepares the app and runs the start() method.
    */
   runApp() {
-    this.prepareForStart();
+    this.prepare();
     this.start();
     return this;
   }
@@ -60,27 +33,12 @@ export abstract class LifecycleApp extends App implements Lifecycle {
    * Prints a description of how the Envirionment Configuration should look like.
    */
   help() {
-    const envConfig = this.getSingleton(EnvConfig);
+    const envConfig = this.getSingleton(Envaridator);
     console.error(`Env config:\n${envConfig.describeAll()}\n\n`);
   }
 
-  /**
-   * Optional method that can be overridden for any initialization that has to take part before the start() method.
-   * TODO: check whether its redundant, and delete it if thats the case.
-   */
-  init() {}
-
-  /**
-   * Instantiates the given plugin, and introduces it to the lifecycle of the app (which means that its lifecycle
-   * methods will be called along those of the Lifecycle App)
-   */
-  registerPlugin(pluginClass: PluginClass) {
-    const plugin = new pluginClass(this);
-    this.pluginRegistry.set(pluginClass, plugin);
-  }
-
   private validateEnv() {
-    const envConfig = this.getSingleton(EnvConfig);
+    const envConfig = this.getSingleton(Envaridator);
     try {
       envConfig.validate();
     } catch (e) {
@@ -93,10 +51,19 @@ export abstract class LifecycleApp extends App implements Lifecycle {
   /**
    * Executes all the needed steps to start() the app.
    */
-  prepareForStart() {
+  prepare() {
+    this.registerPlugins().forEach(plugin => {
+      this.pluginRegistry.push(plugin);
+    });
+    this.load(this.getEnvConfig());
+    this.pluginRegistry.forEach(plugin => {
+      if (!!plugin.config) {
+        this.load(plugin.config);
+      }
+    });
     this.validateEnv();
     this.init();
-    this.pluginRegistry.forEach(plugin => plugin.init());
+    this.pluginRegistry.forEach(plugin => plugin.init(this));
     return this;
   }
 }

@@ -1,9 +1,9 @@
 import { Envaridator } from 'envaridator';
-import { App } from '@h4bff/core';
+import { AppSingleton } from '@h4bff/core';
 
 /**
  * Registers and validates auth env variables.
  */
-export const EnvConfig = (_app: App) => {
-  return new Envaridator();
-};
+export abstract class EnvConfig extends AppSingleton {
+  protected env = this.getSingleton(Envaridator); 
+}

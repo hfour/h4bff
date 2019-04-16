@@ -1,61 +1,19 @@
-import { AppSingleton } from '@h4bff/core';
-import { LifecycleApp, Plugin, EnvConfig } from '@h4bff/backend';
-import { HttpRouter } from './router';
+import { LifecycleApp, EnvConfig, Router, Database } from '@h4bff/backend';
 import * as _ from 'lodash';
+import * as https from 'https';
 import * as toi from '@toi/toi';
 import * as toix from '@toi/toix';
+import { App } from '@h4bff/core';
 
-export default class SomeApp extends LifecycleApp {
-  registerEnvironmentVars() {
-    //just load all the configs needed here.
-    this.load(AppConfig);
-  }
-
-  loadPlugins() {
-    this.registerPlugin(SomePlugin);
-  }
-
-  start() {
-    console.log('listening on http://localhost:8080/');
-    this.getSingleton(HttpRouter).listen(8080);
-  }
-}
-
-export class SomePlugin extends Plugin {
-  registerEnvironmentVars() {
-    this.app.load(PluginConfig);
-  }
-
-  init() {
-    //some logic to plug itself in the app.
-  }
-}
-
-export class PluginConfig extends AppSingleton {
-  private randomConfigEnv = this.getSingleton(EnvConfig).register(
-    'RANDOM',
-    toi.optional().and(toix.str.urlAsString()),
-    'Explains the env',
-  );
-
-  get randomConfig() {
-    return this.randomConfigEnv.value;
-  }
-}
-
-export class AppConfig extends AppSingleton {
-  private importantUrlEnv = this.getSingleton(EnvConfig).register(
+export class AppConfig extends EnvConfig {
+  private importantUrlEnv = this.env.register(
     'IMPORTANT_URL',
     toi.optional().and(toix.str.urlAsString()),
     'Some really important URL',
   );
 
-  private dbUrlEnv = this.getSingleton(EnvConfig).register(
-    'POSTGRES_URL',
-    toi.required().and(toi.str.is()),
-    'Database connection string.',
-  );
-  private dbMaxConnEnv = this.getSingleton(EnvConfig).register(
+  private dbUrlEnv = this.env.register('POSTGRES_URL', toi.required().and(toi.str.is()), 'Database connection string.');
+  private dbMaxConnEnv = this.env.register(
     'DB_MAX_CONNS',
     toi
       .optional()
@@ -65,7 +23,7 @@ export class AppConfig extends AppSingleton {
   );
 
   //the getters can be with some logic, not just directly the value of the registered env variable
-  get clamAvUrl() {
+  get complexConfig() {
     if (!this.importantUrlEnv.value) {
       console.warn('Warning: CLAMAV_URL is not defined; files WILL NOT be scanned for viruses!');
     }
@@ -83,4 +41,52 @@ export class AppConfig extends AppSingleton {
   }
 }
 
-new SomeApp().runApp();
+export class PluginConfig extends EnvConfig {
+  private randomConfigEnv = this.env.register('RANDOM', toi.optional().and(toix.str.urlAsString()), 'Explains the env');
+
+  get randomConfig() {
+    return this.randomConfigEnv.value;
+  }
+}
+
+export const FirstPlugin = {
+  init: (app: App) => {
+    console.log(app);
+  },
+};
+
+export const SecondPlugin = {
+  config: PluginConfig,
+  init: () => {
+    console.log('second');
+  },
+};
+
+export class ExampleApp extends LifecycleApp {
+  protected getEnvConfig() {
+    //returns the apps config
+    return AppConfig;
+  }
+
+  protected registerPlugins() {
+    //returns all the plugins. they include their own config, that is loaded after the apps config, and an init() that plugs (activates) the plugin
+    return [FirstPlugin, SecondPlugin];
+  }
+
+  protected init() {
+    //generally loads stuff that should be on parent level, loaded before anything else (or common for all plugins)
+    this.load(Database);
+  }
+
+  protected start(): void {
+    //starts the app by creating the server and listens to a port
+    let router = this.getSingleton(Router).router;
+    https.createServer({}, router).listen('3000');
+  }
+}
+
+//usage in tests, running scripts, etc.
+new ExampleApp().prepare();
+
+//usage for starting the server
+new ExampleApp().prepare().runApp();
