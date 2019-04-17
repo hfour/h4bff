@@ -1,3 +1,3 @@
 # The Core
 
-Lays out the base for pruggable web application framework.
+Lays out the base for pluggable web application framework.
