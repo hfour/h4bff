@@ -61,7 +61,7 @@ export class App {
    * Checks if this or any of the parent apps has an instance of the
    * given singleton initialized.
    */
-  private hasSingleton<T>(Klass: ConstructorOrFactory<App, T>): boolean {
+  protected hasSingleton<T>(Klass: ConstructorOrFactory<App, T>): boolean {
     if (this.hasOwnSingleton(Klass)) {
       return true;
     } else {
