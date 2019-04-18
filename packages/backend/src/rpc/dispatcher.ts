@@ -1,5 +1,5 @@
 import * as Promise from 'bluebird';
-import { BaseService, ServiceContextEvents } from '@h4bff/core';
+import { BaseService } from '@h4bff/core';
 import { RPCServiceRegistry } from './serviceRegistry';
 import { RequestInfo } from '../request';
 import { RPCMiddlewareContainer } from './middleware';
@@ -66,38 +66,30 @@ export class RPCDispatcher extends BaseService {
   }
 
   private fail = (e: Error) => {
-    return this.getSingleton(ServiceContextEvents)
-      .disposeContext(this.context, e)
-      .then(() => {
-        if (typeof (e as any).code === 'number') {
-          return this.jsonFail((e as any).code, e.message);
-        } else if ((e as any).isJoi) {
-          // TODO: Joi specific handling, get rid of it
-          console.error(`Validation failed for "${this.rpcPath}":`);
-          (e as any).details.forEach((err: any) => console.error(` \-> ${err.message}`));
-          return this.jsonFail(400, 'Technical error, the request was malformed.');
-        } else {
-          console.error(e);
-          return this.jsonFail(500, 'Something bad happened.');
-        }
-      });
+    if (typeof (e as any).code === 'number') {
+      return this.jsonFail((e as any).code, e.message);
+    } else if ((e as any).isJoi) {
+      // TODO: Joi specific handling, get rid of it
+      console.error(`Validation failed for "${this.rpcPath}":`);
+      (e as any).details.forEach((err: any) => console.error(` \-> ${err.message}`));
+      return this.jsonFail(400, 'Technical error, the request was malformed.');
+    } else {
+      console.error(e);
+      return this.jsonFail(500, 'Something bad happened.');
+    }
   };
 
   private success = (data: any, code: number = 200) => {
-    return this.getSingleton(ServiceContextEvents)
-      .disposeContext(this.context, null)
-      .then(() => {
-        if (isCustomResponse(data)) {
-          return data.sendToHTTPResponse(this.res, code);
-        } else {
-          return this.res.status(code).json({
-            code,
-            result: data,
-            error: null,
-            version: 2,
-          });
-        }
+    if (isCustomResponse(data)) {
+      return data.sendToHTTPResponse(this.res, code);
+    } else {
+      return this.res.status(code).json({
+        code,
+        result: data,
+        error: null,
+        version: 2,
       });
+    }
   };
 
   /**
