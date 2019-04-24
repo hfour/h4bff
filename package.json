@@ -29,7 +29,8 @@
   "devDependencies": {
     "@microsoft/api-documenter": "7.0.42",
     "@microsoft/api-extractor": "7.0.34",
-    "docsify-tools": "^1.0.15",
+    "docsify-tools": "^1.0.16",
+    "gh-pages": "^2.0.1",
     "path-to-regexp": "^3.0.0",
     "prettier": "^1.15.3",
     "typescript": "^3.0.3",
@@ -44,7 +45,8 @@
     "clean": "git clean -fdx packages/*/build",
     "prettier": "prettier --list-different **/*.ts '**/*.md' **/*.json",
     "prettier:fix": "prettier --write **/*.ts '**/*.md' **/*.json",
-    "docs": "cp -r docs docs-dist && docsify-init -d docs-dist -e docs && wsrun -p @h4bff/backend @h4bff/core @h4bff/frontend -c api-extractor run --local && cp packages/*/docs-json/*.api.json docs-dist/2-API && generate-ts-docs markdown -i docs-dist/2-API -o docs-dist/2-API && docsify-auto-sidebar -d docs-dist && rm -rf packages/*/docs-json/*.api.json"
+    "docs": "cp -r docs docs-dist && wsrun -p @h4bff/backend @h4bff/core @h4bff/frontend -c api-extractor run --local && cp packages/*/docs-json/*.api.json docs-dist/2-API && generate-ts-docs markdown -i docs-dist/2-API -o docs-dist/2-API && docsify-init -d docs-dist -e docs && docsify-auto-sidebar -d docs-dist && rm -rf packages/*/docs-json/*.api.json",
+    "docs:publish": "gh-pages -d docs-dist --dotfiles"
   },
   "jest": {
     "verbose": true,
