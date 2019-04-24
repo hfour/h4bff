@@ -1,4 +1,4 @@
 # .prettierignore
 build/
-package.json
+coverage/
 package-lock.json
