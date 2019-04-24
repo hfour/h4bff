@@ -2,13 +2,16 @@ import * as Promise from 'bluebird';
 import { AppSingleton } from '@h4bff/core';
 import { RPCDispatcher } from './dispatcher';
 
-export type RPCMiddleware = (dispatcher: RPCDispatcher, next: () => Promise<any>) => Promise<any>;
+export type RPCMiddleware = (
+  dispatcher: RPCDispatcher,
+  next: () => PromiseLike<any>,
+) => PromiseLike<any>;
 
 /**
  * Container for RPC middlewares.
  */
 export class RPCMiddlewareContainer extends AppSingleton {
-  call = (dispatcher: RPCDispatcher) => {
+  call = (dispatcher: RPCDispatcher): PromiseLike<any> => {
     return Promise.resolve().then(() => dispatcher.handleRequest());
   };
 
@@ -20,7 +23,7 @@ export class RPCMiddlewareContainer extends AppSingleton {
    */
   addMiddleware(middleware: RPCMiddleware) {
     let oldCall = this.call;
-    this.call = (dispatcher: RPCDispatcher) => {
+    this.call = (dispatcher: RPCDispatcher): PromiseLike<any> => {
       try {
         return middleware.call(null, dispatcher, () => oldCall(dispatcher));
       } catch (e) {

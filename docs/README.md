@@ -1,3 +1,7 @@
+---
+title: 'Hi'
+---
+
 <center>
 
 ![H4BFF Logo](/assets/h4bff-logo.png)

@@ -335,7 +335,7 @@
     source-map "~0.6.1"
     typescript "~3.1.6"
 
-"@microsoft/api-extractor@^7.0.34":
+"@microsoft/api-extractor@7.0.36":
   version "7.0.36"
   resolved "https://registry.yarnpkg.com/@microsoft/api-extractor/-/api-extractor-7.0.36.tgz#7d9e9606247ef5e2e14111b3b437191f66260afc"
   integrity sha512-bA7RD7ud6TpiMiNceFwfcx9O6gv5ibC4URgMPbT35urYpUku05Eqsrliv3ShI1/Yyg+7rMC+hOFrHx8FKMR2pw==
@@ -1717,12 +1717,12 @@ diff@^3.2.0:
   resolved "https://registry.yarnpkg.com/diff/-/diff-3.5.0.tgz#800c0dd1e0a8bfbc95835c202ad220fe317e5a12"
   integrity sha512-A46qtFgd+g7pDZinpnwiRJtxbC1hpgf0uzP3iG89scHk0AUC7A1TGxf5OiiOUv/JMZR8GOt8hL900hV0bOy5xA==
 
-docsify-tools@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/docsify-tools/-/docsify-tools-1.0.4.tgz#15f52850a2e082d0c248cdfb65f3e5ece38f475c"
-  integrity sha512-GHVlLYiqGredbKxir5XSmRr5/7/MaKsSmqOUPFI6I3SRPEEC5FqCWAXiHtfhhdORjTnOV9sPLFr6ZZdjo0gcdA==
+docsify-tools@^1.0.15:
+  version "1.0.15"
+  resolved "https://registry.yarnpkg.com/docsify-tools/-/docsify-tools-1.0.15.tgz#de9c6a7d42fb8f1c9f62e3162b635de252fe003c"
+  integrity sha512-DHn07pSnSN0yzy5FkeRQWNdzmHtojNHuCRLhrF7ieGEwEkqLDZPQHhJmrYBjkGlN4v74Q7m6bBlEeujzzX9VGA==
   dependencies:
-    "@microsoft/api-extractor" "^7.0.34"
+    "@microsoft/api-extractor" "7.0.36"
     "@microsoft/api-extractor-model" "^7.0.28"
     "@microsoft/ts-command-line" "^4.2.3"
     colors "^1.3.3"
