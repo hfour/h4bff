@@ -159,7 +159,7 @@ export class App {
    * Creates a service context, executes the provided function and disposes
    * of the context afterwards. Disposal happens regardless of exceptions.
    */
-  withServiceContext<T>(f: (createdCtx: ServiceContext) => PromiseLike<T>): PromiseLike<T> {
+  withServiceContext<T>(f: (createdCtx: ServiceContext) => PromiseLike<T>) {
     let serviceContext = this.createServiceContext();
     let ctxEvents = this.getSingleton(ServiceContextEvents);
     let happyHandler = (res: T) => ctxEvents.disposeContext(serviceContext, null).then(() => res);
@@ -167,11 +167,9 @@ export class App {
       ctxEvents.disposeContext(serviceContext, error).then(() => {
         throw error;
       });
-    try {
-      return Promise.resolve(f(serviceContext)).then(happyHandler, sadHandler);
-    } catch (e) {
-      return sadHandler(e);
-    }
+    return Promise.resolve(serviceContext)
+      .then(f)
+      .then(happyHandler, sadHandler);
   }
 
   /**
