@@ -16,4 +16,4 @@ jobs:
       script: yarn test
     - stage: documentation
       if: branch = master AND type = push
-      script: yarn docs
+      script: yarn docs && yarn docs:publish
