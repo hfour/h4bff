@@ -41,7 +41,3 @@
       - [RouteProvider](/2-API/frontend/RouteProvider.md)
       - [Router](/2-API/frontend/Router.md)
       - [UIElement](/2-API/frontend/UIElement.md)
-  - [docs](/docs/README.md)
-    - Guides
-      - [Introduction](/docs/1-Guides/Introduction.md)
-      - [Thinking in h4bff](/docs/1-Guides/Thinking-in-h4bff.md)
