@@ -39,7 +39,7 @@ graph LR
     RPCServiceRegistry --Request--> HelloService
 ```
 
-<figcaption> A simple app. The RPCServiceRegistry singleton instantiates HelloService on every JSONRPC request with the metod `hello.sayHello`, calling the method. </figcaption>
+<figcaption> A simple app. The RPCServiceRegistry singleton instantiates HelloService on every JSONRPC request with the method `hello.sayHello`, calling the method. </figcaption>
 </figure>
 
 When the plugin is loaded into the app, it will gain a new RPC method called `hello.sayHello`.
@@ -57,7 +57,7 @@ Some services are exposed at a HTTP endpoint, such as in the above hello world e
 of them need to be directly exposed - other services can use them instead.
 
 For example, the Hello service can take advantage of a translation service to translate the hello
-world message to the appropriate language for hte current user. It can do that by importing that
+world message to the appropriate language for the current user. It can do that by importing that
 service from the translation plugin, then asking for an instance using the [getService][BS.GS]
 method.
 
@@ -76,7 +76,7 @@ class HelloService extends BaseService {
 ```
 
 Typical services that are present in most apps are the [RequestInfo][ReqInfoSvc] service (contains
-the express request and respone objects), an app's own UserService that provides authentication
+the express request and response objects), an app's own UserService that provides authentication
 information about the current user. The Database module provides a [Transaction][TxSvc] service
 which creates a database transaction that lives for a single HTTP request.
 
