@@ -8,8 +8,8 @@ title: 'Hi'
 
 </center>
 
-Welcome to h4bff, a new kind of TypeScript web development framework. We aim is to provide developers with tools to
-write highly modular code by composing their app from multiple plugins.
+Welcome to h4bff, a new kind of TypeScript web development framework. We aim to provide developers
+with tools to write highly modular code by composing their app from multiple plugins.
 
 <style>
 #intro code {
