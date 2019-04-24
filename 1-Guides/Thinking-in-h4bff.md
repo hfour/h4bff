@@ -12,7 +12,7 @@ like a refresher, check out the [Introduction](Introduction.md) article first.
 Our task is to design a comments plugin. As plugin writers, our customers / users are other teams
 that work on the main products. (On smaller teams these could be individual contributors or ourselves)
 
-### Step 1: Consider the use cases to identify uknowns
+### Step 1: Consider the use cases to identify unknowns
 
 When designing a plugin, its helpful to think of at least two use cases for it that are somewhat
 different. In our example, we know of two products need the commenting functionality:
@@ -24,7 +24,7 @@ different. In our example, we know of two products need the commenting functiona
 The blog product design team are thinking about moderator-approved commenting mode, where everyone
 can comment but comments don't appear until blog moderators review them.
 
-The document review team is using a custom permissioning system, but are considering switching to a
+The document review team is using a custom permissions system, but are considering switching to a
 more general access control plugin. We aren't quite sure when this system will be implemented.
 
 Requirements may also include hooking up comments to the notifications system (with emailing).
@@ -151,8 +151,8 @@ How do we decide between the two approaches? We can decide by asking ourselves a
    for `getService(UserInfo).userId` API to always work, even if we change authentication systems,
    there is no need to make it configurable.
 
-For this plugin, we'll assume we need to make it configurable, just to demonstrate how plugability
-works on a simple example. One way is to add a singleton called CommentsConfig which has a writeable
+For this plugin, we'll assume we need to make it configurable, just to demonstrate how pluggability
+works on a simple example. One way is to add a singleton called CommentsConfig which has a writable
 property for the user id getter:
 
 ```typescript

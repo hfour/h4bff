@@ -2,7 +2,7 @@
 
 ## TransactionProvider class
 
-Provides transaction instance to support transactional behavior within service context. It there is no existing transaction present in the current service context, it creates it. Can be used within a service implementation or where there is a  instance available.
+Provides transaction instance to support transactional behavior within service context. It there is no existing transaction present in the current service context, it creates it. Can be used within a service implementation or where there is a [ServiceContext](../core/ServiceContext.md) instance available.
 
 <b>Signature:</b>
 

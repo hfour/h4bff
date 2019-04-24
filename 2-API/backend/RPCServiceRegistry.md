@@ -59,8 +59,8 @@ add(alias: string, service: typeof BaseService): void;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  alias | <code>string</code> |  |
-|  service | <code>typeof BaseService</code> |  |
+|  alias | <code>string</code> | service alias |
+|  service | <code>typeof BaseService</code> | service constructor |
 
 <b>Returns:</b>
 

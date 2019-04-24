@@ -8,8 +8,8 @@ title: 'Hi'
 
 </center>
 
-Welcome to h4bff, a new kind of TypeScript web development framework. We aim is to provide developers with tools to
-write highly modular code by composing their app from multiple plugins.
+Welcome to h4bff, a new kind of TypeScript web development framework. We aim to provide developers
+with tools to write highly modular code by composing their app from multiple plugins.
 
 <style>
 #intro code {
@@ -62,8 +62,7 @@ new HelloApp().start();
 
 </td><td style="width: 90%;">
 
-Traditional frameworks such as Ruby on Rails have focused on separation of technologies rather than separation of
-concerns. We believe that approach results with monolitic code bases that are highly coupled and difficult to maintain.
+Traditional frameworks such as Ruby on Rails have focused on separation of technologies rather than separation of concerns. We believe that approach results with monolithic code bases that are highly coupled and difficult to maintain.
 
 </td></tr></table>
 

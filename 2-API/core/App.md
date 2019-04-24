@@ -39,6 +39,7 @@ singletonLocator: Locator<this>;
 |  [clearSingletonOverrides()](App.md#clearsingletonoverrides) | Clears any defined singleton overrides. |
 |  [createChildApp()](App.md#createchildapp) | When instatiating singletons, child applications look in their parents for already instantiated singletons, returning them if they exists.<!-- -->Services and the service context are not affected by parent / child hierarchies.<!-- -->Use this when you want to initialize the same kind of a singleton multiple times. |
 |  [getSingleton(Klass)](App.md#getsingleton) | Returns an instance of the singleton, if it exists somewhere here or in some of the parent apps. If it doesn't it's created in this app. |
+|  [hasSingleton(Klass)](App.md#hassingleton) | Checks if this or any of the parent apps has an instance of the given singleton initialized. |
 |  [load(Klass)](App.md#load) | Loads the plugin, which forces its initialization.<!-- -->Use this when you want to initialize a class somewhere specific in the hierarchy of apps, for example in the parent app, to prevent it from being initalized in a child later on. |
 |  [loadPlugins()](App.md#loadplugins) | Override this method to load plugins in your app.<!-- -->TODO: describe why it's important to load plugins when configuring an application; also how it differs from starting the application -- the other kind of side-effects. |
 |  [overrideService(Klass, Klass2)](App.md#overrideservice) | Allows you to specify an alternative implementation for the expected service. Each time someone tries to instantiate the specified class / fn, the override is used instead. The type of the override must match that of the original class / fn. |
@@ -107,6 +108,26 @@ getSingleton<T>(Klass: ConstructorOrFactory<App, T>): T;
 <b>Returns:</b>
 
 `T`
+
+### hasSingleton
+
+Checks if this or any of the parent apps has an instance of the given singleton initialized.
+
+<b>Signature:</b>
+
+```typescript
+hasSingleton<T>(Klass: ConstructorOrFactory<App, T>): boolean;
+```
+
+#### Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  Klass | <code>ConstructorOrFactory&lt;App, T&gt;</code> |  |
+
+<b>Returns:</b>
+
+`boolean`
 
 ### load
 

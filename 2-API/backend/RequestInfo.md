@@ -2,7 +2,7 @@
 
 ## RequestInfo class
 
-Stores the current  and  objects.
+Stores the current express Request and Response objects.
 
 <b>Signature:</b>
 
