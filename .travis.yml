@@ -4,13 +4,9 @@ node_js:
 install:
   - yarn
 
-stages:
-  - pull request
-  - master
 jobs:
   include:
-    - stage: pull request
-      script: yarn build && yarn test
-    - stage: master
+    - script: yarn build && yarn test
+    - script: yarn build && yarn docs && yarn docs:publish
       # if: branch = master AND type = push
-      script: yarn build && yarn docs && yarn docs:publish
+
