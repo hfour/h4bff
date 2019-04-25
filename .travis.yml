@@ -12,5 +12,5 @@ jobs:
     - stage: pull request
       script: yarn build && yarn test
     - stage: master
-      if: branch = master AND type = push
+      # if: branch = master AND type = push
       script: yarn build && yarn docs && yarn docs:publish
