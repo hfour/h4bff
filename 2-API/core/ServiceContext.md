@@ -2,6 +2,14 @@
 
 ## ServiceContext class
 
+Represents a transient context. On the backend that's usually created for every individual HTTP request. On the frontend a transient request is created when the router route changes - when the user navigates to a different page.
+
+#### Remarks
+
+A service context is typically only provided via the safe APIs, for example [App.withServiceContext](App.md#withservicecontext)<!-- -->. Once the async function passed to this method finishes, the context is fully disposed automatically
+
+If your service context initializes resources, see [ServiceContextEvents](ServiceContextEvents.md) for more info on doing cleanup when a context goes away.
+
 <b>Signature:</b>
 
 ```typescript

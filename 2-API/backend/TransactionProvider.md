@@ -14,7 +14,7 @@ export declare class TransactionProvider extends BaseService
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [conn](TransactionProvider.md#conn) | <code>Transaction &#124; import(&quot;anydb-sql-2&quot;).AnyDBPool</code> |  |
+|  [conn](TransactionProvider.md#conn) | <code>import(&quot;anydb-sql-2&quot;).AnyDBPool &#124; Transaction</code> |  |
 |  [tx](TransactionProvider.md#tx) | <code>Transaction</code> |  |
 
 ### conn
@@ -22,7 +22,7 @@ export declare class TransactionProvider extends BaseService
 <b>Signature:</b>
 
 ```typescript
-readonly conn: Transaction | import("anydb-sql-2").AnyDBPool;
+readonly conn: import("anydb-sql-2").AnyDBPool | Transaction;
 ```
 
 ### tx

@@ -8,7 +8,7 @@
 |  --- | --- |
 |  [Database](backend/Database.md) | Serves as kind of a database driver. Creates and exposes anydb-sql instance of the database, which provides API for database operations. Additionally, it stores the db migration tasks and provides API for migrations. |
 |  [ErrorLikeResult](backend/ErrorLikeResult.md) | Used to return an error to callers, but doesn't actually result in error semantics on the backend. |
-|  [RequestContextProvider](backend/RequestContextProvider.md) | Keeps a map of request / response pairs tied to their given service context. |
+|  [RequestContextProvider](backend/RequestContextProvider.md) | Use this class to open up a new service context from an express middleware. The service context will provide unique instances of all service classes for that particular request.<!-- -->Also see [App.withServiceContext](core/App.md#withservicecontext) which is the more generic, non-backend-specific service context. |
 |  [RequestInfo](backend/RequestInfo.md) | Stores the current express Request and Response objects. |
 |  [Router](backend/Router.md) |  |
 |  [RPCDispatcher](backend/RPCDispatcher.md) | Responsible for finding and executing the right RPC method based on the RPC mapping found in the [RPCServiceRegistry](backend/RPCServiceRegistry.md)<!-- -->. |

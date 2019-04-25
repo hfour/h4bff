@@ -4,7 +4,7 @@
 
 Handles events related to context creation, destruction etc.
 
-See `onContextDisposed` for more details.
+See [onContextDisposed](ServiceContextEvents.md#oncontextdisposed) for more details.
 
 <b>Signature:</b>
 
@@ -16,15 +16,11 @@ export declare class ServiceContextEvents extends AppSingleton
 
 |  Method | Description |
 |  --- | --- |
-|  [onContextDisposed(listener)](ServiceContextEvents.md#oncontextdisposed) | Registers a function that will be called every time a service context is getting destroyed.<!-- -->For example, let's say we create a context on the backend each time a request comes in. Before we return a response, we want to close the DB transaction. What you'd do is:<code>app.getSingleton(ServiceContextEvents).onContextDisposed(ctx =&gt; { ... ctx.getService(Txn).rm() })</code>Use this when you want to react to the destruction of any service context. |
+|  [onContextDisposed(listener)](ServiceContextEvents.md#oncontextdisposed) | Registers a function that will be called every time a service context is getting destroyed.<!-- -->Use this when you want to react to the destruction of any service context. |
 
 ### onContextDisposed
 
 Registers a function that will be called every time a service context is getting destroyed.
-
-For example, let's say we create a context on the backend each time a request comes in. Before we return a response, we want to close the DB transaction. What you'd do is:
-
-`app.getSingleton(ServiceContextEvents).onContextDisposed(ctx => { ... ctx.getService(Txn).rm() })`
 
 Use this when you want to react to the destruction of any service context.
 
@@ -38,9 +34,20 @@ onContextDisposed(listener: ContextListener): void;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  listener | <code>ContextListener</code> |  |
+|  listener | <code>ContextListener</code> | A function that receives the context and returns a promise when the event completes. |
 
 <b>Returns:</b>
 
 `void`
+
+#### Example
+
+Let's say we create a context on the backend each time a request comes in. Before we return a response, we want to close the DB transaction. What we can do is:
+
+```typescript
+app.getSingleton(ServiceContextEvents).onContextDisposed(ctx => {
+  ctx.getService(Txn).dispose()
+})
+
+```
 
