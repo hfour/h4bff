@@ -9,7 +9,7 @@ describe('RPCMiddlewareContainer', () => {
     app.overrideService(
       RPCDispatcher,
       class MockRPCDispatcher extends RPCDispatcher {
-        handleRequest = jest.fn().mockResolvedValue('RPC finished');
+        handleRequest = () => Promise.resolve('RPC finished');
       },
     );
 
@@ -34,7 +34,7 @@ describe('RPCMiddlewareContainer', () => {
     app.overrideService(
       RPCDispatcher,
       class MockRPCDispatcher extends RPCDispatcher {
-        handleRequest = jest.fn().mockResolvedValue('RPC finished');
+        handleRequest = () => Promise.resolve('RPC finished');
       },
     );
 
@@ -62,7 +62,7 @@ describe('RPCMiddlewareContainer', () => {
     app.overrideService(
       RPCDispatcher,
       class MockRPCDispatcher extends RPCDispatcher {
-        handleRequest = jest.fn().mockResolvedValue('RPC finished');
+        handleRequest = () => Promise.resolve('RPC finished');
       },
     );
 
@@ -89,7 +89,7 @@ describe('RPCMiddlewareContainer', () => {
     app.overrideService(
       RPCDispatcher,
       class MockRPCDispatcher extends RPCDispatcher {
-        handleRequest = jest.fn().mockResolvedValue('RPC finished');
+        handleRequest = () => Promise.resolve('RPC finished');
       },
     );
 
@@ -114,7 +114,7 @@ describe('RPCMiddlewareContainer', () => {
     app.overrideService(
       RPCDispatcher,
       class MockRPCDispatcher extends RPCDispatcher {
-        handleRequest = jest.fn().mockResolvedValue('RPC finished');
+        handleRequest = () => Promise.resolve('RPC finished');
       },
     );
 

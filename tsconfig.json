@@ -2,6 +2,7 @@
   "compilerOptions": {
     "strict": true,
     "preserveWatchOutput": true,
+    "incremental": true,
     "outDir": "./accidental-build",
     "sourceMap": true,
     "module": "commonjs",

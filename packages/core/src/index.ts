@@ -4,24 +4,41 @@ export type ConstructorOrFactory<U, T> = ClassFactory<U, T> | ClassConstructor<U
 
 export type PublicInterface<T> = { [K in keyof T]: T[K] };
 
+/**
+ * Represents an H4BFF application, the central hub of h4bff. Its the class that loads and
+ * initializes all the plugins, storing instances of their singletons in the singleton locator, as
+ * well as creating new service contexts which keep per-request service locators.
+ *
+ * @remarks
+ *
+ * When creating a new backend or frontend application, typically you would inherit from this
+ * class, adding a few methods such as `start` and `loadPlugins`
+ *
+ * You can also use this class in your plugin tests to create a fake, controlled application
+ * environment. Services and singletons in this environment can be overridden using the
+ * overrideService and overrideSingleton methods, in order to more easily test plugins in
+ * isolation.
+ *
+ * Applications are hierarchical. An app can contain multiple child applications. This is useful
+ * if for example you want to have two RPC endpoints, internal and external - but you want both
+ * apps to share a single database access layer. You would load the database access layer in the
+ * parent, while the individual routes get set up in the child apps created with
+ * `app.createChildApp`
+ *
+ * The App class does not currently propose any specific lifecycle. A typical application would
+ * probably have a configuration method and a loadPlugins method.
+ *
+ * The configuration method will get any configuration singletons and set up any necessary values
+ * in them. For example, a configuration singleton of a backend plugin might specify the needed
+ * environment variables.
+ *
+ * Then, the `loadPlugins` method would actually load all the plugins, which should setup router
+ * routes, event hooks, RPC endpoints (for backend apps) and so on.
+ */
 export class App {
   singletonLocator: Locator<this>;
   parentApp: App | null;
 
-  /**
-   * Represents an H4BFF application.
-   *
-   * Applications are responsible for:
-   * - initializing and storing singletons;
-   * - creating and executing functions within service contexts;
-   * - managing singleton overrides (useful for tests)
-   *
-   * Applications can have parents. When initializing singletons,
-   * we check the parent, grand-parent app etc. to see if the singleton
-   * is already initialized, so we can return that instance. If a parent
-   * is not found, the singleton is initialized in the child app, *not*
-   * in a parent app.
-   */
   constructor(opts: { parentApp?: App } = {}) {
     this.parentApp = opts.parentApp ? opts.parentApp : null;
     this.singletonLocator = new Locator(this, s => '__appSingleton' in s);
@@ -59,7 +76,8 @@ export class App {
 
   /**
    * Checks if this or any of the parent apps has an instance of the
-   * given singleton initialized.
+   * given singleton initialized. Plugins can use this to check if their configuration
+   * singletons have been loaded before they have.
    */
   hasSingleton<T>(Klass: ConstructorOrFactory<App, T>): boolean {
     if (this.hasOwnSingleton(Klass)) {
@@ -76,6 +94,11 @@ export class App {
   /**
    * Returns an instance of the singleton, if it exists somewhere here or
    * in some of the parent apps. If it doesn't it's created in this app.
+   *
+   * This method can also be used to initialize a class somewhere
+   * specific in the hierarchy of apps, for example in
+   * the parent app, to prevent it from being initialized
+   * in a child later on.
    */
   getSingleton<T>(Klass: ConstructorOrFactory<App, T>): T {
     if (this.hasSingleton(Klass)) {
@@ -89,6 +112,9 @@ export class App {
    * expected singleton. Each time someone tries to instantiate the
    * specified class / fn, the override is used instead. The type of
    * the override must match that of the original class / fn.
+   *
+   * This method is typically useful in tests to test plugins in isolation by providing mock or
+   * fake dependencies.
    */
   overrideSingleton<T>(Klass: ConstructorOrFactory<App, T>, Klass2: ConstructorOrFactory<App, PublicInterface<T>>) {
     return this.singletonLocator.override(Klass, Klass2);
@@ -106,6 +132,9 @@ export class App {
    * expected service. Each time someone tries to instantiate the
    * specified class / fn, the override is used instead. The type of
    * the override must match that of the original class / fn.
+   *
+   * This method is typically useful in tests to test plugins in isolation by providing mock or
+   * fake dependencies.
    */
   overrideService<T>(
     Klass: ConstructorOrFactory<ServiceContext, T>,
@@ -124,10 +153,9 @@ export class App {
   /**
    * Loads the plugin, which forces its initialization.
    *
-   * Use this when you want to initialize a class somewhere
-   * specific in the hierarchy of apps, for example in
-   * the parent app, to prevent it from being initialized
-   * in a child later on.
+   * While singleton classes are typically side effect free and can be instantiated lazily when
+   * first requested, plugins have side-effects, such as adding router routes, adding RPC endpoints
+   * or setting up event listeners. The load method is therefore used to load those plugins.
    */
   load<T>(Klass: ConstructorOrFactory<App, T>): void {
     this.getSingleton(Klass); // force initialization;
@@ -209,6 +237,21 @@ export class AppSingleton {
   }
 }
 
+/**
+ * Represents a transient context. On the backend that's usually created for every individual
+ * HTTP request. On the frontend a transient request is created when the router route changes -
+ * when the user navigates to a different page.
+ *
+ * @remarks
+ *
+ * A service context is typically only provided via the safe APIs, for example
+ * {@link App.withServiceContext | App.withServiceContext}. Once the async function passed to this
+ * method finishes, the context is fully disposed automatically
+ *
+ * If your service context initializes resources, see
+ * {@link ServiceContextEvents | ServiceContextEvents} for more info on doing cleanup when a
+ * context goes away.
+ */
 export class ServiceContext {
   private _locator: Locator<ServiceContext> | null = null;
 
@@ -219,23 +262,6 @@ export class ServiceContext {
     return this._locator;
   }
 
-  /**
-   * Represents a transient context, that's usually created when an
-   * HTTP request comes, a new page is created or on similar events
-   * on which you want to create and later destroy some services.
-   *
-   * For example, if you want all services to execute their queries
-   * within a single transaction, you'd create a service context and
-   * initialize a transaction inside it.
-   *
-   * Another example is handling access to the request that triggered
-   * the creation of the service context. You'll want to initialize
-   * a Request service on the service context which will get passed
-   * around.
-   *
-   * See `ServiceContextEvents` for more info on doing things in
-   * response to the creation / destruction of service contexts.
-   */
   constructor(private app: App) {}
 
   /**
@@ -260,7 +286,7 @@ export type ContextListener = (serviceCtx: ServiceContext, error: Error | null) 
 /**
  * Handles events related to context creation, destruction etc.
  *
- * See `onContextDisposed` for more details.
+ * See {@link ServiceContextEvents.onContextDisposed | onContextDisposed} for more details.
  */
 export class ServiceContextEvents extends AppSingleton {
   private listeners: ContextListener[] = [];
@@ -269,14 +295,21 @@ export class ServiceContextEvents extends AppSingleton {
    * Registers a function that will be called every time a service
    * context is getting destroyed.
    *
-   * For example, let's say we create a context on the backend
-   * each time a request comes in. Before we return a response,
-   * we want to close the DB transaction. What you'd do is:
-   *
-   * `app.getSingleton(ServiceContextEvents).onContextDisposed(ctx => { ... ctx.getService(Txn).rm() })`
-   *
    * Use this when you want to react to the destruction of any
    * service context.
+   *
+   * @param listener - A function that receives the context and returns a promise when the event completes.
+   *
+   * @example
+   * Let's say we create a context on the backend
+   * each time a request comes in. Before we return a response,
+   * we want to close the DB transaction. What we can do is:
+   *
+   * ```typescript
+   * app.getSingleton(ServiceContextEvents).onContextDisposed(ctx => {
+   *   ctx.getService(Txn).dispose()
+   * })
+   * ```
    */
   onContextDisposed(listener: ContextListener) {
     this.listeners.push(listener);
