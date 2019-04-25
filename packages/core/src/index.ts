@@ -1,7 +1,14 @@
 type ClassFactory<U, T> = (u: U) => T;
 type ClassConstructor<U, T> = { new (u: U): T };
+
+/**
+ * @internal
+ */
 export type ConstructorOrFactory<U, T> = ClassFactory<U, T> | ClassConstructor<U, T>;
 
+/**
+ * @internal
+ */
 export type PublicInterface<T> = { [K in keyof T]: T[K] };
 
 /**
@@ -34,9 +41,11 @@ export type PublicInterface<T> = { [K in keyof T]: T[K] };
  *
  * Then, the `loadPlugins` method would actually load all the plugins, which should setup router
  * routes, event hooks, RPC endpoints (for backend apps) and so on.
+ *
+ * @public
  */
 export class App {
-  singletonLocator: Locator<this>;
+  private singletonLocator: Locator<this>;
   parentApp: App | null;
 
   constructor(opts: { parentApp?: App } = {}) {
@@ -60,7 +69,9 @@ export class App {
       if (!this.parentApp) {
         // this should not happen, because prior to calling this method,
         // we check if there's an instance.
-        throw new Error('Finished searching through parents but couldnt find the singleton instance');
+        throw new Error(
+          'Finished searching through parents but couldnt find the singleton instance',
+        );
       }
       return this.parentApp.getExistingSingleton(Klass);
     }
@@ -116,7 +127,10 @@ export class App {
    * This method is typically useful in tests to test plugins in isolation by providing mock or
    * fake dependencies.
    */
-  overrideSingleton<T>(Klass: ConstructorOrFactory<App, T>, Klass2: ConstructorOrFactory<App, PublicInterface<T>>) {
+  overrideSingleton<T>(
+    Klass: ConstructorOrFactory<App, T>,
+    Klass2: ConstructorOrFactory<App, PublicInterface<T>>,
+  ) {
     return this.singletonLocator.override(Klass, Klass2);
   }
 
@@ -185,7 +199,10 @@ export class App {
 
   /**
    * Creates a service context, executes the provided function and disposes
-   * of the context afterwards. Disposal happens regardless of exceptions.
+   * of the context afterwards. Disposal happens regardless of exceptions. See
+   * {@link ServiceContext | ServiceContext} for more info on what a service context is,
+   * and {@link ServiceContextEvents | ServiceContextEvents} for more info on disposal.
+   *
    */
   withServiceContext<T>(f: (createdCtx: ServiceContext) => PromiseLike<T>): PromiseLike<T> {
     let serviceContext = this.createServiceContext();
@@ -217,20 +234,22 @@ export class App {
   }
 }
 
+/**
+ * Derive from this class to create application singletons.
+ *
+ * Singletons are initialized only once per application, although
+ * you can initialize different singletons of the same type in
+ * child applications.
+ *
+ * @public
+ */
 export class AppSingleton {
   protected static __appSingleton = true;
 
-  /**
-   * Derive from this class to create application singletons.
-   *
-   * Singletons are initialized only once per application, although
-   * you can initialize different singletons of the same type in
-   * child applications.
-   */
   constructor(protected app: App) {}
 
   /**
-   * A proxy for `app.getSingleton(Klass)`.
+   * A proxy for {@link App.getSingleton | `app.getSingleton(Klass)`}
    */
   getSingleton<T>(Klass: ConstructorOrFactory<App, T>): T {
     return this.app.getSingleton(Klass);
@@ -251,11 +270,13 @@ export class AppSingleton {
  * If your service context initializes resources, see
  * {@link ServiceContextEvents | ServiceContextEvents} for more info on doing cleanup when a
  * context goes away.
+ *
+ * @public
  */
 export class ServiceContext {
   private _locator: Locator<ServiceContext> | null = null;
 
-  get locator() {
+  private get locator() {
     if (this._locator == null) {
       this._locator = this.app.serviceLocator.withNewContext(this);
     }
@@ -281,12 +302,14 @@ export class ServiceContext {
   }
 }
 
-export type ContextListener = (serviceCtx: ServiceContext, error: Error | null) => PromiseLike<void>;
+type ContextListener = (serviceCtx: ServiceContext, error: Error | null) => PromiseLike<void>;
 
 /**
  * Handles events related to context creation, destruction etc.
  *
  * See {@link ServiceContextEvents.onContextDisposed | onContextDisposed} for more details.
+ *
+ * @public
  */
 export class ServiceContextEvents extends AppSingleton {
   private listeners: ContextListener[] = [];
@@ -324,32 +347,48 @@ export class ServiceContextEvents extends AppSingleton {
   };
 }
 
+/**
+ * Derive from this class to create H4BFF services.
+ *
+ * Services are classes that are instantiated and operate
+ * within an "isolated" service context, and are instantiated
+ * separately within each context, as opposed to singletons
+ * which have only one instance within an App.
+ *
+ * @remarks
+ *
+ * Examples of classes that should derive from `BaseService`:
+ *
+ * * Request: holds a reference to the HTTP request that triggered
+ *   the service context creation
+ *
+ * * Transaction: a single transaction that's shared between
+ *   services that operate throughout the duration of a single
+ *   request.
+ *
+ * * UserInfo: information about the current user (known through
+ *   req.session.id)
+ *
+ *
+ * @public
+ */
 export class BaseService {
+  /**
+   * @internal
+   */
   protected static __baseService = true;
+  /**
+   * @internal
+   */
   static _factory: any;
+  /**
+   * @internal
+   */
   static get factory() {
     if (!this._factory) this._factory = (serviceCtx: ServiceContext) => new this(serviceCtx);
     return this._factory;
   }
 
-  /**
-   * Derive from this class to create H4BFF services.
-   *
-   * Services are classes that are instantiated and operate
-   * within an "isolated" service context, and are instantiated
-   * separately within each context, as opposed to singletons
-   * which have only one instance within an App.
-   *
-   * Examples of classes that should derive from `BaseService`:
-   * * Request: holds a reference to the HTTP request that triggered
-   *   the service context creation
-   * * Transaction: a single transaction that's shared between
-   *   services that operate throughout the duration of a single
-   *   request.
-   * * UserInfo: information about the current user (known through
-   *   req.session.id)
-   * etc.
-   */
   constructor(protected context: ServiceContext) {}
 
   /**
@@ -367,18 +406,21 @@ export class BaseService {
   }
 }
 
+/**
+ * The dependency injection locator of h4bff. One is instantiated for each app, as well as for
+ * each service context (per request).
+ *
+ * Normally you wouldn't use the locator directly, instead convenience methods getService and
+ * getSingleton are provided from within services, service context singletons and apps.
+ *
+ * The locator also controls overrides, but those are also typically configured through the app
+ * itself instead of via the locator.
+ *
+ * @internal
+ */
 export class Locator<Context> {
   private instances: Map<Function, any> = new Map();
   private overrides: Map<Function, Function> = new Map();
-
-  /**
-   * Mostly for internal use.
-   *
-   * Used for locating instances of classes / factory functions,
-   * and for instantiating them if they don't exist.
-   *
-   * Provides overriding functionality (used for mocks in tests.)
-   */
   constructor(
     private locatorCtx: Context,
     private isClass: (v: ConstructorOrFactory<Context, any>) => boolean,
@@ -415,7 +457,9 @@ export class Locator<Context> {
 
   override<T>(f: ConstructorOrFactory<Context, T>, g: ConstructorOrFactory<Context, T>) {
     if (this.instances.has(f)) {
-      console.warn(`Warning: by overriding ${f.name}, you will be shadowing an already instantiated class.`);
+      console.warn(
+        `Warning: by overriding ${f.name}, you will be shadowing an already instantiated class.`,
+      );
     }
     this.overrides.set(f, g);
   }
