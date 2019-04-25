@@ -2,6 +2,10 @@
 
 ## AppSingleton class
 
+Derive from this class to create application singletons.
+
+Singletons are initialized only once per application, although you can initialize different singletons of the same type in child applications.
+
 <b>Signature:</b>
 
 ```typescript
@@ -35,11 +39,11 @@ protected app: App;
 
 |  Method | Description |
 |  --- | --- |
-|  [getSingleton(Klass)](AppSingleton.md#getsingleton) | A proxy for <code>app.getSingleton(Klass)</code>. |
+|  [getSingleton(Klass)](AppSingleton.md#getsingleton) | A proxy for [\`app.getSingleton(Klass)\`](App.md#getsingleton) |
 
 ### getSingleton
 
-A proxy for `app.getSingleton(Klass)`<!-- -->.
+A proxy for [\`app.getSingleton(Klass)\`](App.md#getsingleton)
 
 <b>Signature:</b>
 

@@ -16,20 +16,6 @@ If your service context initializes resources, see [ServiceContextEvents](Servic
 export declare class ServiceContext 
 ```
 
-## Properties
-
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [locator](ServiceContext.md#locator) | <code>Locator&lt;ServiceContext&gt;</code> |  |
-
-### locator
-
-<b>Signature:</b>
-
-```typescript
-readonly locator: Locator<ServiceContext>;
-```
-
 ## Methods
 
 |  Method | Description |

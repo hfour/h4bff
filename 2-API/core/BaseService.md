@@ -2,6 +2,20 @@
 
 ## BaseService class
 
+Derive from this class to create H4BFF services.
+
+Services are classes that are instantiated and operate within an "isolated" service context, and are instantiated separately within each context, as opposed to singletons which have only one instance within an App.
+
+#### Remarks
+
+Examples of classes that should derive from `BaseService`<!-- -->:
+
+\* Request: holds a reference to the HTTP request that triggered the service context creation
+
+\* Transaction: a single transaction that's shared between services that operate throughout the duration of a single request.
+
+\* UserInfo: information about the current user (known through req.session.id)
+
 <b>Signature:</b>
 
 ```typescript
@@ -12,26 +26,7 @@ export declare class BaseService
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [\_\_baseService](BaseService.md#__baseservice) | <code>boolean</code> |  |
-|  [\_factory](BaseService.md#_factory) | <code>any</code> |  |
 |  [context](BaseService.md#context) | <code>ServiceContext</code> |  |
-|  [factory](BaseService.md#factory) | <code>any</code> |  |
-
-### \_\_baseService
-
-<b>Signature:</b>
-
-```typescript
-protected static __baseService: boolean;
-```
-
-### \_factory
-
-<b>Signature:</b>
-
-```typescript
-static _factory: any;
-```
 
 ### context
 
@@ -39,14 +34,6 @@ static _factory: any;
 
 ```typescript
 protected context: ServiceContext;
-```
-
-### factory
-
-<b>Signature:</b>
-
-```typescript
-static readonly factory: any;
 ```
 
 ## Methods

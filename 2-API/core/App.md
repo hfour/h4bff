@@ -29,7 +29,6 @@ export declare class App
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [parentApp](App.md#parentapp) | <code>App &#124; null</code> |  |
-|  [singletonLocator](App.md#singletonlocator) | <code>Locator&lt;this&gt;</code> |  |
 
 ### parentApp
 
@@ -37,14 +36,6 @@ export declare class App
 
 ```typescript
 parentApp: App | null;
-```
-
-### singletonLocator
-
-<b>Signature:</b>
-
-```typescript
-singletonLocator: Locator<this>;
 ```
 
 ## Methods
@@ -60,7 +51,7 @@ singletonLocator: Locator<this>;
 |  [loadPlugins()](App.md#loadplugins) | Override this method to load plugins in your app.<!-- -->TODO: describe why it's important to load plugins when configuring an application; also how it differs from starting the application -- the other kind of side-effects. |
 |  [overrideService(Klass, Klass2)](App.md#overrideservice) | Allows you to specify an alternative implementation for the expected service. Each time someone tries to instantiate the specified class / fn, the override is used instead. The type of the override must match that of the original class / fn.<!-- -->This method is typically useful in tests to test plugins in isolation by providing mock or fake dependencies. |
 |  [overrideSingleton(Klass, Klass2)](App.md#overridesingleton) | Allows you to specify an alternative implementation for the expected singleton. Each time someone tries to instantiate the specified class / fn, the override is used instead. The type of the override must match that of the original class / fn.<!-- -->This method is typically useful in tests to test plugins in isolation by providing mock or fake dependencies. |
-|  [withServiceContext(f)](App.md#withservicecontext) | Creates a service context, executes the provided function and disposes of the context afterwards. Disposal happens regardless of exceptions. |
+|  [withServiceContext(f)](App.md#withservicecontext) | Creates a service context, executes the provided function and disposes of the context afterwards. Disposal happens regardless of exceptions. See [ServiceContext](ServiceContext.md) for more info on what a service context is, and [ServiceContextEvents](ServiceContextEvents.md) for more info on disposal. |
 
 ### clearServiceOverrides
 
@@ -232,7 +223,7 @@ overrideSingleton<T>(Klass: ConstructorOrFactory<App, T>, Klass2: ConstructorOrF
 
 ### withServiceContext
 
-Creates a service context, executes the provided function and disposes of the context afterwards. Disposal happens regardless of exceptions.
+Creates a service context, executes the provided function and disposes of the context afterwards. Disposal happens regardless of exceptions. See [ServiceContext](ServiceContext.md) for more info on what a service context is, and [ServiceContextEvents](ServiceContextEvents.md) for more info on disposal.
 
 <b>Signature:</b>
 
