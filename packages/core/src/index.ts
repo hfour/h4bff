@@ -13,7 +13,7 @@ export class App {
    *
    * Applications are responsible for:
    * - initializing and storing singletons;
-   * - creating and executing functions within service contexes;
+   * - creating and executing functions within service contexts;
    * - managing singleton overrides (useful for tests)
    *
    * Applications can have parents. When initializing singletons,
@@ -126,7 +126,7 @@ export class App {
    *
    * Use this when you want to initialize a class somewhere
    * specific in the hierarchy of apps, for example in
-   * the parent app, to prevent it from being initalized
+   * the parent app, to prevent it from being initialized
    * in a child later on.
    */
   load<T>(Klass: ConstructorOrFactory<App, T>): void {
@@ -175,7 +175,7 @@ export class App {
   }
 
   /**
-   * When instatiating singletons, child applications look in their parents
+   * When instantiating singletons, child applications look in their parents
    * for already instantiated singletons, returning them if they exists.
    *
    * Services and the service context are not affected by parent / child
@@ -224,7 +224,7 @@ export class ServiceContext {
    * HTTP request comes, a new page is created or on similar events
    * on which you want to create and later destroy some services.
    *
-   * For example, if you want all services to exectute their queries
+   * For example, if you want all services to execute their queries
    * within a single transaction, you'd create a service context and
    * initialize a transaction inside it.
    *
@@ -234,7 +234,7 @@ export class ServiceContext {
    * around.
    *
    * See `ServiceContextEvents` for more info on doing things in
-   * response to the creation / destruction of service contexes.
+   * response to the creation / destruction of service contexts.
    */
   constructor(private app: App) {}
 
@@ -311,7 +311,7 @@ export class BaseService {
    * * Request: holds a reference to the HTTP request that triggered
    *   the service context creation
    * * Transaction: a single transaction that's shared between
-   *   services that operate througout the duration of a single
+   *   services that operate throughout the duration of a single
    *   request.
    * * UserInfo: information about the current user (known through
    *   req.session.id)

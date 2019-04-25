@@ -16,8 +16,8 @@ export class RPCServiceRegistry extends AppSingleton {
 
   /**
    * Adds new RPC service mapping.
-   * @param alias service alias
-   * @param service service constructor
+   * @param alias - service alias
+   * @param service - service constructor
    */
   add(alias: string, service: typeof BaseService) {
     if (this.services[alias] != null) {

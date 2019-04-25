@@ -1,4 +1,4 @@
-![H4BFF Logo](/assets/h4bff-logo.png)
+![H4BFF Logo](/docs/assets/h4bff-logo.png)
 
 ## HFour's BFF: the backend and frontend framework
 

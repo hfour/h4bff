@@ -7,3 +7,5 @@ package-lock.json
 packages/*/node_modules
 packages/*/build
 packages/*/.intermediate
+packages/*/docs-json
+/docs-dist

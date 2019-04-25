@@ -1,0 +1,23 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/api-extractor.schema.json",
+  "compiler": {
+    "configType": "tsconfig",
+    "rootFolder": "."
+  },
+  "project": {
+    "entryPointSourceFile": "build/index.d.ts"
+  },
+  "validationRules": {
+    "missingReleaseTags": "allow"
+  },
+  "apiReviewFile": {
+    "enabled": false
+  },
+  "tsdocMetadata": {
+    "enabled": false
+  },
+  "apiJsonFile": {
+    "enabled": true,
+    "outputFolder": "./docs-json"
+  }
+}
