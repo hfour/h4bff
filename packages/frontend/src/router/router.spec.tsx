@@ -6,8 +6,8 @@ import { Location } from 'history';
 import * as TestRenderer from 'react-test-renderer';
 import * as url from 'url';
 
-const potatoesPage = jest.fn(() => <div>Example page</div>);
-const carsPage = jest.fn(() => <div>Sample page</div>);
+const potatoesPage = jest.fn(_p1 => <div>Example page</div>);
+const carsPage = jest.fn(_p1 => <div>Sample page</div>);
 
 describe('router', () => {
   let app: App;

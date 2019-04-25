@@ -1,16 +1,4 @@
+dist: xenial
 language: node_js
-node_js:
-  - "10"
-install:
-  - yarn
-
-stages:
-  - pull request
-  - master
-jobs:
-  include:
-    - stage: pull request
-      script: yarn build && yarn test
-    - stage: master
-      if: branch = master AND type = push
-      script: yarn build && yarn docs && yarn docs:publish
+node_js: 'lts/*'
+script: yarn build && yarn test
