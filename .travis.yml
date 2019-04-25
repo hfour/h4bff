@@ -1,10 +1,6 @@
 dist: xenial
 language: node_js
-node_js:
-  - "10"
-install:
-  - yarn
-
+node_js: 'lts/*'
 jobs:
   include:
     - script: yarn build && yarn test
