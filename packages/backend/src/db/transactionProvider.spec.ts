@@ -103,5 +103,21 @@ describe('TransactionProvider', () => {
           expect(transaction.rollbackAsync).toHaveBeenCalled();
         });
     });
+
+    it('should throw if transaction is used after service context ends', () => {
+      let { app } = prepare();
+
+      let tp: TransactionProvider = null!;
+      return app
+        .withServiceContext(sCtx => {
+          tp = sCtx.getService(TransactionProvider);
+          tp.tx;
+          return Promise.resolve();
+        })
+        .then(() => {
+          expect(() => tp.tx).toThrowError('Transaction is already closed');
+          expect(() => tp.conn).toThrowError('Transaction is already closed');
+        });
+    });
   });
 });
