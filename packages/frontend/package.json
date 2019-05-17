@@ -25,7 +25,7 @@
     "classnames": "^2.2.6",
     "history": "^4.7.2",
     "lodash": "^4.17.5",
-    "mobx": "^4.6.0",
+    "mobx": ">=4.x.x <6.x.x",
     "mobx-react": "^5.4.2",
     "path-to-regexp": "^3.0.0",
     "query-string": "^6.2.0",
