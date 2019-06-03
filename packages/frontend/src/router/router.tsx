@@ -16,6 +16,22 @@ export interface HistoryContextProps {
   location: string;
 }
 
+/**
+ * Use the AppContext.Consumer to get the application within a component. This enables the use
+ * of app.getSingleton within e.g. page layouts
+ *
+ * @example
+ * ```
+ * <AppContext.Consumer>
+ *   {context => context.app.getSingleton(NameSingleton).appName}
+ * </AppContext.Consumer>
+ * ```
+ */
+export const AppContext = React.createContext({} as AppContextProps);
+export interface AppContextProps {
+  app: App;
+}
+
 export type Params = { [key: string]: string } | { queryParams?: { [key: string]: string } };
 export type RouteParameters<T extends Params = {}> = T;
 export type RP = RouteParameters<any>;
@@ -46,7 +62,11 @@ class MobxRouter {
 
   constructor(private app: App) {
     reaction(
-      () => [this.routes.length, this.redirects.length, this.app.getSingleton(RouteProvider).location.pathname],
+      () => [
+        this.routes.length,
+        this.redirects.length,
+        this.app.getSingleton(RouteProvider).location.pathname,
+      ],
       () => this.setCurrentComponentOrRedirect(),
     );
   }
@@ -55,7 +75,9 @@ class MobxRouter {
   private setCurrentComponentOrRedirect = () => {
     const routeProvider = this.app.getSingleton(RouteProvider);
     const location = routeProvider.location;
-    const matchedRedirect = this.redirects.find(redirect => matchPath(location.pathname, redirect.from));
+    const matchedRedirect = this.redirects.find(redirect =>
+      matchPath(location.pathname, redirect.from),
+    );
     if (matchedRedirect) {
       routeProvider.browserHistory.push(matchedRedirect.to);
     } else {
@@ -127,11 +149,16 @@ export class Router extends AppSingleton {
   RenderInstance = observer(() => {
     const routeProvider = this.getSingleton(RouteProvider);
     return (
-      <HistoryContext.Provider
-        value={{ history: routeProvider.browserHistory, location: routeProvider.location.pathname }}
-      >
-        <this.router.RenderInstance />
-      </HistoryContext.Provider>
+      <AppContext.Provider value={{ app: this.app }}>
+        <HistoryContext.Provider
+          value={{
+            history: routeProvider.browserHistory,
+            location: routeProvider.location.pathname,
+          }}
+        >
+          <this.router.RenderInstance />
+        </HistoryContext.Provider>
+      </AppContext.Provider>
     );
   });
 }

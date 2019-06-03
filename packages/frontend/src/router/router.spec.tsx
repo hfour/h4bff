@@ -1,10 +1,11 @@
-import { Router } from './router';
+import { Router, AppContext } from './router';
 import { App } from '@h4bff/core';
 import * as React from 'react';
 import { RouteProvider } from './routeProvider';
 import { Location } from 'history';
 import * as TestRenderer from 'react-test-renderer';
 import * as url from 'url';
+import { mount } from 'enzyme';
 
 const potatoesPage = jest.fn(_p1 => <div>Example page</div>);
 const carsPage = jest.fn(_p1 => <div>Sample page</div>);
@@ -159,6 +160,24 @@ describe('router', () => {
 
       let routeProvider = app.getSingleton(RouteProvider);
       expect(routeProvider.location.pathname).toEqual('/example');
+    });
+
+    it('should provide the app correctly', () => {
+      let NameSingleton = (_app: App) => {
+        return { appName: 'default' };
+      };
+
+      const appNamePage = () => (
+        <AppContext.Consumer>
+          {context => context.app.getSingleton(NameSingleton).appName}
+        </AppContext.Consumer>
+      );
+
+      app.getSingleton(NameSingleton).appName = 'HelloWorld';
+      router.addRoute('/appname', appNamePage);
+      visitUrl('/appname');
+      let result = mount(<router.RenderInstance />);
+      expect(result.text().trim()).toEqual('HelloWorld');
     });
   });
 });
