@@ -228,7 +228,7 @@ Creates a service context, executes the provided function and disposes of the co
 <b>Signature:</b>
 
 ```typescript
-withServiceContext<T>(f: (createdCtx: ServiceContext) => PromiseLike<T>): PromiseLike<T>;
+withServiceContext<T>(f: (createdCtx: ServiceContext) => PromiseLike<T>): Promise<T>;
 ```
 
 #### Parameters
@@ -239,5 +239,5 @@ withServiceContext<T>(f: (createdCtx: ServiceContext) => PromiseLike<T>): Promis
 
 <b>Returns:</b>
 
-`PromiseLike<T>`
+`Promise<T>`
 

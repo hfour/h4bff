@@ -14,6 +14,7 @@
 
 |  Interface | Description |
 |  --- | --- |
+|  [AppContextProps](frontend/AppContextProps.md) |  |
 |  [HistoryContextProps](frontend/HistoryContextProps.md) |  |
 |  [LinkProps](frontend/LinkProps.md) |  |
 |  [Redirect](frontend/Redirect.md) |  |
@@ -22,6 +23,7 @@
 
 |  Variable | Description |
 |  --- | --- |
+|  [AppContext](frontend/AppContext.md) |  |
 |  [HistoryContext](frontend/HistoryContext.md) |  |
 
 ## Type Aliases

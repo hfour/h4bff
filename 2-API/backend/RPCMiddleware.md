@@ -5,5 +5,5 @@
 <b>Signature:</b>
 
 ```typescript
-export declare type RPCMiddleware = (dispatcher: RPCDispatcher, next: () => Promise<any>) => Promise<any>;
+export declare type RPCMiddleware = (dispatcher: RPCDispatcher, next: () => PromiseLike<any>) => PromiseLike<any>;
 ```
