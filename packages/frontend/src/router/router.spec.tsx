@@ -1,4 +1,4 @@
-import { Router } from './router';
+import { Router, AppContext } from './router';
 import { App } from '@h4bff/core';
 import * as React from 'react';
 import { RouteProvider } from './routeProvider';
@@ -159,6 +159,29 @@ describe('router', () => {
 
       let routeProvider = app.getSingleton(RouteProvider);
       expect(routeProvider.location.pathname).toEqual('/example');
+    });
+  });
+
+  describe('app provider', () => {
+    it('should provide the app correctly', () => {
+      let NameSingleton = (_app: App) => {
+        return { appName: 'default' };
+      };
+
+      const appNamePage = () => (
+        <AppContext.Consumer>
+          {context => context.app.getSingleton(NameSingleton).appName}
+        </AppContext.Consumer>
+      );
+
+      app.getSingleton(NameSingleton).appName = 'HelloWorld';
+      router.addRoute('/appname', appNamePage);
+      visitUrl('/appname');
+      let renderer = TestRenderer.create(<router.RenderInstance />);
+
+      let result = renderer.toJSON();
+
+      expect(result).toEqual('HelloWorld');
     });
   });
 });
