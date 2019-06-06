@@ -34,10 +34,6 @@
   },
   "devDependencies": {
     "@types/classnames": "^2.2.6",
-    "@types/enzyme": "^3.9.3",
-    "@types/enzyme-adapter-react-16": "^1.0.5",
-    "enzyme": "^3.9.0",
-    "enzyme-adapter-react-16": "^1.13.2",
     "@types/lodash": "^4.14.63",
     "@types/query-string": "^6.2.0",
     "@types/react-dom": "^16.0.10",
@@ -52,7 +48,6 @@
         "isolatedModules": true
       }
     },
-    "setupTestFrameworkScriptFile": "<rootDir>/src/test-configure-enzyme.ts",
     "moduleFileExtensions": [
       "ts",
       "tsx",
