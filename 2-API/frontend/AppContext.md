@@ -2,8 +2,23 @@
 
 ## AppContext variable
 
+Use the AppContext.Consumer to get the application within a component. This enables the use of app.getSingleton within e.g. page layouts
+
 <b>Signature:</b>
 
 ```typescript
-AppContext: React.Context<AppContextProps>
+AppContext: React.Context<{
+    app: App;
+}>
 ```
+
+#### Example
+
+
+```
+<AppContext.Consumer>
+  {context => context.app.getSingleton(NameSingleton).appName}
+</AppContext.Consumer>
+
+```
+

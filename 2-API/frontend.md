@@ -14,7 +14,6 @@
 
 |  Interface | Description |
 |  --- | --- |
-|  [AppContextProps](frontend/AppContextProps.md) |  |
 |  [HistoryContextProps](frontend/HistoryContextProps.md) |  |
 |  [LinkProps](frontend/LinkProps.md) |  |
 |  [Redirect](frontend/Redirect.md) |  |
@@ -23,7 +22,7 @@
 
 |  Variable | Description |
 |  --- | --- |
-|  [AppContext](frontend/AppContext.md) |  |
+|  [AppContext](frontend/AppContext.md) | Use the AppContext.Consumer to get the application within a component. This enables the use of app.getSingleton within e.g. page layouts |
 |  [HistoryContext](frontend/HistoryContext.md) |  |
 
 ## Type Aliases

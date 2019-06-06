@@ -27,7 +27,6 @@
       - [ServiceContextEvents](/2-API/core/ServiceContextEvents.md)
     - [frontend](/2-API/frontend)
       - [AppContext](/2-API/frontend/AppContext.md)
-      - [AppContextProps](/2-API/frontend/AppContextProps.md)
       - [HistoryContext](/2-API/frontend/HistoryContext.md)
       - [HistoryContextProps](/2-API/frontend/HistoryContextProps.md)
       - [Link](/2-API/frontend/Link.md)
