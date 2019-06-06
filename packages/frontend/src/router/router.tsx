@@ -26,11 +26,10 @@ export interface HistoryContextProps {
  *   {context => context.app.getSingleton(NameSingleton).appName}
  * </AppContext.Consumer>
  * ```
+ *
+ * @public
  */
-export const AppContext = React.createContext({} as AppContextProps);
-export interface AppContextProps {
-  app: App;
-}
+export const AppContext = React.createContext({} as { app: App });
 
 export type Params = { [key: string]: string } | { queryParams?: { [key: string]: string } };
 export type RouteParameters<T extends Params = {}> = T;
