@@ -95,7 +95,7 @@ H4BFF aims to offer some of the benefits and drawbacks from both approaches.
 
 - Code separation is easy to achieve. A plugin can live in a single directory or a single npm package - its models, controllers (services), database migrations, API endpoints and everything it needs to function as a single unit.
 
-- Although plugins can be more easily be separated into micro-services compared to typical monoliths, scaling is still more painful than in a microservice architecture. H4BFF is designed mainly for enterprise software style scaling, where multiple (possibly customized) deployments can run for different clients
+- Although plugins can be more easily be separated into micro-services compared to typical monoliths, scaling is still more painful than in a microservice architecture. H4BFF is designed mainly for "on-premise" style scaling, where multiple (likely customized) deployments can run for different clients
 
 Interested in how this works? Check out our [introduction][intro] to get more familiar with the
 framework's building blocks, then lets look at how we would build a comments plugin in the more
