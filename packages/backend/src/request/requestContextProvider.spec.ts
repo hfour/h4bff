@@ -31,11 +31,17 @@ describe('RequestContextProvider', () => {
 
     let app = new App();
     let requestContextProvider = new RequestContextProvider(app);
-    requestContextProvider.withRequestContext(request, response, _sctx => {
-      expect(() => {
-        requestContextProvider.withRequestContext(request, response, () => Promise.resolve());
-      }).toThrow();
-      return Promise.resolve();
-    });
+    requestContextProvider
+      .withRequestContext(request, response, _sctx => {
+        expect(() => {
+          requestContextProvider.withRequestContext(request, response, () => Promise.resolve());
+        }).toThrow();
+        return Promise.resolve();
+      })
+      .then(() => {
+        expect(() => {
+          requestContextProvider.withRequestContext(request, response, () => Promise.resolve());
+        }).not.toThrow();
+      });
   });
 });
