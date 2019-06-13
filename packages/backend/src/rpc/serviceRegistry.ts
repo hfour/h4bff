@@ -6,7 +6,10 @@ import { RPCDispatcher } from '../rpc';
 /**
  * RPC service middleware.
  */
-export type RPCServiceMiddleware = (sCtx: ServiceContext, next: () => PromiseLike<void>) => PromiseLike<void>;
+export type RPCServiceMiddleware = (
+  sCtx: ServiceContext,
+  next: () => PromiseLike<void>,
+) => PromiseLike<void>;
 
 /**
  * Responsible for holding the RPC service mapping.
@@ -27,21 +30,9 @@ export class RPCServiceRegistry extends AppSingleton {
   }
 
   /**
-   * Checks if a given method exists on a RPC service given by its alias.
-   */
-  exists(alias: string, method: string) {
-    const ServiceClass = this.services[alias];
-    if (!ServiceClass) {
-      return false;
-    }
-    const serviceMethod = (ServiceClass.prototype as any)[method];
-    return typeof serviceMethod === 'function';
-  }
-
-  /**
    * Returns service for given alias.
    */
-  get(serviceAlias: string) {
+  get(serviceAlias: string): typeof BaseService | undefined {
     return this.services[serviceAlias];
   }
 
