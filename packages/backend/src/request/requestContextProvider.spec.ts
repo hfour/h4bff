@@ -25,4 +25,23 @@ describe('RequestContextProvider', () => {
         expect(ctxDisposed).toBe(true);
       });
   });
+  it('should not work nested', () => {
+    let request = {} as Request;
+    let response = {} as Response;
+
+    let app = new App();
+    let requestContextProvider = new RequestContextProvider(app);
+    requestContextProvider
+      .withRequestContext(request, response, _sctx => {
+        expect(() => {
+          requestContextProvider.withRequestContext(request, response, () => Promise.resolve());
+        }).toThrow();
+        return Promise.resolve();
+      })
+      .then(() => {
+        expect(() => {
+          requestContextProvider.withRequestContext(request, response, () => Promise.resolve());
+        }).not.toThrow();
+      });
+  });
 });

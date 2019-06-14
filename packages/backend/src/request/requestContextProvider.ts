@@ -2,7 +2,6 @@ import * as Express from 'express';
 import { AppSingleton, ServiceContext, App, ServiceContextEvents } from '@h4bff/core';
 import { RequestInfo } from './';
 
-
 type ServiceContextFn<T> = (createdContext: ServiceContext) => PromiseLike<T>;
 /**
  * Use this class to open up a new service context from an express middleware. The service context
@@ -48,8 +47,11 @@ export class RequestContextProvider extends AppSingleton {
   withRequestContext<T>(
     req: Express.Request,
     res: Express.Response,
-    f: ServiceContextFn<T>
+    f: ServiceContextFn<T>,
   ): PromiseLike<T> {
+    if (this.contexts.get(req)) {
+      throw new Error('Attempted to create a request context within the request context');
+    }
     return this.app.withServiceContext(ctx => {
       ctx.getService(RequestInfo)._setRequestResponse(req, res);
       return f(ctx);
