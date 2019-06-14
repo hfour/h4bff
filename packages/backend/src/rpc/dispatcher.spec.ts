@@ -105,6 +105,7 @@ describe('RPCDispatcher', () => {
         let rpcDispatcher = sCtx.getService(RPCDispatcher);
         let requestInfo = sCtx.getService(RequestInfo);
 
+        expect(rpcDispatcher.serviceMethod).toEqual(undefined);
         return Promise.resolve(rpcDispatcher.handleRequest()).then(() => {
           expect(requestInfo.res.status).toHaveBeenCalledWith(404);
           expect(requestInfo.res.json).toHaveBeenCalledWith({
