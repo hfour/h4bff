@@ -44,12 +44,12 @@ export class RPCDispatcher extends BaseService {
   }
 
   get serviceInstance() {
-    return this.getService(this.serviceClass);
+    return this.serviceClass && this.getService(this.serviceClass);
   }
 
   get serviceMethod() {
     const method = this.serviceNameMethod[1];
-    return (this.serviceInstance as any)[method] as Function;
+    return this.serviceInstance && ((this.serviceInstance as any)[method] as Function);
   }
 
   private jsonFail(code: number, message: string, data: any = null) {
@@ -102,18 +102,20 @@ export class RPCDispatcher extends BaseService {
       return this.jsonFail(400, '"method" query parameter not found');
     }
     if (!req.body.params) {
-      return this.jsonFail(400, '"params" not found, send an empty object in case of no parameters');
+      return this.jsonFail(
+        400,
+        '"params" not found, send an empty object in case of no parameters',
+      );
     }
-
-    const [serviceAlias, method] = this.serviceNameMethod;
-
-    if (!this.rpcRegistry.exists(serviceAlias, method)) {
+    if (this.serviceMethod == null) {
       return this.jsonFail(404, 'Method not found');
     }
 
-    // in case the method is not a promise, we don't want the error to bubble-up
-    const promiseWrapper = Promise.resolve();
-    return promiseWrapper.then(() => this.serviceMethod.call(this.serviceInstance, req.body.params) as Promise<any>);
+    // in case the method fails, we want the error to bubble up
+    return Promise.resolve().then(
+      // We already did the existence check above
+      () => this.serviceMethod!.call(this.serviceInstance, req.body.params),
+    );
   }
 
   /**
