@@ -134,8 +134,13 @@ export class App {
     }
   }
 
+  /**
+   * Ensures that the singleton is provided; throws if it's not.
+   *
+   * Use this to detect unprovided but used singletons early.
+   */
   requireSingleton<T>(Klass: ConstructorOrFactory<App, T>): void {
-    if (!this.providedSingletons.has(Klass)) {
+    if (!this.isSingletonProvided(Klass)) {
       throw new Error(`The singleton ${Klass} is required, but wasnt provided.`);
     }
   }
