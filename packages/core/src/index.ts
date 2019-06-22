@@ -214,10 +214,16 @@ export class App {
    * While singleton classes are typically side effect free and can be instantiated lazily when
    * first requested, plugins have side-effects, such as adding router routes, adding RPC endpoints
    * or setting up event listeners. The load method is therefore used to load those plugins.
+   *
+   * You can load a plugin only once; load throws an error the second time.
    */
   load<T>(Klass: ConstructorOrFactory<App, T>): void {
-    this.getSingleton(Klass); // force initialization;
-    return;
+    if (this.isSingletonProvided(Klass)) {
+      throw new Error(`Singleton ${Klass.name} is already initialized.`);
+    } else {
+      this.provideSingleton(Klass);
+      this.getSingleton(Klass); // force initialization
+    }
   }
 
   /**

@@ -34,8 +34,8 @@ describe('Instantiation', () => {
 
   it('#getSingleton should instantiate a singleton factory once', () => {
     let app = new App();
-    let factoryFunc = () => app.getSingleton(Database);
-    app.provideSingleton(Database);
+    let i = 0;
+    let factoryFunc = (_app: App) => ({ id: ++i });
     app.provideSingleton(factoryFunc);
     let db1 = app.getSingleton(factoryFunc);
     let db2 = app.getSingleton(factoryFunc);
@@ -45,14 +45,12 @@ describe('Instantiation', () => {
   it('#load should force a singleton to instantitate', () => {
     let app = new App();
     let dbDidInit: boolean = false;
-    app.provideSingleton(Database);
     class MyDB extends Database {
       constructor(app: App) {
         super(app);
         dbDidInit = true;
       }
     }
-    app.provideSingleton(MyDB);
     app.load(MyDB);
     expect(dbDidInit).toBe(true);
   });
@@ -184,9 +182,52 @@ describe('Context disposal', () => {
 });
 
 describe('providing dependencies', () => {
-  it('should throw when loading', () => {
+  it('should throw when getting singletons that arent provided', () => {
     let app = new App();
     class MySingleton extends AppSingleton {}
     expect(() => app.getSingleton(MySingleton)).toThrowError();
+  });
+
+  it('should not throw when getting provided singletons', () => {
+    let app = new App();
+    class MySingleton extends AppSingleton {}
+    let mySingletonModule = (app: App) => app.provideSingleton(MySingleton);
+    app.load(mySingletonModule);
+    app.getSingleton(MySingleton); // shouldn't throw
+  });
+
+  it('should throw when you provide singletons twice', () => {
+    let app = new App();
+    class MySingleton extends AppSingleton {}
+    app.provideSingleton(MySingleton);
+    expect(() => app.provideSingleton(MySingleton)).toThrow();
+  });
+
+  it('dependencies provided in child apps shouldnt affect parent apps', () => {
+    let app = new App();
+    let childApp = app.createChildApp();
+    class MySingleton extends AppSingleton {}
+    let myPlugin = (app: App) => {
+      app.provideSingleton(MySingleton);
+    };
+    childApp.load(myPlugin);
+    expect(() => app.getSingleton(MySingleton)).toThrow();
+  });
+
+  it('dependencies provided in the parent should be present in child apps', () => {
+    let app = new App();
+    class MySingleton extends AppSingleton {}
+    app.provideSingleton(MySingleton);
+    let childApp = app.createChildApp();
+    childApp.getSingleton(MySingleton); // should not throw
+  });
+});
+
+describe('loading plugins', () => {
+  it('should throw when loading plugins twice', () => {
+    let app = new App();
+    let myPlugin = (app: App) => app.provideSingleton(class MySingleton extends AppSingleton {});
+    app.load(myPlugin);
+    expect(() => app.load(myPlugin)).toThrow();
   });
 });
