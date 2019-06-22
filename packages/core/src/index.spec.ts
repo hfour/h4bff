@@ -221,6 +221,12 @@ describe('providing dependencies', () => {
     let childApp = app.createChildApp();
     childApp.getSingleton(MySingleton); // should not throw
   });
+
+  it('should throw when you require unprovided singletons', () => {
+    let app = new App();
+    class MySingleton extends AppSingleton {}
+    expect(() => app.requireSingleton(MySingleton)).toThrow();
+  });
 });
 
 describe('loading plugins', () => {
