@@ -126,10 +126,9 @@ describe('App nesting', () => {
 
   it('#getSingleton should instantiate non-existing singletons in the child app, not parent', () => {
     let parentApp = new App();
-    // parentApp.provideSingleton(Database); // works if provided in parent app but... see below.
+    parentApp.provideSingleton(Database);
     let childApp = parentApp.createChildApp();
-    childApp.provideSingleton(Database);
-    let childDbId = childApp.getSingleton(Database).id; // why does this throw??!
+    let childDbId = childApp.getSingleton(Database).id;
     expect(parentApp.getSingleton(Database).id !== childDbId);
   });
 });

@@ -52,7 +52,12 @@ export class App {
   constructor(opts: { parentApp?: App } = {}) {
     this.parentApp = opts.parentApp ? opts.parentApp : null;
     this.singletonLocator = new Locator(this, s => '__appSingleton' in s);
-    this.provideSingleton(ServiceContextEvents); // otherwise, withServiceContext fails.
+
+    if (!opts.parentApp) {
+      // we must provide this, otherwise withServiceContext will fail every time.
+      // we do it once, on the parent app, because child app construction will fail otherwise.
+      this.provideSingleton(ServiceContextEvents); // otherwise, withServiceContext fails.
+    }
   }
 
   /**
@@ -113,7 +118,7 @@ export class App {
    * Also see: `App#requireSingleton`
    */
   provideSingleton<T>(Klass: ConstructorOrFactory<App, T>): void {
-    if (this.providedSingletons.has(Klass)) {
+    if (this.isSingletonProvided(Klass)) {
       throw new Error(`The singleton ${Klass.name} is already provided.`);
     }
     this.providedSingletons.set(Klass, true);
