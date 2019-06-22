@@ -26,6 +26,7 @@ class UserProvider extends BaseService {
 describe('Instantiation', () => {
   it('#getSingleton should instantiate a singleton class once', () => {
     let app = new App();
+    app.provideSingleton(Database);
     let db1 = app.getSingleton(Database);
     let db2 = app.getSingleton(Database);
     expect(db1.id).toEqual(db2.id);
@@ -34,6 +35,8 @@ describe('Instantiation', () => {
   it('#getSingleton should instantiate a singleton factory once', () => {
     let app = new App();
     let factoryFunc = () => app.getSingleton(Database);
+    app.provideSingleton(Database);
+    app.provideSingleton(factoryFunc);
     let db1 = app.getSingleton(factoryFunc);
     let db2 = app.getSingleton(factoryFunc);
     expect(db1.id).toEqual(db2.id);
@@ -42,14 +45,15 @@ describe('Instantiation', () => {
   it('#load should force a singleton to instantitate', () => {
     let app = new App();
     let dbDidInit: boolean = false;
-    app.load(
-      class MyDB extends Database {
-        constructor(app: App) {
-          super(app);
-          dbDidInit = true;
-        }
-      },
-    );
+    app.provideSingleton(Database);
+    class MyDB extends Database {
+      constructor(app: App) {
+        super(app);
+        dbDidInit = true;
+      }
+    }
+    app.provideSingleton(MyDB);
+    app.load(MyDB);
     expect(dbDidInit).toBe(true);
   });
 });
@@ -57,6 +61,7 @@ describe('Instantiation', () => {
 describe('Overrides', () => {
   it('#getSingleton should use and respect singleton overrides', () => {
     let app = new App();
+    app.provideSingleton(Database);
     app.overrideSingleton(
       Database,
       class MockDb extends Database {
@@ -98,6 +103,7 @@ describe('Overrides', () => {
 
   it('#clearSingletonOverrides should cause original singletons to instantiate', () => {
     let app = new App();
+    app.provideSingleton(Database);
     app.overrideSingleton(
       Database,
       class MockDb extends Database {
@@ -112,6 +118,7 @@ describe('Overrides', () => {
 describe('App nesting', () => {
   it('#getSingleton should find instantiated singletons in a parent app', () => {
     let app = new App();
+    app.provideSingleton(Database);
     let dbId = app.getSingleton(Database).id;
     let childApp = app.createChildApp();
     expect(childApp.getSingleton(Database).id).toEqual(dbId);
@@ -119,8 +126,10 @@ describe('App nesting', () => {
 
   it('#getSingleton should instantiate non-existing singletons in the child app, not parent', () => {
     let parentApp = new App();
+    // childApp.provideSingleton(Database); // works if provided in parent app but... see below.
     let childApp = parentApp.createChildApp();
-    let childDbId = childApp.getSingleton(Database).id;
+    childApp.provideSingleton(Database);
+    let childDbId = childApp.getSingleton(Database).id; // why does this throw??!
     expect(parentApp.getSingleton(Database).id !== childDbId);
   });
 });
@@ -172,5 +181,13 @@ describe('Context disposal', () => {
           expect(onDisposeFn).toHaveBeenCalled();
         },
       );
+  });
+});
+
+describe('providing dependencies', () => {
+  it('should throw when loading', () => {
+    let app = new App();
+    class MySingleton extends AppSingleton {}
+    expect(() => app.getSingleton(MySingleton)).toThrowError();
   });
 });

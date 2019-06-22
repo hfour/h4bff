@@ -46,11 +46,13 @@ export type PublicInterface<T> = { [K in keyof T]: T[K] };
  */
 export class App {
   private singletonLocator: Locator<this>;
+  private providedSingletons: WeakMap<ConstructorOrFactory<App, any>, boolean> = new WeakMap();
   parentApp: App | null;
 
   constructor(opts: { parentApp?: App } = {}) {
     this.parentApp = opts.parentApp ? opts.parentApp : null;
     this.singletonLocator = new Locator(this, s => '__appSingleton' in s);
+    this.provideSingleton(ServiceContextEvents); // otherwise, withServiceContext fails.
   }
 
   /**
@@ -103,6 +105,37 @@ export class App {
   }
 
   /**
+   * Registers a singleton as "provided". It's informing the application that a plugin
+   * agreed to expose that singleton.
+   *
+   * Calls to app.getSingleton(UnprovidedService) will fail with an error.
+   *
+   * Also see: `App#requireSingleton`
+   */
+  provideSingleton<T>(Klass: ConstructorOrFactory<App, T>): void {
+    if (this.providedSingletons.has(Klass)) {
+      throw new Error(`The singleton ${Klass.name} is already provided.`);
+    }
+    this.providedSingletons.set(Klass, true);
+  }
+
+  private isSingletonProvided<T>(Klass: ConstructorOrFactory<App, T>): boolean {
+    if (this.providedSingletons.has(Klass)) {
+      return true;
+    } else if (this.parentApp) {
+      return this.parentApp.isSingletonProvided(Klass);
+    } else {
+      return false;
+    }
+  }
+
+  requireSingleton<T>(Klass: ConstructorOrFactory<App, T>): void {
+    if (!this.providedSingletons.has(Klass)) {
+      throw new Error(`The singleton ${Klass} is required, but wasnt provided.`);
+    }
+  }
+
+  /**
    * Returns an instance of the singleton, if it exists somewhere here or
    * in some of the parent apps. If it doesn't it's created in this app.
    *
@@ -114,6 +147,12 @@ export class App {
   getSingleton<T>(Klass: ConstructorOrFactory<App, T>): T {
     if (this.hasSingleton(Klass)) {
       return this.getExistingSingleton(Klass);
+    }
+    if (!this.isSingletonProvided(Klass)) {
+      throw new Error(`Singleton ${Klass.name} wasnt provided`);
+      // console.warn(`The singleton ${Klass} was constructed, but wasn't provided beforehand.`);
+      // console.warn(`Please provide it explicitly using "App#provideSingleton(${Klass})".`);
+      // console.warn('In the future, this will be an error.');
     }
     return this.singletonLocator.get(Klass);
   }
@@ -297,6 +336,10 @@ export class ServiceContext {
    */
   getSingleton<T>(SingletonClass: ConstructorOrFactory<App, T>): T {
     return this.app.getSingleton(SingletonClass);
+  }
+
+  requireSingleton<T>(SingletonClass: ConstructorOrFactory<App, T>) {
+    return this.app.requireSingleton(SingletonClass);
   }
 }
 
