@@ -44,4 +44,18 @@ export let NestedAppsPlugin = (app: App) => {
   // Register RPC for root app
   app.getSingleton(RPCServiceRegistry).add('testRoot', TestService);
   ctxRouter.post('/root-api/rpc', app.getSingleton(RPCServiceRegistry).routeHandler);
+
+  console.log(
+    `Child: testSingleton before test (load plugins):`,
+    child1.getSingleton(testSingleton),
+  );
+  console.log(`Mock singleton for tests`);
+  app.overrideSingleton(testSingleton, (_app: App) => {
+    return 0;
+  });
+  console.log(`Child: testSingleton in test:`, child1.getSingleton(testSingleton));
+};
+
+export let testSingleton = (_app: App) => {
+  return new Date().getTime();
 };

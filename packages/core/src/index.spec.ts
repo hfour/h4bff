@@ -173,4 +173,38 @@ describe('Context disposal', () => {
         },
       );
   });
+
+  describe('Nested apps override showcase', () => {
+    const testSingleton = (_app: App) => {
+      return 'some text';
+    };
+
+    const childAppPlugin = (app: App) => {
+      app.load(testSingleton);
+    };
+
+    // used only to prove the point, otherwise imagine we don't have a reference to the child app
+    let childApp: any = null;
+
+    class ParentApp extends App {
+      init() {
+        // we do this in our app
+        childApp = this.createChildApp();
+        childAppPlugin(childApp);
+        return this;
+      }
+    }
+
+    it('showcase overriding in child apps', () => {
+      let app = new ParentApp().init();
+      // we need to mock the singleton for the 'childApp' (imagine that we don't have the reference to the child app)
+      app.overrideSingleton(testSingleton, () => {
+        return 'some text from override';
+      });
+
+      expect(app.getSingleton(testSingleton)).toBe('some text from override');
+      // this should fail
+      expect((childApp as App).getSingleton(testSingleton)).toBe('some text from override');
+    });
+  });
 });
