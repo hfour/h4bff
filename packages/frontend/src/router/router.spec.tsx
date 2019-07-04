@@ -6,6 +6,7 @@ import * as url from 'url';
 import { RouteProvider } from './routeProvider';
 import { Router } from './router';
 import { AppContext } from '../app-context';
+import { injectApp } from './inject-app-decorator';
 
 const potatoesPage = jest.fn(_p1 => <div>Example page</div>);
 const carsPage = jest.fn(_p1 => <div>Sample page</div>);
@@ -184,5 +185,33 @@ describe('router', () => {
 
       expect(result).toEqual('HelloWorld');
     });
+  });
+
+  it('inject App context - draft version showcase', () => {
+    @injectApp
+    class Test extends React.Component {
+      private app!: App;
+
+      render() {
+        console.log(`Inside render the app context`, this.app);
+        console.log(`Inside render the context type`, Test.contextType);
+        let suffix = this.app.getSingleton(testSingleton);
+        return 'test-' + suffix;
+      }
+    }
+
+    const testSingleton = (_app: App) => {
+      return 'singleton';
+    };
+
+    const testComponent = () => {
+      return <Test />;
+    };
+
+    router.addRoute('/test', testComponent);
+    visitUrl('/test');
+    let renderer = TestRenderer.create(<router.RenderInstance />);
+    let result = renderer.toJSON();
+    expect(result).toEqual('test-singleton');
   });
 });
