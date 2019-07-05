@@ -1,35 +1,21 @@
 import { App, AppSingleton } from '@h4bff/core';
 import { Redirect } from '.';
-import { RouteProvider } from './routeProvider';
 import { reaction, observable, action } from 'mobx';
 import { observer } from 'mobx-react';
 import * as pathToRegexp from 'path-to-regexp';
 import * as React from 'react';
 import { History, Location } from 'history';
-import { matchPath, validatePath } from './routerUtils';
 import * as queryString from 'query-string';
 import * as _ from 'lodash';
+import { RouteProvider } from './routeProvider';
+import { matchPath, validatePath } from './routerUtils';
+import { AppContext } from '../app-context';
 
 export const HistoryContext = React.createContext({} as HistoryContextProps);
 export interface HistoryContextProps {
   history: History;
   location: string;
 }
-
-/**
- * Use the AppContext.Consumer to get the application within a component. This enables the use
- * of app.getSingleton within e.g. page layouts
- *
- * @example
- * ```
- * <AppContext.Consumer>
- *   {context => context.app.getSingleton(NameSingleton).appName}
- * </AppContext.Consumer>
- * ```
- *
- * @public
- */
-export const AppContext = React.createContext({} as { app: App });
 
 export type Params = { [key: string]: string } | { queryParams?: { [key: string]: string } };
 export type RouteParameters<T extends Params = {}> = T;
