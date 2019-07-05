@@ -18,6 +18,7 @@ class Database extends AppSingleton {
 }
 
 class UserProvider extends BaseService {
+  db = this.getSingleton(Database);
   constructor(ctx: ServiceContext, public id = randomId()) {
     super(ctx);
   }
@@ -37,6 +38,17 @@ describe('Instantiation', () => {
     let db1 = app.getSingleton(factoryFunc);
     let db2 = app.getSingleton(factoryFunc);
     expect(db1.id).toEqual(db2.id);
+  });
+
+  it('#getService should instantiate a service from a SC', () => {
+    let app = new App();
+    return app.withServiceContext(sc => {
+      let up = sc.getService(UserProvider);
+      expect(up).toBeInstanceOf(UserProvider);
+      expect(up.getService(UserProvider)).toBeInstanceOf(UserProvider);
+      expect(up.db).toBeInstanceOf(Database);
+      return Promise.resolve();
+    });
   });
 
   it('#load should force a singleton to instantitate', () => {

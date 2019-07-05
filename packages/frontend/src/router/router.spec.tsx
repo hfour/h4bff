@@ -1,10 +1,11 @@
-import { Router, AppContext } from './router';
 import { App } from '@h4bff/core';
 import * as React from 'react';
-import { RouteProvider } from './routeProvider';
 import { Location } from 'history';
 import * as TestRenderer from 'react-test-renderer';
 import * as url from 'url';
+import { RouteProvider } from './routeProvider';
+import { Router } from './router';
+import { AppContext } from '../app-context';
 
 const potatoesPage = jest.fn(_p1 => <div>Example page</div>);
 const carsPage = jest.fn(_p1 => <div>Sample page</div>);
