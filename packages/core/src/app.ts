@@ -40,18 +40,20 @@ import {
  * @public
  */
 export class App {
-  private singletonLocator: Locator<this>;
+  private singletonLocator = new Locator(this, s => '__appSingleton' in s, {});
+  private transientLocator = new Locator(this, s => '__baseTransient' in s, { isTransient: true });
+
   parentApp: App | null;
 
   constructor(opts: { parentApp?: App } = {}) {
     this.parentApp = opts.parentApp ? opts.parentApp : null;
-    this.singletonLocator = new Locator(this, s => '__appSingleton' in s);
+    this.singletonLocator = new Locator(this, s => '__appSingleton' in s, {});
   }
 
   /**
    * @internal
    */
-  serviceLocator = new Locator(this.createServiceContext(), s => '__baseService' in s);
+  serviceLocator = new Locator(this.createServiceContext(), s => '__baseService' in s, {});
 
   /**
    * Walks through parents and returns an existing singleton instance. Call
@@ -157,6 +159,40 @@ export class App {
    */
   clearServiceOverrides() {
     return this.serviceLocator.clearOverrides();
+  }
+
+  /**
+   * Creates a new Transient instance of the specified class. The instance is constructed on every
+   * createTransient request. If using a getter, be sure to use memoization, otherwise the transient
+   * will be recreated on every call of the getter
+   *
+   * @param Klass the transient class or factory
+   */
+  createTransient<T>(Klass: ConstructorOrFactory<App, T>) {
+    return this.transientLocator.get(Klass);
+  }
+
+  /**
+   * Allows you to specify an alternative implementation for the
+   * expected transient. Each time someone tries to instantiate the
+   * specified class / fn, the override is used instead. The type of
+   * the override must match that of the original class / fn.
+   *
+   * This method is typically useful in tests to test plugins in isolation by providing mock or
+   * fake dependencies.
+   */
+  overrideTransient<T>(
+    Klass: ConstructorOrFactory<App, T>,
+    Klass2: ConstructorOrFactory<App, PublicInterface<T>>,
+  ) {
+    return this.transientLocator.override(Klass, Klass2);
+  }
+
+  /**
+   * Clears any defined transient overrides.
+   */
+  clearTransientOverrides() {
+    return this.transientLocator.clearOverrides();
   }
 
   /**
