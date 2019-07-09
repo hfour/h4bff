@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as TestRenderer from 'react-test-renderer';
 import { App } from '@h4bff/core';
 import { AppContext } from './app-context';
-import { injectContextApp } from './inject-context-app';
+import { injectContextApp } from './react-context-app';
 
 describe('@injectContextApp', () => {
   let testApp: App | null;
