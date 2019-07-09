@@ -1,3 +1,3 @@
 export * from './router';
 export * from './app-context';
-export * from './inject-context-app';
+export * from './react-context-app';
