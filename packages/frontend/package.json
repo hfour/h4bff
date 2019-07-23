@@ -33,11 +33,12 @@
     "react-dom": "^16.6.3"
   },
   "devDependencies": {
-    "@types/classnames": "^2.2.6",
-    "@types/lodash": "^4.14.63",
+    "@types/classnames": "^2.2.9",
+    "@types/lodash": "^4.14.136",
     "@types/query-string": "^6.2.0",
     "@types/react-dom": "^16.0.10",
-    "@types/react-test-renderer": "^16.8.1",
+    "@types/react-test-renderer": "^16.8.2",
+    "mobx-react-lite": "^1.4.1",
     "react-test-renderer": "^16.8.4"
   },
   "jest": {

@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as TestRenderer from 'react-test-renderer';
 import { App } from '@h4bff/core';
 import { AppContext } from './app-context';
-import { injectContextApp, useContextApp } from './react-context-app';
+import { injectContextApp, useContextApp } from './app-context';
 
 /**
  * The following tests will log to console the following error:

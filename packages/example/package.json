@@ -11,15 +11,15 @@
     "start": "yarn install --force && tsc && node build/app"
   },
   "dependencies": {
-    "uuid": "^3.2.1",
+    "@h4bff/backend": "*",
     "@h4bff/core": "*",
-    "@h4bff/backend": "*"
+    "uuid": "^3.2.1"
   },
   "devDependencies": {
-    "@types/uuid": "^3.4.3",
-    "@types/jest": "^23.3.2",
-    "jest": "^23.6.0",
-    "ts-jest": "^23.10.5"
+    "@types/jest": "^24.0.15",
+    "@types/uuid": "^3.4.5",
+    "jest": "^24.8.0",
+    "ts-jest": "^24.0.2"
   },
   "jest": {
     "verbose": false,
