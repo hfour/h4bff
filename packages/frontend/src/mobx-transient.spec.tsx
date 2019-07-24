@@ -5,7 +5,6 @@ import { MobxStateTransient, useStateTransient } from './mobx-transient';
 import { observable, action } from 'mobx';
 import * as React from 'react';
 import { observer } from 'mobx-react-lite';
-import { statement } from '@babel/template';
 
 class CounterIncrementer extends AppSingleton {
   incrementValue: number = 1;
@@ -36,7 +35,9 @@ let HookyCounter = observer((props: { initialValue: number }) => {
 
   return (
     <div>
-      <span>Current value: {state.counter.toString()}</span>
+      <span>
+        Current value: {state.counter.toString()}, initial {props.initialValue}
+      </span>
       <button onClick={state.increment} />
     </div>
   );

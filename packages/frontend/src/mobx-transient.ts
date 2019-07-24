@@ -39,7 +39,7 @@ export class MobxStateTransient<T> extends BaseTransient {
    * @internal
    */
   updateProps(newProps: T) {
-    this.props = newProps;
+    Object.assign(this.props, newProps);
   }
 
   private reactionDisposers: Array<() => void> = [];
@@ -116,8 +116,9 @@ export function useStateTransient<T, U extends MobxStateTransientConstructor<T>>
   let app = useContextApp();
 
   let [s] = useState(() => MobxStateTransient.createWithProps(Klass, app, props));
+  s.updateProps(props);
 
-  useEffect(() => () => s.onDispose());
+  useEffect(() => () => s.onDispose(), []);
 
   return s;
 }
