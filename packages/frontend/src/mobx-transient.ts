@@ -1,7 +1,8 @@
 import { BaseTransient, App } from '@h4bff/core';
 import { autorun, observable } from 'mobx';
+import { useLocalStore } from 'mobx-react-lite';
 import { useContextApp } from './app-context';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { ClassConstructor } from '@h4bff/core/build/internal';
 
 /**
@@ -33,13 +34,6 @@ export class MobxStateTransient<T> extends BaseTransient {
 
   private initialProps(): T {
     throw new Error('Must override props setter!');
-  }
-
-  /**
-   * @internal
-   */
-  updateProps(newProps: T) {
-    Object.assign(this.props, newProps);
   }
 
   private reactionDisposers: Array<() => void> = [];
@@ -103,6 +97,16 @@ export class MobxStateTransient<T> extends BaseTransient {
 }
 
 /**
+ * The original useLocalStore is overly restrictive in its arguments. This one corrects the
+ * issue.
+ * @param initializer
+ * @param t
+ */
+function useLocalStoreCorrected<T, U>(initializer: (t: T) => U, t: T): U {
+  return useLocalStore(initializer as any, t as any);
+}
+
+/**
  * Use a state transient - a substitute for observable properties embedded within a component class.
  * Think of this as a react component class that has everything but the render method.
  *
@@ -114,9 +118,10 @@ export function useStateTransient<T, U extends MobxStateTransientConstructor<T>>
   props: T,
 ) {
   let app = useContextApp();
-
-  let [s] = useState(() => MobxStateTransient.createWithProps(Klass, app, props));
-  s.updateProps(props);
+  let s = useLocalStoreCorrected(
+    props => MobxStateTransient.createWithProps(Klass, app, props),
+    props,
+  );
 
   useEffect(() => () => s.onDispose(), []);
 

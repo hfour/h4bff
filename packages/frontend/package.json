@@ -27,6 +27,7 @@
     "lodash": "^4.17.13",
     "mobx": ">=4.x.x <6.x.x",
     "mobx-react": "^5.4.2",
+    "mobx-react-lite": "^1.4.1",
     "path-to-regexp": "^3.0.0",
     "query-string": "^6.2.0",
     "react": "^16.7.7",
@@ -38,7 +39,6 @@
     "@types/query-string": "^6.2.0",
     "@types/react-dom": "^16.0.10",
     "@types/react-test-renderer": "^16.8.2",
-    "mobx-react-lite": "^1.4.1",
     "react-test-renderer": "^16.8.4"
   },
   "jest": {
