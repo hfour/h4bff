@@ -1,52 +1,76 @@
 import { ConstructorOrFactory, ClassConstructor } from './internal';
 
-/**
- * The dependency injection locator of h4bff. One is instantiated for each app, as well as for
- * each service context (per request).
- *
- * Normally you wouldn't use the locator directly, instead convenience methods getService and
- * getSingleton are provided from within services, service context singletons and apps.
- *
- * The locator also controls overrides, but those are also typically configured through the app
- * itself instead of via the locator.
- *
- * @internal
- */
+export type Instantiator<Context> = <T>(f: ConstructorOrFactory<Context, T>) => T;
+
+export type Interceptor<Context> = (i: Instantiator<Context>) => Instantiator<Context>;
+
+function baseInstantiator<Context>(opts: {
+  isClass: (v: ConstructorOrFactory<Context, any>) => boolean;
+  locatorCtx: Context;
+}): Instantiator<Context> {
+  let isClassG = opts.isClass as ((
+    v: ConstructorOrFactory<Context, any>,
+  ) => v is ClassConstructor<Context, any>);
+
+  return f => {
+    if (isClassG(f)) return new f(opts.locatorCtx);
+    else return f(opts.locatorCtx);
+  };
+}
+
+function cachingInterceptor<Context>(
+  instances: Map<Function, any> = new Map(),
+): Interceptor<Context> {
+  return instantiator => f => {
+    if (!instances.has(f)) {
+      instances.set(f, instantiator(f));
+    }
+    return instances.get(f);
+  };
+}
+
+
+
+function overrideInterceptor<Context>(
+  overrides: Map<Function, Function> = new Map(),
+): Interceptor<Context> {
+  return instantiator => f => {
+    if (overrides.has(f)) {
+      f = overrides.get(f) as any;
+    }
+    return instantiator(f);
+  };
+}
+
 export class Locator<Context> {
   private instances: Map<Function, any> = new Map();
   private overrides: Map<Function, Function> = new Map();
+
+  public get: <T>(f: ConstructorOrFactory<Context, T>) => T;
+
   constructor(
-    private locatorCtx: Context,
+    locatorCtx: Context,
     private isClass: (v: ConstructorOrFactory<Context, any>) => boolean,
-    options?: {
+    options: {
       overrides?: Map<Function, Function>;
+      isTransient?: boolean;
     },
   ) {
-    options = options || {};
-    this.overrides = options.overrides || this.overrides;
+    if (options.overrides != null) this.overrides = options.overrides;
+    this.get = baseInstantiator({ isClass, locatorCtx });
+    if (!options.isTransient) this.addInterceptor(cachingInterceptor(this.instances));
+    this.addInterceptor(overrideInterceptor(this.overrides));
   }
 
-  private isClassTG<T>(v: ConstructorOrFactory<Context, T>): v is ClassConstructor<Context, T> {
-    return this.isClass(v);
-  }
-
-  private instantiate<T>(f: ConstructorOrFactory<Context, T>) {
-    if (this.isClassTG(f)) return new f(this.locatorCtx);
-    else return f(this.locatorCtx);
+  private addInterceptor(ic: Interceptor<Context>) {
+    this.get = ic(this.get);
   }
 
   has<T>(f: ConstructorOrFactory<Context, T>): boolean {
-    return this.instances.has(f) || this.overrides.has(f);
-  }
-
-  get<T>(f: ConstructorOrFactory<Context, T>): T {
-    if (this.overrides.has(f)) {
-      f = this.overrides.get(f) as any;
-    }
-    if (!this.instances.has(f)) {
-      this.instances.set(f, this.instantiate(f));
-    }
-    return this.instances.get(f) as T;
+    if (this.instances.has(f)) return true;
+    let override = this.overrides.get(f);
+    if (override) return this.instances.has(override);
+    return false;
   }
 
   override<T>(f: ConstructorOrFactory<Context, T>, g: ConstructorOrFactory<Context, T>) {
@@ -63,6 +87,6 @@ export class Locator<Context> {
   }
 
   clearOverrides() {
-    this.overrides = new Map();
+    this.overrides.clear();
   }
 }
