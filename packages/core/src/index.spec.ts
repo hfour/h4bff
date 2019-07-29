@@ -174,7 +174,7 @@ describe('Context disposal', () => {
       );
   });
 
-  describe('Nested apps override showcase', () => {
+  describe.skip('Nested apps override showcase', () => {
     const testSingleton = (_app: App) => {
       return 'some text';
     };
