@@ -96,12 +96,7 @@ export class MobxStateTransient<T> extends BaseTransient {
   }
 }
 
-/**
- * The original useLocalStore is overly restrictive in its arguments. This one corrects the
- * issue.
- * @param initializer
- * @param t
- */
+// The original useLocalStore is overly restrictive in its arguments. This one corrects the issue.
 function useLocalStoreCorrected<T, U>(initializer: (t: T) => U, t: T): U {
   return useLocalStore(initializer as any, t as any);
 }

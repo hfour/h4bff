@@ -58,7 +58,8 @@
     },
     "testRegex": ".*\\.spec\\.tsx?",
     "collectCoverageFrom": [
-      "src/**/*.tsx?"
+      "src/**/*.ts",
+      "src/**/*.tsx"
     ],
     "coverageDirectory": "coverage"
   }

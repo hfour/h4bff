@@ -5,6 +5,7 @@ import { MobxStateTransient, useStateTransient } from './mobx-transient';
 import { observable, action } from 'mobx';
 import * as React from 'react';
 import { observer } from 'mobx-react';
+import { useState } from 'react';
 
 class CounterIncrementer extends AppSingleton {
   incrementValue: number = 1;
@@ -110,6 +111,25 @@ describe('mobx transient', () => {
     TestRenderer.act(() => {
       r.root.findByType('button').props.onClick();
     });
+
+    expect(disposeCalled).toBeTruthy();
+  });
+
+  it('disposes state recursively', () => {
+    let disposeCalled = false;
+
+    class MST2 extends MobxStateTransient<{}> {
+      _1 = this.autoDispose(() => {
+        disposeCalled = true;
+      });
+    }
+    class MST1 extends MobxStateTransient<{}> {
+      innerState = this.useStateTransient(MST2, {});
+    }
+    let app = new App();
+
+    let ct = MobxStateTransient.createWithProps(MST1, app, {});
+    ct.onDispose();
 
     expect(disposeCalled).toBeTruthy();
   });
