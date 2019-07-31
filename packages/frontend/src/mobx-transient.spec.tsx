@@ -4,7 +4,7 @@ import { AppContext } from './app-context';
 import { MobxStateTransient, useStateTransient } from './mobx-transient';
 import { observable, action } from 'mobx';
 import * as React from 'react';
-import { observer } from 'mobx-react-lite';
+import { observer } from 'mobx-react';
 
 class CounterIncrementer extends AppSingleton {
   incrementValue: number = 1;
@@ -75,7 +75,7 @@ describe('mobx transient', () => {
       value = 1;
     }
 
-    let TemporaryComponent = observer<{}>(props => {
+    let TemporaryComponent = observer(props => {
       let state = useStateTransient(DisposerTest, props);
       return <div>Hello number {state.value}</div>;
     });
@@ -87,7 +87,7 @@ describe('mobx transient', () => {
       }
     }
 
-    let SwitchingComponent = observer<{}>(props => {
+    let SwitchingComponent = observer(props => {
       let switchState = useStateTransient(SwitchState, props);
       return (
         <div>
@@ -105,7 +105,7 @@ describe('mobx transient', () => {
       </AppContext.Provider>,
     );
 
-    expect(disposeCalled).toBeFalsy();
+    expect(disposeCalled).toBeFalsy;
 
     TestRenderer.act(() => {
       r.root.findByType('button').props.onClick();
