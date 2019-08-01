@@ -1,14 +1,13 @@
 import { BaseTransient, App } from '@h4bff/core';
 import { autorun, observable } from 'mobx';
-import { useLocalStore } from 'mobx-react-lite';
+import { useLocalStore } from 'mobx-react';
 import { useContextApp } from './app-context';
 import { useEffect } from 'react';
-import { ClassConstructor } from '@h4bff/core/build/internal';
 
 /**
  * A class constructor of a {@link MobxStateTransient | mobx state transient}
  */
-export type MobxStateTransientConstructor<T> = ClassConstructor<App, MobxStateTransient<T>>;
+export type MobxStateTransientConstructor<T> = { new (app: App): MobxStateTransient<T> };
 
 /**
  * Use a MobX state transient as a substitute for observable properties embedded within a component

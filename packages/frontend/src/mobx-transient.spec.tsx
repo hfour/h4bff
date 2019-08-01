@@ -6,47 +6,48 @@ import { observable, action } from 'mobx';
 import * as React from 'react';
 import { observer } from 'mobx-react';
 
-class CounterIncrementer extends AppSingleton {
-  incrementValue: number = 1;
-
-  increment(num: number) {
-    return num + this.incrementValue;
-  }
-}
-
-class CounterState extends MobxStateTransient<{ initialValue: number }> {
-  incrementer = this.getSingleton(CounterIncrementer);
-
-  @observable counter = this.props.initialValue;
-
-  @observable previousState =
-    this.props.initialValue > 0
-      ? this.useStateTransient(CounterState, { initialValue: this.props.initialValue - 1 })
-      : null;
-
-  @action.bound
-  increment() {
-    this.counter = this.incrementer.increment(this.counter);
-  }
-}
-
-let HookyCounter = observer((props: { initialValue: number }) => {
-  let state = useStateTransient(CounterState, props);
-
-  return (
-    <div>
-      <span>
-        Current value: {state.counter.toString()}, initial {props.initialValue}
-      </span>
-      <button onClick={state.increment} />
-    </div>
-  );
-});
-
 describe('mobx transient', () => {
-  it('works', () => {
+  it('can access singleton correctly', () => {
+    class CounterIncrementer extends AppSingleton {
+      incrementValue: number = 1;
+
+      increment(num: number) {
+        return num + this.incrementValue;
+      }
+    }
+
+    class CounterState extends MobxStateTransient<{ initialValue: number }> {
+      incrementer = this.getSingleton(CounterIncrementer);
+
+      @observable counter = this.props.initialValue;
+
+      @observable previousState =
+        this.props.initialValue > 0
+          ? this.useStateTransient(CounterState, { initialValue: this.props.initialValue - 1 })
+          : null;
+
+      @action.bound
+      increment() {
+        this.counter = this.incrementer.increment(this.counter);
+      }
+    }
+
+    let HookyCounter = observer((props: { initialValue: number }) => {
+      let state = useStateTransient(CounterState, props);
+
+      return (
+        <div>
+          <span>
+            Current value: {state.counter.toString()}, initial {props.initialValue}
+          </span>
+          <button onClick={state.increment} />
+        </div>
+      );
+    });
+
     const INCREMENT_VALUE = 3,
       INITIAL_VALUE = 4;
+
     let app = new App();
     app.getSingleton(CounterIncrementer).incrementValue = INCREMENT_VALUE;
 
