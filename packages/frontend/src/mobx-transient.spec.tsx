@@ -5,7 +5,6 @@ import { MobxStateTransient, useStateTransient } from './mobx-transient';
 import { observable, action } from 'mobx';
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { useState } from 'react';
 
 class CounterIncrementer extends AppSingleton {
   incrementValue: number = 1;
