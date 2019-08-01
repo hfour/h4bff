@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { App } from '@h4bff/core';
 
+export interface AppContextProps {
+  app: App;
+}
 /**
  * Use the AppContext.Consumer to get the application within a component. This enables the use
  * of app.getSingleton within e.g. page layouts
@@ -14,7 +17,7 @@ import { App } from '@h4bff/core';
  *
  * @public
  */
-export const AppContext = React.createContext({} as { app: App });
+export const AppContext = React.createContext({} as AppContextProps);
 
 function getAppFromContext(context: any) {
   if (!context.app) {
