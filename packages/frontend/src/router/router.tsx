@@ -64,7 +64,7 @@ class MobxRouter {
       matchPath(location.pathname, redirect.from),
     );
     if (matchedRedirect) {
-      routeProvider.browserHistory.push(matchedRedirect.to);
+      routeProvider.browserHistory.replace(matchedRedirect.to);
     } else {
       const matchedRoute = this.routes.find(route => route.match(location) !== null);
       if (matchedRoute) {
