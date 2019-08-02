@@ -12,9 +12,11 @@ export class RouteProvider extends AppSingleton {
   constructor(app: App) {
     super(app);
 
-    this.browserHistory = createBrowserHistory();
+    this.browserHistory = this.getSingleton(HistoryProvider);
     this.location = this.browserHistory.location;
 
     this.browserHistory.listen(location => runInAction(() => (this.location = location)));
   }
 }
+
+export let HistoryProvider = () => createBrowserHistory();

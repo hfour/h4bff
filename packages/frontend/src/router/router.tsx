@@ -1,6 +1,6 @@
 import { App, AppSingleton } from '@h4bff/core';
 import { Redirect } from '.';
-import { reaction, observable, action } from 'mobx';
+import { observable, action, autorun, computed } from 'mobx';
 import { observer } from 'mobx-react';
 import * as pathToRegexp from 'path-to-regexp';
 import * as React from 'react';
@@ -40,42 +40,38 @@ export interface Redirect {
  *
  */
 class MobxRouter {
-  @observable private currentComponentJSX: UIElement = null;
-  @observable private routeParams: RouteParameters = {};
   @observable private routes: Array<Route> = [];
   @observable private redirects: Array<Redirect> = [];
 
   constructor(private app: App) {
-    reaction(
-      () => [
-        this.routes.length,
-        this.redirects.length,
-        this.app.getSingleton(RouteProvider).location.pathname,
-      ],
-      () => this.setCurrentComponentOrRedirect(),
-    );
+    autorun(() => {
+      if (this.matchedRedirect != null) {
+        app.getSingleton(RouteProvider).browserHistory.replace(this.matchedRedirect.to);
+      }
+    });
   }
 
-  @action
-  private setCurrentComponentOrRedirect = () => {
-    const routeProvider = this.app.getSingleton(RouteProvider);
-    const location = routeProvider.location;
-    const matchedRedirect = this.redirects.find(redirect =>
-      matchPath(location.pathname, redirect.from),
-    );
-    if (matchedRedirect) {
-      routeProvider.browserHistory.replace(matchedRedirect.to);
-    } else {
-      const matchedRoute = this.routes.find(route => route.match(location) !== null);
-      if (matchedRoute) {
-        this.currentComponentJSX = matchedRoute.component;
-        this.routeParams = matchedRoute.match(location);
-      }
-    }
-  };
+  @computed get location() {
+    return this.app.getSingleton(RouteProvider).location;
+  }
+
+  @computed get matchedRedirect() {
+    return this.redirects.find(redirect => matchPath(this.location.pathname, redirect.from));
+  }
+
+  @computed get matchedRoute() {
+    if (this.matchedRedirect) return null;
+    return this.routes.find(route => route.match(this.location) !== null);
+  }
+
+  @computed get matchedParams() {
+    return this.matchedRoute != null ? this.matchedRoute.match(this.location) : null;
+  }
 
   RenderInstance = observer(() => {
-    return this.currentComponentJSX ? this.currentComponentJSX(this.routeParams) : null;
+    return this.matchedRoute && this.matchedRoute.component && this.matchedParams
+      ? this.matchedRoute.component(this.matchedParams)
+      : null;
   });
 
   @action
