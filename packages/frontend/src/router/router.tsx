@@ -19,12 +19,10 @@ export interface HistoryContextProps {
 
 export type Params = { [key: string]: string } | { queryParams?: { [key: string]: string } };
 export type RouteParameters<T extends Params = {}> = T;
-export type RP = RouteParameters<any>;
-export type UIElement = ((rp: RouteParameters) => JSX.Element) | null;
 
-interface Route {
-  match: (location: Location) => RouteParameters;
-  component: UIElement;
+interface Route<T> {
+  match: (location: Location) => RouteParameters<T>;
+  component: (rp: RouteParameters<T>) => JSX.Element;
 }
 
 export interface Redirect {
@@ -40,7 +38,7 @@ export interface Redirect {
  *
  */
 class MobxRouter {
-  @observable private routes: Array<Route> = [];
+  @observable private routes: Array<Route<any>> = [];
   @observable private redirects: Array<Redirect> = [];
 
   constructor(private app: App) {
@@ -61,21 +59,15 @@ class MobxRouter {
 
   @computed get matchedRoute() {
     if (this.matchedRedirect) return null;
-    return this.routes.find(route => route.match(this.location) !== null);
+    for (let route of this.routes) {
+      let params = route.match(this.location);
+      if (params) return { params, component: route.component };
+    }
+    return null;
   }
 
-  @computed get matchedParams() {
-    return this.matchedRoute != null ? this.matchedRoute.match(this.location) : null;
-  }
-
-  RenderInstance = observer(() => {
-    return this.matchedRoute && this.matchedRoute.component && this.matchedParams
-      ? this.matchedRoute.component(this.matchedParams)
-      : null;
-  });
-
-  @action
-  addRoute = (path: string, component: (rp: RouteParameters) => JSX.Element) => {
+  @action.bound
+  addRoute<T>(path: string, component: (rp: RouteParameters<T>) => JSX.Element) {
     validatePath(path);
 
     //pathToRegex doesnt handle '/*' for matching anything, so we have to replace it with an aptly-named param with 0 or more occurences.
@@ -97,14 +89,18 @@ class MobxRouter {
       return params;
     };
     this.routes.unshift({ match, component });
-  };
+  }
 
-  @action
-  addRedirect = (newRedirect: Redirect) => {
+  @action.bound
+  addRedirect(newRedirect: Redirect) {
     validatePath(newRedirect.from);
     validatePath(newRedirect.to);
     this.redirects.unshift(newRedirect);
-  };
+  }
+
+  RenderInstance = observer(() => {
+    return this.matchedRoute && this.matchedRoute.component(this.matchedRoute.params);
+  });
 }
 
 /**
@@ -112,12 +108,7 @@ class MobxRouter {
  * is rendered within a history context provider.
  */
 export class Router extends AppSingleton {
-  @observable router: MobxRouter;
-
-  constructor(app: App) {
-    super(app);
-    this.router = new MobxRouter(app);
-  }
+  @observable private router = new MobxRouter(this.app);
 
   addRoute = (path: string, component: (rp: RouteParameters) => JSX.Element) => {
     return this.router.addRoute(path, component);
