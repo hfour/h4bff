@@ -1,9 +1,8 @@
 import { App } from '@h4bff/core';
 import * as React from 'react';
-import { Location } from 'history';
+import { createMemoryHistory } from 'history';
 import * as TestRenderer from 'react-test-renderer';
-import * as url from 'url';
-import { RouteProvider } from './routeProvider';
+import { RouteProvider, HistoryProvider } from './routeProvider';
 import { Router } from './router';
 import { AppContext } from '../app-context';
 
@@ -13,20 +12,25 @@ const carsPage = jest.fn(_p1 => <div>Sample page</div>);
 describe('router', () => {
   let app: App;
   let router: Router;
+  let renderer: TestRenderer.ReactTestRenderer;
 
-  const visitUrl = (path: string) => {
-    TestRenderer.create(<router.RenderInstance />);
-
-    const routeProvider = app.getSingleton(RouteProvider);
-    const parsedUrl = url.parse(path);
-
-    routeProvider.location = { pathname: parsedUrl.pathname, search: parsedUrl.search } as Location;
-  };
+  function visitUrl(path: string) {
+    TestRenderer.act(() => {
+      const routeProvider = app.getSingleton(RouteProvider);
+      routeProvider.browserHistory.push(path);
+    });
+  }
 
   beforeEach(() => {
     jest.clearAllMocks();
     app = new App();
+    app.overrideSingleton(HistoryProvider, () => createMemoryHistory());
     router = app.getSingleton(Router);
+    renderer = TestRenderer.create(<router.RenderInstance />);
+  });
+
+  afterEach(() => {
+    renderer.unmount();
   });
 
   describe('matching routes', () => {
@@ -161,6 +165,22 @@ describe('router', () => {
       let routeProvider = app.getSingleton(RouteProvider);
       expect(routeProvider.location.pathname).toEqual('/example');
     });
+
+    it('should not break the back button', () => {
+      router.addRoute('/example', potatoesPage);
+      router.addRedirect({ from: '/lol', to: '/route' });
+
+      let routeProvider = app.getSingleton(RouteProvider);
+
+      visitUrl('/example');
+      expect(routeProvider.location.pathname).toEqual('/example');
+
+      visitUrl('/lol');
+      expect(routeProvider.location.pathname).toEqual('/route');
+
+      routeProvider.browserHistory.goBack();
+      expect(routeProvider.location.pathname).toEqual('/example');
+    });
   });
 
   describe('app provider', () => {
@@ -185,5 +205,4 @@ describe('router', () => {
       expect(result).toEqual('HelloWorld');
     });
   });
-
 });

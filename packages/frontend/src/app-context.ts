@@ -15,3 +15,6 @@ import { App } from '@h4bff/core';
  * @public
  */
 export const AppContext = React.createContext({} as { app: App });
+export interface AppContextProps {
+  app: App;
+}
