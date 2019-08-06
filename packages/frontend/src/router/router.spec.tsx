@@ -12,27 +12,25 @@ const carsPage = jest.fn(_p1 => <div>Sample page</div>);
 describe('router', () => {
   let app: App;
   let router: Router;
+  let renderer: TestRenderer.ReactTestRenderer;
 
-  const withRoutingInstance = (f: (visit: (url: string) => void) => void) => {
-    TestRenderer.create(<router.RenderInstance />);
-
-    function visit(path: string) {
+  function visitUrl(path: string) {
+    TestRenderer.act(() => {
       const routeProvider = app.getSingleton(RouteProvider);
-      // const parsedUrl = url.parse(path);
       routeProvider.browserHistory.push(path);
-    }
-    TestRenderer.act(() => f(visit));
-  };
-
-  const visitUrl = (path: string) => {
-    return withRoutingInstance(visit => visit(path));
-  };
+    });
+  }
 
   beforeEach(() => {
     jest.clearAllMocks();
     app = new App();
     app.overrideSingleton(HistoryProvider, () => createMemoryHistory());
     router = app.getSingleton(Router);
+    renderer = TestRenderer.create(<router.RenderInstance />);
+  });
+
+  afterEach(() => {
+    renderer.unmount();
   });
 
   describe('matching routes', () => {
@@ -172,18 +170,16 @@ describe('router', () => {
       router.addRoute('/example', potatoesPage);
       router.addRedirect({ from: '/lol', to: '/route' });
 
-      withRoutingInstance(visitUrl => {
-        let routeProvider = app.getSingleton(RouteProvider);
+      let routeProvider = app.getSingleton(RouteProvider);
 
-        visitUrl('/example');
-        expect(routeProvider.location.pathname).toEqual('/example');
+      visitUrl('/example');
+      expect(routeProvider.location.pathname).toEqual('/example');
 
-        visitUrl('/lol');
-        expect(routeProvider.location.pathname).toEqual('/route');
+      visitUrl('/lol');
+      expect(routeProvider.location.pathname).toEqual('/route');
 
-        routeProvider.browserHistory.goBack();
-        expect(routeProvider.location.pathname).toEqual('/example');
-      });
+      routeProvider.browserHistory.goBack();
+      expect(routeProvider.location.pathname).toEqual('/example');
     });
   });
 
