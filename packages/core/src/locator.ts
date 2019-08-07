@@ -29,8 +29,6 @@ function cachingInterceptor<Context>(
   };
 }
 
-
-
 function overrideInterceptor<Context>(
   overrides: Map<Function, Function> = new Map(),
 ): Interceptor<Context> {
