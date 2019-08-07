@@ -21,12 +21,22 @@ describe('router', () => {
     });
   }
 
+  function goBack() {
+    TestRenderer.act(() => {
+      const routeProvider = app.getSingleton(RouteProvider);
+      routeProvider.browserHistory.goBack();
+    });
+  }
+
   beforeEach(() => {
     jest.clearAllMocks();
     app = new App();
     app.overrideSingleton(HistoryProvider, () => createMemoryHistory());
     router = app.getSingleton(Router);
-    renderer = TestRenderer.create(<router.RenderInstance />);
+
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(<router.RenderInstance />);
+    });
   });
 
   afterEach(() => {
@@ -117,7 +127,9 @@ describe('router', () => {
 
   describe('handling redirects', () => {
     it('should perform a simple redirect', () => {
-      router.addRedirect({ from: '/', to: '/example' });
+      TestRenderer.act(() => {
+        router.addRedirect({ from: '/', to: '/example' });
+      });
       visitUrl('/');
 
       let routeProvider = app.getSingleton(RouteProvider);
@@ -125,18 +137,18 @@ describe('router', () => {
     });
 
     it('should perform a chained (double) redirect', () => {
-      router.addRedirect({ from: '/', to: '/example' });
+      router.addRedirect({ from: '/x', to: '/example' });
       router.addRedirect({ from: '/example', to: '/example/route' });
-      visitUrl('/');
+      visitUrl('/x');
 
       let routeProvider = app.getSingleton(RouteProvider);
       expect(routeProvider.location.pathname).toEqual('/example/route');
     });
 
     it('should redirect to the lastly added route if both redirects have the same "from"', () => {
-      router.addRedirect({ from: '/', to: '/example' });
-      router.addRedirect({ from: '/', to: '/route' });
-      visitUrl('/');
+      router.addRedirect({ from: '/x', to: '/example' });
+      router.addRedirect({ from: '/x', to: '/route' });
+      visitUrl('/x');
 
       let routeProvider = app.getSingleton(RouteProvider);
       expect(routeProvider.location.pathname).toEqual('/route');
@@ -178,7 +190,7 @@ describe('router', () => {
       visitUrl('/lol');
       expect(routeProvider.location.pathname).toEqual('/route');
 
-      routeProvider.browserHistory.goBack();
+      goBack();
       expect(routeProvider.location.pathname).toEqual('/example');
     });
   });

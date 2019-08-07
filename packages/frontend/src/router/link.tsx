@@ -4,7 +4,6 @@ import { HistoryContext } from './router';
 import { matchPath } from './routerUtils';
 import classNames from 'classnames';
 import { observer } from 'mobx-react';
-import * as _ from 'lodash';
 
 export interface LinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
   to: LocationDescriptor;
@@ -39,7 +38,7 @@ export class Link extends React.Component<LinkProps, {}> {
       const method = this.props.replace ? history.replace : history.push;
       const to = this.props.to;
       // we have to do this because typescript cannot handle properly 2 different methods with the same name, but different argument.
-      if (_.isString(to)) {
+      if (typeof to === 'string') {
         method(to);
       } else {
         method(to);
@@ -57,7 +56,7 @@ export class Link extends React.Component<LinkProps, {}> {
 
           const currentLocation = context.location;
           const { innerRef, replace, to, activeClassName, ...rest } = this.props; // eslint-disable-line no-unused-vars
-          const path = _.isString(to) ? to : to.pathname;
+          const path = typeof to === 'string' ? to : to.pathname;
           const escapedPath = path && path.replace(/([.+*?=^!:${}()[\]|/\\])/g, '\\$1');
           const isActive = escapedPath ? matchPath(currentLocation, escapedPath) : false;
 
@@ -67,10 +66,13 @@ export class Link extends React.Component<LinkProps, {}> {
           } else {
             className = this.props.className;
           }
-          const style = isActive ? { ...this.props.style, ...this.props.activeStyle } : this.props.style;
+          const style = isActive
+            ? { ...this.props.style, ...this.props.activeStyle }
+            : this.props.style;
 
           const history = context.history;
-          const location = typeof to === 'string' ? createLocation(to, null, undefined, history.location) : to;
+          const location =
+            typeof to === 'string' ? createLocation(to, null, undefined, history.location) : to;
           const href = location ? history.createHref(location) : '';
 
           return (
