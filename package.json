@@ -27,13 +27,13 @@
     ]
   },
   "devDependencies": {
-    "wsrun": "^3.6.5",
     "@microsoft/api-extractor": "^7.1.0",
-    "docsify-tools": "^1.0.18",
+    "docsify-tools": "^1.0.19",
     "gh-pages": "^2.0.1",
     "path-to-regexp": "^3.0.0",
     "prettier": "^1.15.3",
-    "typescript": "^3.4.5"
+    "typescript": "^3.4.5",
+    "wsrun": "^5.0.0"
   },
   "scripts": {
     "build": "wsrun --stages -r build",
