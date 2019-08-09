@@ -6,7 +6,6 @@ import * as pathToRegexp from 'path-to-regexp';
 import * as React from 'react';
 import { History, Location } from 'history';
 import * as queryString from 'query-string';
-import * as _ from 'lodash';
 import { RouteProvider } from './routeProvider';
 import { matchPath, validatePath } from './routerUtils';
 import { AppContext } from '../app-context';

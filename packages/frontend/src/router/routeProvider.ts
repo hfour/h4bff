@@ -15,7 +15,9 @@ export class RouteProvider extends AppSingleton {
     this.browserHistory = this.getSingleton(HistoryProvider);
     this.location = this.browserHistory.location;
 
-    this.browserHistory.listen(location => runInAction(() => (this.location = location)));
+    this.browserHistory.listen(location => {
+      runInAction(() => (this.location = location));
+    });
   }
 }
 
