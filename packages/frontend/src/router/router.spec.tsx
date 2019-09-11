@@ -60,6 +60,14 @@ describe('router', () => {
       expect(carsPage).toBeCalled();
     });
 
+    it('should not reload current route when adding routes', () => {
+      router.addRoute('/potatoes', potatoesPage);
+      visitUrl('/potatoes');
+      router.addRoute('/cars', carsPage);
+      expect(potatoesPage).toBeCalledTimes(1);
+      expect(carsPage).not.toBeCalled();
+    });
+
     it('should match only the lastly added route if they have the same path', () => {
       router.addRoute('/example', potatoesPage);
       router.addRoute('/example', carsPage);

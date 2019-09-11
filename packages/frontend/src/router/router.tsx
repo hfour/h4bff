@@ -39,6 +39,7 @@ export interface Redirect {
 class MobxRouter {
   @observable private routes: Array<Route<any>> = [];
   @observable private redirects: Array<Redirect> = [];
+  routeParams: RouteParameters<any> = null;
 
   constructor(private app: App) {
     autorun(() => {
@@ -59,8 +60,10 @@ class MobxRouter {
   @computed get matchedRoute() {
     if (this.matchedRedirect) return null;
     for (let route of this.routes) {
-      let params = route.match(this.location);
-      if (params) return { params, component: route.component };
+      this.routeParams = route.match(this.location);
+      if (this.routeParams) {
+        return route.component;
+      }
     }
     return null;
   }
@@ -98,7 +101,7 @@ class MobxRouter {
   }
 
   RenderInstance = observer(() => {
-    return this.matchedRoute && this.matchedRoute.component(this.matchedRoute.params);
+    return this.matchedRoute && this.matchedRoute(this.routeParams);
   });
 }
 
@@ -116,6 +119,10 @@ export class Router extends AppSingleton {
   addRedirect = (newRedirect: Redirect) => {
     return this.router.addRedirect(newRedirect);
   };
+
+  get routeParams() {
+    return this.router.routeParams;
+  }
 
   RenderInstance = observer(() => {
     const routeProvider = this.getSingleton(RouteProvider);
