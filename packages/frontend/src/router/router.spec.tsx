@@ -132,7 +132,7 @@ describe('router', () => {
       expect(params[0].queryParams.second).toEqual('2');
     });
 
-    it('should not refresh when route params change', () => {
+    it('should refresh when route params change', () => {
       router.addRoute('/example/:paramone/:paramtwo', potatoesPage);
 
       visitUrl('/example/p1/p2');
@@ -143,10 +143,10 @@ describe('router', () => {
       expect(router.routeParams.paramone).toEqual('p3');
       expect(router.routeParams.paramtwo).toEqual('p4');
 
-      expect(potatoesPage).toBeCalledTimes(1);
+      expect(potatoesPage).toBeCalledTimes(2);
     });
 
-    it('should not refresh when query params change', () => {
+    it('should refresh when query params change', () => {
       router.addRoute('/example/:paramone', potatoesPage);
 
       visitUrl('/example/p1?first=1&second=2');
@@ -165,7 +165,7 @@ describe('router', () => {
       expect(router.routeParams.queryParams.second).not.toEqual('2');
       expect(router.routeParams.queryParams.second).not.toEqual('3');
 
-      expect(potatoesPage).toBeCalledTimes(1);
+      expect(potatoesPage).toBeCalledTimes(3);
     });
   });
 

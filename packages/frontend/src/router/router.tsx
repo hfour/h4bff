@@ -20,7 +20,8 @@ export type Params = { [key: string]: string } | { queryParams?: { [key: string]
 export type RouteParameters<T extends Params = {}> = T;
 
 interface Route<T> {
-  match: (location: Location) => RouteParameters<T>;
+  match: (location: Location) => boolean;
+  extractParams: (location: Location) => RouteParameters<T>;
   component: (rp: RouteParameters<T>) => JSX.Element;
 }
 
@@ -39,7 +40,6 @@ export interface Redirect {
 class MobxRouter {
   @observable private routes: Array<Route<any>> = [];
   @observable private redirects: Array<Redirect> = [];
-  routeParams: RouteParameters<any> = null;
 
   constructor(private app: App) {
     autorun(() => {
@@ -57,12 +57,15 @@ class MobxRouter {
     return this.redirects.find(redirect => matchPath(this.location.pathname, redirect.from));
   }
 
+  @computed get routeParams() {
+    return this.matchedRoute && this.matchedRoute.extractParams(this.location);
+  }
+
   @computed get matchedRoute() {
     if (this.matchedRedirect) return null;
     for (let route of this.routes) {
-      this.routeParams = route.match(this.location);
-      if (this.routeParams) {
-        return route.component;
+      if (route.match(this.location)) {
+        return route;
       }
     }
     return null;
@@ -72,11 +75,16 @@ class MobxRouter {
   addRoute<T>(path: string, component: (rp: RouteParameters<T>) => JSX.Element) {
     validatePath(path);
 
-    //pathToRegex doesnt handle '/*' for matching anything, so we have to replace it with an aptly-named param with 0 or more occurences.
+    //pathToRegex doesn't handle '/*' for matching anything, so we have to replace it with an aptly-named param with 0 or more occurrences.
     const newPath = path.replace('/*', '/:placeholderForMatchingAnyRoute*');
     const keys: pathToRegexp.Key[] = [];
     const reg = pathToRegexp(newPath, keys);
+
     const match = (location: Location) => {
+      return !!location.pathname.match(reg);
+    };
+
+    const extractParams = (location: Location) => {
       const r = location.pathname.match(reg);
       if (r === null) {
         return null;
@@ -90,7 +98,8 @@ class MobxRouter {
 
       return params;
     };
-    this.routes.unshift({ match, component });
+
+    this.routes.unshift({ match, extractParams, component });
   }
 
   @action.bound
@@ -101,7 +110,7 @@ class MobxRouter {
   }
 
   RenderInstance = observer(() => {
-    return this.matchedRoute && this.matchedRoute(this.routeParams);
+    return this.matchedRoute && this.matchedRoute.component(this.routeParams);
   });
 }
 
@@ -120,6 +129,7 @@ export class Router extends AppSingleton {
     return this.router.addRedirect(newRedirect);
   };
 
+  @computed
   get routeParams() {
     return this.router.routeParams;
   }
