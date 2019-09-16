@@ -60,6 +60,14 @@ describe('router', () => {
       expect(carsPage).toBeCalled();
     });
 
+    it('should not reload current route when adding routes', () => {
+      router.addRoute('/potatoes', potatoesPage);
+      visitUrl('/potatoes');
+      router.addRoute('/cars', carsPage);
+      expect(potatoesPage).toBeCalledTimes(1);
+      expect(carsPage).not.toBeCalled();
+    });
+
     it('should match only the lastly added route if they have the same path', () => {
       router.addRoute('/example', potatoesPage);
       router.addRoute('/example', carsPage);
@@ -123,6 +131,42 @@ describe('router', () => {
       expect(params[0].queryParams.first).toEqual('1');
       expect(params[0].queryParams.second).toEqual('2');
     });
+
+    it('should refresh when route params change', () => {
+      router.addRoute('/example/:paramone/:paramtwo', potatoesPage);
+
+      visitUrl('/example/p1/p2');
+      expect(potatoesPage.mock.calls[0][0].paramone).toEqual('p1');
+      expect(potatoesPage.mock.calls[0][0].paramtwo).toEqual('p2');
+
+      visitUrl('/example/p3/p4');
+      expect(router.routeParams.paramone).toEqual('p3');
+      expect(router.routeParams.paramtwo).toEqual('p4');
+
+      expect(potatoesPage).toBeCalledTimes(2);
+    });
+
+    it('should refresh when query params change', () => {
+      router.addRoute('/example/:paramone', potatoesPage);
+
+      visitUrl('/example/p1?first=1&second=2');
+      expect(router.routeParams.paramone).toEqual('p1');
+      expect(router.routeParams.queryParams.first).toEqual('1');
+      expect(router.routeParams.queryParams.second).toEqual('2');
+
+      visitUrl('/example/p1?first=1&second=3');
+      expect(router.routeParams.paramone).toEqual('p1');
+      expect(router.routeParams.queryParams.first).toEqual('1');
+      expect(router.routeParams.queryParams.second).toEqual('3');
+
+      visitUrl('/example/p1?first=1');
+      expect(router.routeParams.paramone).toEqual('p1');
+      expect(router.routeParams.queryParams.first).toEqual('1');
+      expect(router.routeParams.queryParams.second).not.toEqual('2');
+      expect(router.routeParams.queryParams.second).not.toEqual('3');
+
+      expect(potatoesPage).toBeCalledTimes(3);
+    });
   });
 
   describe('handling redirects', () => {
@@ -170,7 +214,7 @@ describe('router', () => {
       expect(routeProvider.location.pathname).toEqual('/redirected');
     });
 
-    it('should NOT redirect from url if route param doesnt match', () => {
+    it('should not redirect from url if route param doesnt match', () => {
       router.addRedirect({ from: '/example/:param', to: '/redirected' });
       visitUrl('/example');
 
