@@ -1,7 +1,21 @@
 import * as pathToRegexp from 'path-to-regexp';
 
-export function matchPath(currentPath: string, regexPathToMatch: string) {
-  const regexp = pathToRegexp(regexPathToMatch);
+export function matchPath(
+  currentPath: string,
+  regexPathToMatch: string | undefined,
+  exact: boolean = false,
+  strict: boolean = false,
+) {
+  if (!regexPathToMatch) {
+    return null;
+  }
+  const keys: pathToRegexp.Key[] = [];
+  const options = {
+    end: exact,
+    strict,
+    sensitive: false,
+  };
+  const regexp = pathToRegexp(regexPathToMatch, keys, options);
   return regexp.exec(currentPath) != null;
 }
 
