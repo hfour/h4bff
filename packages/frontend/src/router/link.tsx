@@ -58,7 +58,7 @@ export class Link extends React.Component<LinkProps, {}> {
           const { innerRef, replace, to, activeClassName, exact, strict, ...rest } = this.props; // eslint-disable-line no-unused-vars
           const path = typeof to === 'string' ? to : to.pathname;
           const escapedPath = path && path.replace(/([.+*?=^!:${}()[\]|/\\])/g, '\\$1');
-          const isActive = matchPath(currentLocation, escapedPath, exact, strict);
+          const isActive = matchPath(currentLocation, escapedPath, { exact, strict });
 
           let className;
           if (isActive) {

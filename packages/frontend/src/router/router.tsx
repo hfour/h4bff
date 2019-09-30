@@ -54,7 +54,9 @@ class MobxRouter {
   }
 
   @computed get matchedRedirect() {
-    return this.redirects.find(redirect => matchPath(this.location.pathname, redirect.from, true));
+    return this.redirects.find(redirect =>
+      matchPath(this.location.pathname, redirect.from, { exact: true }),
+    );
   }
 
   @computed get routeParams() {
