@@ -3,13 +3,7 @@ import * as pathToRegexp from 'path-to-regexp';
 export function matchPath(
   currentPath: string,
   regexPathToMatch: string | undefined,
-  {
-    exact = false,
-    strict = false,
-  }: {
-    exact?: boolean;
-    strict?: boolean;
-  },
+  { exact = false, strict = false },
 ) {
   if (!regexPathToMatch) {
     return null;
