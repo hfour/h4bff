@@ -32,7 +32,7 @@ export class MobxStateTransient<T> extends BaseTransient {
   }
 
   private initialProps(): T {
-    throw new Error('Must override props setter!');
+    throw new Error('Cannot instantiate mobx state transient directly without the hook or helper');
   }
 
   private reactionDisposers: Array<() => void> = [];
