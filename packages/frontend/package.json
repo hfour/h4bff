@@ -29,7 +29,8 @@
     "path-to-regexp": "^3.0.0",
     "query-string": "^6.2.0",
     "react": "^16.7.7",
-    "react-dom": "^16.6.3"
+    "react-dom": "^16.6.3",
+    "tslib": "^1.7.0"
   },
   "devDependencies": {
     "@types/classnames": "^2.2.9",
