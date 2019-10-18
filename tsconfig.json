@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "importHelpers": true,
     "strict": true,
     "preserveWatchOutput": true,
     "incremental": true,

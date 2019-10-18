@@ -4,6 +4,9 @@
   "description": "H4BFF, the core: dependency injection, overrides, apps singletons and services.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
+  "dependencies": {
+    "tslib": "^1.7.0"
+  },
   "files": [
     "build/**/*",
     "src/**/*"
