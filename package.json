@@ -28,10 +28,13 @@
   },
   "devDependencies": {
     "@microsoft/api-extractor": "^7.1.0",
+    "copyfiles": "^2.1.1",
     "docsify-tools": "^1.0.19",
     "gh-pages": "^2.0.1",
+    "mkdirp": "^0.5.1",
     "path-to-regexp": "^3.0.0",
     "prettier": "^1.15.3",
+    "rimraf": "^3.0.0",
     "typescript": "^3.4.5",
     "wsrun": "^5.0.0"
   },
@@ -44,6 +47,8 @@
     "prettier": "prettier --list-different **/*.ts '**/*.md' **/*.json",
     "prettier:fix": "prettier --write **/*.ts '**/*.md' **/*.json",
     "docs": "rm -rf docs-dist && mkdir -p docs-dist/2-API && cp -r docs/* docs-dist/ && wsrun -p @h4bff/backend @h4bff/core @h4bff/frontend -c api-extractor run --local && cp packages/*/docs-json/*.api.json docs-dist/2-API && generate-ts-docs markdown -i docs-dist/2-API -o docs-dist/2-API && docsify-init -d docs-dist -e docs && docsify-auto-sidebar -d docs-dist && rm -rf packages/*/docs-json/*.api.json",
+    "docs-new": "rimraf docs-dist && mkdirp docs-dist/2-API && copyfiles docs/**/* docs-dist/ && wsrun -p @h4bff/backend @h4bff/core @h4bff/frontend -c api-extractor run --local && copyfiles -f packages/**/docs-json/*.api.json docs-dist/2-API && generate-ts-docs markdown -i docs-dist/2-API -o docs-dist/2-API && docsify-init -d docs-dist -e docs && docsify-auto-sidebar -d docs-dist && rimraf packages/*/docs-json/*.api.json",
+    "docs-new-cpy-test": "rimraf docs-dist && mkdirp docs-dist/2-API && cpy --parents --cwd=docs ** ../docs-dist && wsrun -p @h4bff/backend @h4bff/core @h4bff/frontend -c api-extractor run --local && cpy packages/**/docs-json/*.api.json docs-dist/2-API && generate-ts-docs markdown -i docs-dist/2-API -o docs-dist/2-API && docsify-init -d docs-dist -e docs && docsify-auto-sidebar -d docs-dist && rimraf packages/*/docs-json/*.api.json",
     "docs:publish": "gh-pages -d docs-dist --dotfiles"
   },
   "jest": {
