@@ -1,7 +1,7 @@
 import { App, ServiceContextEvents } from '@h4bff/core';
-import { RequestContextProvider } from './requestContextProvider';
+import { RequestContextProvider } from './request-context-provider';
 import { Request, Response } from 'express';
-import { RequestInfo } from './requestInfo';
+import { RequestInfo } from './request-info';
 
 describe('RequestContextProvider', () => {
   it('#withRequestContext should prepare service context for given request / response pair', () => {

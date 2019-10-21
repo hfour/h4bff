@@ -1,6 +1,6 @@
 import * as Promise from 'bluebird';
 import { BaseService } from '@h4bff/core';
-import { RPCServiceRegistry } from './serviceRegistry';
+import { RPCServiceRegistry } from './service-registry';
 import { RequestInfo } from '../request';
 import { RPCMiddlewareContainer } from './middleware';
 import { isCustomResponse } from './response';

@@ -1,6 +1,6 @@
 import { App } from '@h4bff/core';
 import { FilesPlugin } from './files-plugin';
-import { NestedAppsPlugin } from './nestedApps-plugin';
+import { NestedAppsPlugin } from './nested-apps-plugin';
 import { HttpRouter } from './router';
 
 export default class MyApp extends App {

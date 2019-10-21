@@ -2,7 +2,10 @@ import * as Promise from 'bluebird';
 import { AppSingleton } from '@h4bff/core';
 import { RPCDispatcher } from './dispatcher';
 
-export type RPCMiddleware = (dispatcher: RPCDispatcher, next: () => PromiseLike<any>) => PromiseLike<any>;
+export type RPCMiddleware = (
+  dispatcher: RPCDispatcher,
+  next: () => PromiseLike<any>,
+) => PromiseLike<any>;
 
 /**
  * Container for RPC middlewares.

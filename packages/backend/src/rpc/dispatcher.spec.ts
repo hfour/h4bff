@@ -3,7 +3,7 @@ import { App, BaseService, ServiceContextEvents } from '@h4bff/core';
 import { Request, Response } from 'express';
 import { RequestInfo } from '../request';
 import { RPCDispatcher } from './dispatcher';
-import { RPCServiceRegistry } from './serviceRegistry';
+import { RPCServiceRegistry } from './service-registry';
 import { RPCMiddlewareContainer } from './middleware';
 
 describe('RPCDispatcher', () => {

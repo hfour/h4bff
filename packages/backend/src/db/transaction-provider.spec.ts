@@ -1,5 +1,5 @@
 import { App } from '@h4bff/core';
-import { TransactionProvider } from './transactionProvider';
+import { TransactionProvider } from './transaction-provider';
 import { Database } from './database';
 import { AnydbSql, Transaction, AnyDBPool } from 'anydb-sql-2';
 import * as Promise from 'bluebird';

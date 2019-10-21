@@ -2,7 +2,7 @@ import { App } from '@h4bff/core';
 import * as React from 'react';
 import { createMemoryHistory } from 'history';
 import * as TestRenderer from 'react-test-renderer';
-import { RouteProvider, HistoryProvider } from './routeProvider';
+import { RouteProvider, HistoryProvider } from './route-provider';
 import { Router } from './router';
 import { AppContext } from '../app-context';
 

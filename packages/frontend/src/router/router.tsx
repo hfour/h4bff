@@ -6,8 +6,8 @@ import * as pathToRegexp from 'path-to-regexp';
 import * as React from 'react';
 import { History, Location } from 'history';
 import * as queryString from 'query-string';
-import { RouteProvider } from './routeProvider';
-import { matchPath, validatePath } from './routerUtils';
+import { RouteProvider } from './route-provider';
+import { matchPath, validatePath } from './router-utils';
 import { AppContext } from '../app-context';
 
 export const HistoryContext = React.createContext({} as HistoryContextProps);
