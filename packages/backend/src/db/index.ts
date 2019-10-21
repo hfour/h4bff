@@ -1,2 +1,2 @@
 export * from './database';
-export * from './transactionProvider';
+export * from './transaction-provider';

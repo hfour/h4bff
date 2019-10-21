@@ -1,5 +1,5 @@
 import { App, BaseService } from '@h4bff/core';
-import { RPCServiceRegistry } from './serviceRegistry';
+import { RPCServiceRegistry } from './service-registry';
 
 describe('RPCServiceRegistry', () => {
   describe('Registration', () => {
@@ -17,7 +17,9 @@ describe('RPCServiceRegistry', () => {
       let rpcServiceRegistry = app.getSingleton(RPCServiceRegistry);
       class TestService extends BaseService {}
       rpcServiceRegistry.add('test', TestService);
-      expect(() => rpcServiceRegistry.add('test', TestService)).toThrowError('Namespace test already in use!');
+      expect(() => rpcServiceRegistry.add('test', TestService)).toThrowError(
+        'Namespace test already in use!',
+      );
     });
   });
 });

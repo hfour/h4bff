@@ -1,5 +1,5 @@
 import { AppSingleton, App, ServiceContextEvents } from '@h4bff/core';
-import { TransactionProvider } from './transactionProvider';
+import { TransactionProvider } from './transaction-provider';
 
 /**
  * Responsible for transaction clean-up. Makes sure that a transaction will be
