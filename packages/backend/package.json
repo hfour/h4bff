@@ -21,7 +21,7 @@
   "dependencies": {
     "@h4bff/core": "*",
     "@types/content-disposition": "^0.5.2",
-    "anydb-sql-2": "^4.0.0",
+    "anydb-sql-2": "^4.0.1",
     "anydb-sql-2-migrations": "^3.0.3",
     "bluebird": "3.5.1",
     "body-parser": "1.18.3",
