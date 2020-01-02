@@ -164,7 +164,10 @@ describe('RPCDispatcher', () => {
             });
           });
         })
-        .then(() => {}, () => {})
+        .then(
+          () => {},
+          () => {},
+        )
         .then(() => {
           expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         });
@@ -207,7 +210,10 @@ describe('RPCDispatcher', () => {
             expect(mockData.sendToHTTPResponse).toHaveBeenCalledWith(requestInfo.res, 200);
           });
         })
-        .then(() => {}, () => {})
+        .then(
+          () => {},
+          () => {},
+        )
         .then(() => {
           expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         });
@@ -257,7 +263,10 @@ describe('RPCDispatcher', () => {
             });
           });
         })
-        .then(() => {}, () => {})
+        .then(
+          () => {},
+          () => {},
+        )
         .then(() => {
           expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         });
@@ -307,7 +316,10 @@ describe('RPCDispatcher', () => {
             });
           });
         })
-        .then(() => {}, () => {})
+        .then(
+          () => {},
+          () => {},
+        )
         .then(() => {
           expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         });
@@ -349,14 +361,17 @@ describe('RPCDispatcher', () => {
               result: null,
               error: {
                 code: 500,
-                message: 'Something bad happened.',
+                message: 'An unexpected error occurred. Please try again.',
               },
               version: 2,
               backendError: true,
             });
           });
         })
-        .then(() => {}, () => {})
+        .then(
+          () => {},
+          () => {},
+        )
         .then(() => {
           expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         });
