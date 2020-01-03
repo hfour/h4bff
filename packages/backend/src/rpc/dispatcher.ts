@@ -75,7 +75,7 @@ export class RPCDispatcher extends BaseService {
       return this.jsonFail(400, 'Technical error, the request was malformed.');
     } else {
       console.error(e);
-      return this.jsonFail(500, 'Something bad happened.');
+      return this.jsonFail(500, 'An unexpected error occurred. Please try again.');
     }
   };
 
