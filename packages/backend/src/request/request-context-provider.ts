@@ -54,6 +54,7 @@ export class RequestContextProvider extends AppSingleton {
     }
     return this.app.withServiceContext(ctx => {
       ctx.getService(RequestInfo)._setRequestResponse(req, res);
+      this.contexts.set(req, ctx);
       return f(ctx);
     });
   }

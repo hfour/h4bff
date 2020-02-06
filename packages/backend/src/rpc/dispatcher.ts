@@ -125,6 +125,9 @@ export class RPCDispatcher extends BaseService {
   call = () => {
     return this.getSingleton(RPCMiddlewareContainer)
       .call(this)
-      .then(this.success, this.fail);
+      .then(this.success, err => {
+        this.fail(err);
+        throw err;
+      });
   };
 }
