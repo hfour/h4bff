@@ -31,11 +31,11 @@ describe('RequestContextProvider', () => {
 
     let app = new App();
     let requestContextProvider = new RequestContextProvider(app);
-    requestContextProvider
+    return requestContextProvider
       .withRequestContext(request, response, _sctx => {
         expect(() => {
           requestContextProvider.withRequestContext(request, response, () => Promise.resolve());
-        }).toThrow();
+        }).toThrow('Attempted to create a request context within the request context');
         return Promise.resolve();
       })
       .then(() => {

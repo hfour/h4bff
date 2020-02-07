@@ -164,10 +164,6 @@ describe('RPCDispatcher', () => {
             });
           });
         })
-        .then(
-          () => {},
-          () => {},
-        )
         .then(() => {
           expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         });
@@ -210,10 +206,6 @@ describe('RPCDispatcher', () => {
             expect(mockData.sendToHTTPResponse).toHaveBeenCalledWith(requestInfo.res, 200);
           });
         })
-        .then(
-          () => {},
-          () => {},
-        )
         .then(() => {
           expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         });
@@ -249,24 +241,24 @@ describe('RPCDispatcher', () => {
           let rpcDispatcher = sCtx.getService(RPCDispatcher);
           let requestInfo = sCtx.getService(RequestInfo);
 
-          return rpcDispatcher.call().then(() => {
-            expect(requestInfo.res.status).toHaveBeenCalledWith(403);
-            expect(requestInfo.res.json).toHaveBeenCalledWith({
-              code: 403,
-              result: null,
-              error: {
+          return rpcDispatcher.call().then(
+            () => {},
+            err => {
+              expect(err).toEqual(expect.objectContaining({ code: 403, message: 'error' }));
+              expect(requestInfo.res.status).toHaveBeenCalledWith(403);
+              expect(requestInfo.res.json).toHaveBeenCalledWith({
                 code: 403,
-                message: 'error',
-              },
-              version: 2,
-              backendError: true,
-            });
-          });
+                result: null,
+                error: {
+                  code: 403,
+                  message: 'error',
+                },
+                version: 2,
+                backendError: true,
+              });
+            },
+          );
         })
-        .then(
-          () => {},
-          () => {},
-        )
         .then(() => {
           expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         });
@@ -302,24 +294,24 @@ describe('RPCDispatcher', () => {
           let rpcDispatcher = sCtx.getService(RPCDispatcher);
           let requestInfo = sCtx.getService(RequestInfo);
 
-          return rpcDispatcher.call().then(() => {
-            expect(requestInfo.res.status).toHaveBeenCalledWith(400);
-            expect(requestInfo.res.json).toHaveBeenCalledWith({
-              code: 400,
-              result: null,
-              error: {
+          return rpcDispatcher.call().then(
+            () => {},
+            err => {
+              expect(err).toEqual(expect.objectContaining({ isJoi: true, details: [] }));
+              expect(requestInfo.res.status).toHaveBeenCalledWith(400);
+              expect(requestInfo.res.json).toHaveBeenCalledWith({
                 code: 400,
-                message: 'Technical error, the request was malformed.',
-              },
-              version: 2,
-              backendError: true,
-            });
-          });
+                result: null,
+                error: {
+                  code: 400,
+                  message: 'Technical error, the request was malformed.',
+                },
+                version: 2,
+                backendError: true,
+              });
+            },
+          );
         })
-        .then(
-          () => {},
-          () => {},
-        )
         .then(() => {
           expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         });
@@ -354,24 +346,24 @@ describe('RPCDispatcher', () => {
           let rpcDispatcher = sCtx.getService(RPCDispatcher);
           let requestInfo = sCtx.getService(RequestInfo);
 
-          return rpcDispatcher.call().then(() => {
-            expect(requestInfo.res.status).toHaveBeenCalledWith(500);
-            expect(requestInfo.res.json).toHaveBeenCalledWith({
-              code: 500,
-              result: null,
-              error: {
+          return rpcDispatcher.call().then(
+            () => {},
+            err => {
+              expect(err).toEqual('error');
+              expect(requestInfo.res.status).toHaveBeenCalledWith(500);
+              expect(requestInfo.res.json).toHaveBeenCalledWith({
                 code: 500,
-                message: 'An unexpected error occurred. Please try again.',
-              },
-              version: 2,
-              backendError: true,
-            });
-          });
+                result: null,
+                error: {
+                  code: 500,
+                  message: 'An unexpected error occurred. Please try again.',
+                },
+                version: 2,
+                backendError: true,
+              });
+            },
+          );
         })
-        .then(
-          () => {},
-          () => {},
-        )
         .then(() => {
           expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         });
