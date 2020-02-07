@@ -33,16 +33,13 @@ describe('RequestContextProvider', () => {
     let requestContextProvider = new RequestContextProvider(app);
     return requestContextProvider
       .withRequestContext(request, response, _sctx => {
-        return Promise.resolve(
-          expect(() => {
-            return requestContextProvider.withRequestContext(request, response, () =>
-              Promise.resolve(),
-            );
-          }).toThrow('Attempted to create a request context within the request context'),
-        );
+        expect(() => {
+          requestContextProvider.withRequestContext(request, response, () => Promise.resolve());
+        }).toThrow('Attempted to create a request context within the request context');
+        return Promise.resolve();
       })
       .then(() => {
-        return expect(() => {
+        expect(() => {
           requestContextProvider.withRequestContext(request, response, () => Promise.resolve());
         }).not.toThrow();
       });
