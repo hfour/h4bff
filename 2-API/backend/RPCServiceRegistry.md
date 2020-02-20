@@ -42,7 +42,6 @@ services: {
 |  Method | Description |
 |  --- | --- |
 |  [add(alias, service)](RPCServiceRegistry.md#add) | Adds new RPC service mapping. |
-|  [exists(alias, method)](RPCServiceRegistry.md#exists) | Checks if a given method exists on a RPC service given by its alias. |
 |  [get(serviceAlias)](RPCServiceRegistry.md#get) | Returns service for given alias. |
 
 ### add
@@ -66,27 +65,6 @@ add(alias: string, service: typeof BaseService): void;
 
 `void`
 
-### exists
-
-Checks if a given method exists on a RPC service given by its alias.
-
-<b>Signature:</b>
-
-```typescript
-exists(alias: string, method: string): boolean;
-```
-
-#### Parameters
-
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  alias | <code>string</code> |  |
-|  method | <code>string</code> |  |
-
-<b>Returns:</b>
-
-`boolean`
-
 ### get
 
 Returns service for given alias.
@@ -94,7 +72,7 @@ Returns service for given alias.
 <b>Signature:</b>
 
 ```typescript
-get(serviceAlias: string): typeof BaseService;
+get(serviceAlias: string): typeof BaseService | undefined;
 ```
 
 #### Parameters
@@ -105,5 +83,5 @@ get(serviceAlias: string): typeof BaseService;
 
 <b>Returns:</b>
 
-`typeof BaseService`
+`typeof BaseService | undefined`
 

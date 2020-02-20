@@ -7,9 +7,7 @@ Use the AppContext.Consumer to get the application within a component. This enab
 <b>Signature:</b>
 
 ```typescript
-AppContext: React.Context<{
-    app: App;
-}>
+AppContext: React.Context<AppContextProps>
 ```
 
 #### Example

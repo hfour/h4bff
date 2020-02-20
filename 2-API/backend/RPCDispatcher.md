@@ -19,9 +19,9 @@ export declare class RPCDispatcher extends BaseService
 |  [res](RPCDispatcher.md#res) | <code>import(&quot;express&quot;).Response</code> |  |
 |  [rpcPath](RPCDispatcher.md#rpcpath) | <code>string</code> |  |
 |  [rpcRegistry](RPCDispatcher.md#rpcregistry) | <code>RPCServiceRegistry</code> |  |
-|  [serviceClass](RPCDispatcher.md#serviceclass) | <code>typeof BaseService</code> |  |
-|  [serviceInstance](RPCDispatcher.md#serviceinstance) | <code>BaseService</code> |  |
-|  [serviceMethod](RPCDispatcher.md#servicemethod) | <code>Function</code> |  |
+|  [serviceClass](RPCDispatcher.md#serviceclass) | <code>typeof BaseService &#124; undefined</code> |  |
+|  [serviceInstance](RPCDispatcher.md#serviceinstance) | <code>BaseService &#124; undefined</code> |  |
+|  [serviceMethod](RPCDispatcher.md#servicemethod) | <code>Function &#124; undefined</code> |  |
 |  [serviceNameMethod](RPCDispatcher.md#servicenamemethod) | <code>string[]</code> | When given 'serviceAlias.method' string, it splits it to \['serviceAlias', 'method'\].<!-- -->If the string has more than one dot, the serviceAlias consumes all parts of the name except for the last one:<!-- -->'path.with.more.dots' =<!-- -->&gt; \['path.with.more', 'dots'\] |
 
 ### call
@@ -71,7 +71,7 @@ readonly rpcRegistry: RPCServiceRegistry;
 <b>Signature:</b>
 
 ```typescript
-readonly serviceClass: typeof BaseService;
+readonly serviceClass: typeof BaseService | undefined;
 ```
 
 ### serviceInstance
@@ -79,7 +79,7 @@ readonly serviceClass: typeof BaseService;
 <b>Signature:</b>
 
 ```typescript
-readonly serviceInstance: BaseService;
+readonly serviceInstance: BaseService | undefined;
 ```
 
 ### serviceMethod
@@ -87,7 +87,7 @@ readonly serviceInstance: BaseService;
 <b>Signature:</b>
 
 ```typescript
-readonly serviceMethod: Function;
+readonly serviceMethod: Function | undefined;
 ```
 
 ### serviceNameMethod

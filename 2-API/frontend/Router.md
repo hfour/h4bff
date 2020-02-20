@@ -17,7 +17,7 @@ export declare class Router extends AppSingleton
 |  [addRedirect](Router.md#addredirect) | <code>(newRedirect: Redirect) =&gt; void</code> |  |
 |  [addRoute](Router.md#addroute) | <code>(path: string, component: (rp: {}) =&gt; JSX.Element) =&gt; void</code> |  |
 |  [RenderInstance](Router.md#renderinstance) | <code>() =&gt; JSX.Element</code> |  |
-|  [router](Router.md#router) | <code>MobxRouter</code> |  |
+|  [routeParams](Router.md#routeparams) | <code>any</code> |  |
 
 ### addRedirect
 
@@ -43,10 +43,10 @@ addRoute: (path: string, component: (rp: {}) => JSX.Element) => void;
 RenderInstance: () => JSX.Element;
 ```
 
-### router
+### routeParams
 
 <b>Signature:</b>
 
 ```typescript
-router: MobxRouter;
+readonly routeParams: any;
 ```
