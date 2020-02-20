@@ -1,3 +1,6 @@
+  - Guides
+    - [Introduction](/1-Guides/Introduction.md)
+    - [Thinking in h4bff](/1-Guides/Thinking-in-h4bff.md)
   - API
     - [backend](/2-API/backend)
       - [CustomResponse](/2-API/backend/CustomResponse.md)
@@ -41,7 +44,3 @@
       - [injectContextApp](/2-API/frontend/injectContextApp.md)
       - [useContextApp](/2-API/frontend/useContextApp.md)
       - [useStateTransient](/2-API/frontend/useStateTransient.md)
-  - docs
-    - Guides
-      - [Introduction](/docs/1-Guides/Introduction.md)
-      - [Thinking in h4bff](/docs/1-Guides/Thinking-in-h4bff.md)
