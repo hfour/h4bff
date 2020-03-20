@@ -27,8 +27,8 @@
     ]
   },
   "devDependencies": {
-    "@microsoft/api-extractor": "^7.1.0",
-    "docsify-tools": "^1.0.19",
+    "@microsoft/api-extractor": "^7.7.10",
+    "docsify-tools": "^1.0.20",
     "gh-pages": "^2.0.1",
     "prettier": "^1.15.3",
     "typescript": "^3.4.5",
