@@ -4,6 +4,7 @@ import { RPCServiceRegistry } from './service-registry';
 import { RequestInfo } from '../request';
 import { RPCMiddlewareContainer } from './middleware';
 import { isCustomResponse } from './response';
+import { RPCErrorHandlers } from './error-handler';
 
 /**
  * Responsible for finding and executing the right RPC method based on the RPC mapping found in the {@link RPCServiceRegistry}.
@@ -66,17 +67,18 @@ export class RPCDispatcher extends BaseService {
   }
 
   private fail = (e: Error) => {
+    let handler = this.getSingleton(RPCErrorHandlers).handle(e);
+    if (handler) {
+      console.error(`RPC call failed for "${this.rpcPath}":`);
+      return this.jsonFail(handler.code, handler.message, handler.data);
+    }
+
     if (typeof (e as any).code === 'number') {
       return this.jsonFail((e as any).code, e.message);
-    } else if ((e as any).isJoi) {
-      // TODO: Joi specific handling, get rid of it
-      console.error(`Validation failed for "${this.rpcPath}":`);
-      (e as any).details.forEach((err: any) => console.error(` \-> ${err.message}`));
-      return this.jsonFail(400, 'Technical error, the request was malformed.');
-    } else {
-      console.error(e);
-      return this.jsonFail(500, 'An unexpected error occurred. Please try again.');
     }
+
+    console.error(e);
+    return this.jsonFail(500, 'An unexpected error occurred. Please try again.');
   };
 
   private success = (data: any, code: number = 200) => {
