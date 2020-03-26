@@ -1,7 +1,7 @@
 import { AppSingleton } from '@h4bff/core';
 
 type jsonErrorResponse = { code: number; message: string; data?: any };
-type errorHandler = (e: Error) => jsonErrorResponse;
+type errorHandler = (e: Error) => jsonErrorResponse | undefined;
 
 /**
  * Singleton for adding error handlers used in `RPCDispatcher.call()`

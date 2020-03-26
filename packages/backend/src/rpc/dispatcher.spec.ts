@@ -5,6 +5,7 @@ import { RequestInfo } from '../request';
 import { RPCDispatcher } from './dispatcher';
 import { RPCServiceRegistry } from './service-registry';
 import { RPCMiddlewareContainer } from './middleware';
+import { RPCErrorHandlers } from '.';
 
 describe('RPCDispatcher', () => {
   function mockRequest(method?: string, params?: any) {
@@ -281,6 +282,16 @@ describe('RPCDispatcher', () => {
           call = jest.fn(() => Promise.reject({ isJoi: true, details: [] }));
         },
       );
+      // register custom handler
+      app.getSingleton(RPCErrorHandlers).addErrorHandler((e: Error) => {
+        if ((e as any).isJoi) {
+          return {
+            code: 400,
+            message: 'Technical error, the request was malformed.',
+            data: (e as any).details,
+          };
+        }
+      });
       // mock disposeContext call
       app.overrideSingleton(
         ServiceContextEvents,
@@ -301,7 +312,7 @@ describe('RPCDispatcher', () => {
               expect(requestInfo.res.status).toHaveBeenCalledWith(400);
               expect(requestInfo.res.json).toHaveBeenCalledWith({
                 code: 400,
-                result: null,
+                result: [],
                 error: {
                   code: 400,
                   message: 'Technical error, the request was malformed.',
