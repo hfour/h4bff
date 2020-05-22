@@ -76,7 +76,7 @@ describe('mobx transient', () => {
       value = 1;
     }
 
-    let TemporaryComponent = observer(props => {
+    let TemporaryComponent = observer((props: {}) => {
       let state = useStateTransient(DisposerTest, props);
       return <div>Hello number {state.value}</div>;
     });
@@ -88,7 +88,7 @@ describe('mobx transient', () => {
       }
     }
 
-    let SwitchingComponent = observer(props => {
+    let SwitchingComponent = observer((props: {}) => {
       let switchState = useStateTransient(SwitchState, props);
       return (
         <div>

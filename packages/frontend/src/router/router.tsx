@@ -1,5 +1,4 @@
 import { App, AppSingleton } from '@h4bff/core';
-import { Redirect } from '.';
 import { observable, action, autorun, computed } from 'mobx';
 import { observer } from 'mobx-react';
 import * as pathToRegexp from 'path-to-regexp';
