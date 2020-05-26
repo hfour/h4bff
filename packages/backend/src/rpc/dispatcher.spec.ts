@@ -23,7 +23,7 @@ describe('RPCDispatcher', () => {
   }
 
   describe('handleRequest', () => {
-    it(`should respond with error if method is not found in the request qyery params`, () => {
+    it(`should respond with error if method is not found in the request query params`, () => {
       let app = new App();
       // prepare request / response
       app.overrideService(
@@ -83,7 +83,7 @@ describe('RPCDispatcher', () => {
       });
     });
 
-    it(`should respond with error if method does't exist on the service`, () => {
+    it(`should respond with error if method doesn't exist on the service`, () => {
       let app = new App();
       // prepare request / response
       app.overrideService(
@@ -267,6 +267,7 @@ describe('RPCDispatcher', () => {
 
     it('should respond with validation error response when the RPC call fails with validation data', () => {
       let app = new App();
+
       // prepare request / response
       app.overrideService(
         RequestInfo,
@@ -275,6 +276,7 @@ describe('RPCDispatcher', () => {
           res = mockResponse();
         },
       );
+
       // mock middleware call and prepare erroneous response
       app.overrideSingleton(
         RPCMiddlewareContainer,
@@ -282,7 +284,17 @@ describe('RPCDispatcher', () => {
           call = jest.fn(() => Promise.reject({ isJoi: true, details: [] }));
         },
       );
-      // register custom handler
+
+      let calledFn = jest.fn(() => {});
+      let notCalledFn = jest.fn(() => {});
+
+      // register dummy handler to ensure the correct handler can be reached
+      app.getSingleton(RPCErrorHandlers).addErrorHandler((_e: Error) => {
+        calledFn();
+        return undefined;
+      });
+
+      // register custom handler that we expect to be reached
       app.getSingleton(RPCErrorHandlers).addErrorHandler((e: Error) => {
         if ((e as any).isJoi) {
           return {
@@ -292,6 +304,19 @@ describe('RPCDispatcher', () => {
           };
         }
       });
+
+      // register third handler with same condition as the previous to ensure it was not reached
+      app.getSingleton(RPCErrorHandlers).addErrorHandler((e: Error) => {
+        notCalledFn();
+        if ((e as any).isJoi) {
+          return {
+            code: 444,
+            message: 'It should have been handled before',
+            data: (e as any).details,
+          };
+        }
+      });
+
       // mock disposeContext call
       app.overrideSingleton(
         ServiceContextEvents,
@@ -324,6 +349,8 @@ describe('RPCDispatcher', () => {
           );
         })
         .then(() => {
+          expect(calledFn).toHaveBeenCalledTimes(1);
+          expect(notCalledFn).toHaveBeenCalledTimes(0);
           expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         });
     });
