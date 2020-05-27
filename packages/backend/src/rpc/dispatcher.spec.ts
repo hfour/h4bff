@@ -285,17 +285,11 @@ describe('RPCDispatcher', () => {
         },
       );
 
-      let calledFn = jest.fn(() => {});
-      let notCalledFn = jest.fn(() => {});
-
       // register dummy handler to ensure the correct handler can be reached
-      app.getSingleton(RPCErrorHandlers).addErrorHandler((_e: Error) => {
-        calledFn();
-        return undefined;
-      });
+      let handlerCalledNotHandling = jest.fn((_e: Error) => undefined);
 
       // register custom handler that we expect to be reached
-      app.getSingleton(RPCErrorHandlers).addErrorHandler((e: Error) => {
+      let handlerCalledHandling = jest.fn((e: Error) => {
         if ((e as any).isJoi) {
           return {
             code: 400,
@@ -306,8 +300,7 @@ describe('RPCDispatcher', () => {
       });
 
       // register third handler with same condition as the previous to ensure it was not reached
-      app.getSingleton(RPCErrorHandlers).addErrorHandler((e: Error) => {
-        notCalledFn();
+      let handlerNotCalled = jest.fn((e: Error) => {
         if ((e as any).isJoi) {
           return {
             code: 444,
@@ -316,6 +309,11 @@ describe('RPCDispatcher', () => {
           };
         }
       });
+
+      // register the handles in order
+      app.getSingleton(RPCErrorHandlers).addErrorHandler(handlerCalledNotHandling);
+      app.getSingleton(RPCErrorHandlers).addErrorHandler(handlerCalledHandling);
+      app.getSingleton(RPCErrorHandlers).addErrorHandler(handlerNotCalled);
 
       // mock disposeContext call
       app.overrideSingleton(
@@ -349,8 +347,9 @@ describe('RPCDispatcher', () => {
           );
         })
         .then(() => {
-          expect(calledFn).toHaveBeenCalledTimes(1);
-          expect(notCalledFn).toHaveBeenCalledTimes(0);
+          expect(handlerCalledNotHandling).toHaveBeenCalledTimes(1);
+          expect(handlerCalledHandling).toHaveBeenCalledTimes(1);
+          expect(handlerNotCalled).toHaveBeenCalledTimes(0);
           expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         });
     });
