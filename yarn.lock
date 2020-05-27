@@ -603,9 +603,9 @@ acorn-walk@^6.0.1:
   integrity sha512-OtUw6JUTgxA2QoqqmrmQ7F2NYqiBPi/L2jqHyFtllhOUvXYQXf0Z1CYUinIfyT4bTCGmrA7gX9FvHA81uzCoVw==
 
 acorn@^5.5.3:
-  version "5.7.4"
-  resolved "https://registry.yarnpkg.com/acorn/-/acorn-5.7.4.tgz#3e8d8a9947d0599a1796d10225d7432f4a4acf5e"
-  integrity sha512-1D++VG7BhrtvQpNbBzovKNc1FLGGEE/oGe7b9xJm/RFHMBeUaUGpluV9RLjZa47YFdPcDAenEYuq9pQPcMdLJg==
+  version "5.7.3"
+  resolved "https://registry.yarnpkg.com/acorn/-/acorn-5.7.3.tgz#67aa231bf8812974b85235a96771eb6bd07ea279"
+  integrity sha512-T/zvzYRfbVojPWahDsE5evJdHb3oJoQfFbsrKM7w5Zcs++Tr257tia3BmMP8XYVjp1S9RZXQMh7gao96BlqZOw==
 
 acorn@^6.0.1:
   version "6.1.1"
@@ -701,17 +701,17 @@ anydb-sql-2-migrations@^3.0.3:
     lodash "^4.17.5"
     yargs "^1.3.3"
 
-"anydb-sql-2@>=3.0.0 <5.0.0", anydb-sql-2@^4.0.2:
-  version "4.0.2"
-  resolved "https://registry.yarnpkg.com/anydb-sql-2/-/anydb-sql-2-4.0.2.tgz#7502e5d48117006cd5bb9eb90dd1348a6f1249f0"
-  integrity sha512-V15DZ9FOeIBmwZuq6poeOHYcPvtmpPeEM5d6Jw2I/4Rm69PZ1x65sCX9+tEDUfAnlTaABMm3T+QtZFbzFLwpww==
+"anydb-sql-2@>=3.0.0 <5.0.0", anydb-sql-2@^4.0.1:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/anydb-sql-2/-/anydb-sql-2-4.0.1.tgz#0883408949ebbf20321f77f202af01b76d80b56e"
+  integrity sha512-cwviAhKIIBaJFw0Bl/Okdugy7gJ+VNSJ6ZACQe645fccEa3AVTSP/rU4A2xemXNiDpzb+Nid44LUpmlDedb40g==
   dependencies:
     any-db "^2.1.0"
     any-db-mysql "^2.1.2"
     any-db-postgres "^2.1.4"
     any-db-transaction "^2.2.2"
     bluebird ">= 2.10.2"
-    node-sql-2 "^0.79.0"
+    node-sql-2 "^0.78.0"
 
 anymatch@^2.0.0:
   version "2.0.0"
@@ -904,6 +904,11 @@ bignumber.js@7.2.1:
   resolved "https://registry.yarnpkg.com/bignumber.js/-/bignumber.js-7.2.1.tgz#80c048759d826800807c4bfd521e50edbba57a5f"
   integrity sha512-S4XzBk5sMB+Rcb/LNcpzXr57VRTxgAvaAEDAl1AwRx27j00hT84O6OkteE7u8UB3NuaaygCRrEpqox4uDOrbdQ==
 
+bluebird@3.5.1:
+  version "3.5.1"
+  resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.5.1.tgz#d9551f9de98f1fcda1e683d17ee91a0602ee2eb9"
+  integrity sha512-MKiLiV+I1AA596t9w1sQJ8jkiSr5+ZKi0WKrYGUn6d1Fx+Ij4tIj+m2WMQSGczs5jZVxV339chE8iwk6F64wjA==
+
 "bluebird@>= 2.10.2", bluebird@^3.5.1:
   version "3.5.4"
   resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.5.4.tgz#d6cc661595de30d5b3af5fcedd3c0b3ef6ec5714"
@@ -913,11 +918,6 @@ bluebird@^3.5.0:
   version "3.7.1"
   resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.7.1.tgz#df70e302b471d7473489acf26a93d63b53f874de"
   integrity sha512-DdmyoGCleJnkbp3nkbxTLJ18rjDsE4yCggEwKNXkeV123sPNfOCYeDoeuOY+F2FrSjO1YXcTU+dsy96KMy+gcg==
-
-bluebird@^3.7.1:
-  version "3.7.2"
-  resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.7.2.tgz#9f229c15be272454ffa973ace0dbee79a1b0c36f"
-  integrity sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg==
 
 body-parser@1.18.3:
   version "1.18.3"
@@ -3181,10 +3181,10 @@ node-pre-gyp@^0.12.0:
     semver "^5.3.0"
     tar "^4"
 
-node-sql-2@^0.79.0:
-  version "0.79.0"
-  resolved "https://registry.yarnpkg.com/node-sql-2/-/node-sql-2-0.79.0.tgz#79e108b3dea5042cba3478b9c5a6274ed61518e1"
-  integrity sha512-eYHli4z/jIBPcFJhOHaVJBN4OWngfyKuCVYYOTpBh8kng4cy044bfTbTPKDL6JfdU/Y2FPLcmdOReSEI2vZjOg==
+node-sql-2@^0.78.0:
+  version "0.78.0"
+  resolved "https://registry.yarnpkg.com/node-sql-2/-/node-sql-2-0.78.0.tgz#69fe8c701af8ace09fda5a2e61eb0e80e0f56918"
+  integrity sha1-af6McBr4rOCf2louYesOgOD1aRg=
   dependencies:
     lodash "^4.17.5"
     sliced "0.0.x"
