@@ -5,6 +5,7 @@ import { RequestInfo } from '../request';
 import { RPCDispatcher } from './dispatcher';
 import { RPCServiceRegistry } from './service-registry';
 import { RPCMiddlewareContainer } from './middleware';
+import { RPCErrorHandlers } from '.';
 
 describe('RPCDispatcher', () => {
   function mockRequest(method?: string, params?: any) {
@@ -22,7 +23,7 @@ describe('RPCDispatcher', () => {
   }
 
   describe('handleRequest', () => {
-    it(`should respond with error if method is not found in the request qyery params`, () => {
+    it(`should respond with error if method is not found in the request query params`, () => {
       let app = new App();
       // prepare request / response
       app.overrideService(
@@ -82,7 +83,7 @@ describe('RPCDispatcher', () => {
       });
     });
 
-    it(`should respond with error if method does't exist on the service`, () => {
+    it(`should respond with error if method doesn't exist on the service`, () => {
       let app = new App();
       // prepare request / response
       app.overrideService(
@@ -264,8 +265,9 @@ describe('RPCDispatcher', () => {
         });
     });
 
-    it('should respond with validation error response when the RPC call fails with validation data', () => {
+    it('should respond with error response from a registered error handler when the RPC call fails with error the handler can handle', () => {
       let app = new App();
+
       // prepare request / response
       app.overrideService(
         RequestInfo,
@@ -274,13 +276,33 @@ describe('RPCDispatcher', () => {
           res = mockResponse();
         },
       );
+
       // mock middleware call and prepare erroneous response
       app.overrideSingleton(
         RPCMiddlewareContainer,
         class MockRPCMiddlewareContainer extends RPCMiddlewareContainer {
-          call = jest.fn(() => Promise.reject({ isJoi: true, details: [] }));
+          call = jest.fn(() => Promise.reject({ isJoi: true, details: 'Error details' }));
         },
       );
+
+      // create dummy handler to ensure the correct handler can be reached
+      let dummyHandler = jest.fn((_e: Error) => undefined);
+
+      // create custom handler that we expect to be reached
+      let specificHandler = jest.fn((e: Error) => {
+        if ((e as any).isJoi) {
+          return {
+            code: 400,
+            message: 'Technical error, the request was malformed.',
+            data: (e as any).details,
+          };
+        }
+      });
+
+      // register the handlers in order
+      app.getSingleton(RPCErrorHandlers).addErrorHandler(dummyHandler);
+      app.getSingleton(RPCErrorHandlers).addErrorHandler(specificHandler);
+
       // mock disposeContext call
       app.overrideSingleton(
         ServiceContextEvents,
@@ -297,11 +319,13 @@ describe('RPCDispatcher', () => {
           return rpcDispatcher.call().then(
             () => {},
             err => {
-              expect(err).toEqual(expect.objectContaining({ isJoi: true, details: [] }));
+              expect(err).toEqual(
+                expect.objectContaining({ isJoi: true, details: 'Error details' }),
+              );
               expect(requestInfo.res.status).toHaveBeenCalledWith(400);
               expect(requestInfo.res.json).toHaveBeenCalledWith({
                 code: 400,
-                result: null,
+                result: 'Error details',
                 error: {
                   code: 400,
                   message: 'Technical error, the request was malformed.',
@@ -313,6 +337,165 @@ describe('RPCDispatcher', () => {
           );
         })
         .then(() => {
+          expect(dummyHandler).not.toHaveBeenCalled();
+          expect(specificHandler).toHaveBeenCalledTimes(1);
+          expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
+        });
+    });
+
+    it('should respond with error response from the last registered error handler when the RPC call fails with error that the handler can handle', () => {
+      let app = new App();
+
+      // prepare request / response
+      app.overrideService(
+        RequestInfo,
+        class MockRequestInfo extends RequestInfo {
+          req = mockRequest('test.method', {});
+          res = mockResponse();
+        },
+      );
+
+      // mock middleware call and prepare erroneous response
+      app.overrideSingleton(
+        RPCMiddlewareContainer,
+        class MockRPCMiddlewareContainer extends RPCMiddlewareContainer {
+          call = jest.fn(() => Promise.reject({ isJoi: true, details: 'Error details' }));
+        },
+      );
+
+      // create handler that can handle the error but cannot be reached? reached
+      let specificHandler1 = jest.fn((e: Error) => {
+        if ((e as any).isJoi) {
+          return {
+            code: 400,
+            message: 'Technical error, the request was malformed.',
+            data: (e as any).details,
+          };
+        }
+      });
+
+      // create third handler with same condition as the previous to ensure it was not reached
+      let specificHandler2 = jest.fn((e: Error) => {
+        if ((e as any).isJoi) {
+          return {
+            code: 444,
+            message: 'I am the most recently registered handler and I am handling the error.',
+            data: (e as any).details,
+          };
+        }
+      });
+
+      // register the handlers in order
+      app.getSingleton(RPCErrorHandlers).addErrorHandler(specificHandler1);
+      app.getSingleton(RPCErrorHandlers).addErrorHandler(specificHandler2);
+
+      // mock disposeContext call
+      app.overrideSingleton(
+        ServiceContextEvents,
+        class MockServiceContextEvents extends ServiceContextEvents {
+          disposeContext = jest.fn(() => Promise.resolve());
+        },
+      );
+
+      return app
+        .withServiceContext(sCtx => {
+          let rpcDispatcher = sCtx.getService(RPCDispatcher);
+          let requestInfo = sCtx.getService(RequestInfo);
+
+          return rpcDispatcher.call().then(
+            () => {},
+            err => {
+              expect(err).toEqual(
+                expect.objectContaining({ isJoi: true, details: 'Error details' }),
+              );
+              expect(requestInfo.res.status).toHaveBeenCalledWith(444);
+              expect(requestInfo.res.json).toHaveBeenCalledWith({
+                code: 444,
+                result: 'Error details',
+                error: {
+                  code: 444,
+                  message: 'I am the most recently registered handler and I am handling the error.',
+                },
+                version: 2,
+                backendError: true,
+              });
+            },
+          );
+        })
+        .then(() => {
+          expect(specificHandler1).not.toHaveBeenCalledWith();
+          expect(specificHandler2).toHaveBeenCalledTimes(1);
+          expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
+        });
+    });
+
+    it('should respond with error response from the default coded error handler if the RPC call fails with error no handler can handle', () => {
+      let app = new App();
+
+      // prepare request / response
+      app.overrideService(
+        RequestInfo,
+        class MockRequestInfo extends RequestInfo {
+          req = mockRequest('test.method', {});
+          res = mockResponse();
+        },
+      );
+
+      // mock middleware call and prepare erroneous response
+      app.overrideSingleton(
+        RPCMiddlewareContainer,
+        class MockRPCMiddlewareContainer extends RPCMiddlewareContainer {
+          call = jest.fn(() => Promise.reject({ code: 444, message: 'Error details' }));
+        },
+      );
+
+      // create custom handler that we expect to be reached
+      let specificHandler = jest.fn((e: Error) => {
+        if ((e as any).isJoi) {
+          return {
+            code: 400,
+            message: 'Technical error, the request was malformed.',
+            data: (e as any).details,
+          };
+        }
+      });
+
+      // register the handler
+      app.getSingleton(RPCErrorHandlers).addErrorHandler(specificHandler);
+
+      // mock disposeContext call
+      app.overrideSingleton(
+        ServiceContextEvents,
+        class MockServiceContextEvents extends ServiceContextEvents {
+          disposeContext = jest.fn(() => Promise.resolve());
+        },
+      );
+
+      return app
+        .withServiceContext(sCtx => {
+          let rpcDispatcher = sCtx.getService(RPCDispatcher);
+          let requestInfo = sCtx.getService(RequestInfo);
+
+          return rpcDispatcher.call().then(
+            () => {},
+            err => {
+              expect(err).toEqual(expect.objectContaining({ code: 444, message: 'Error details' }));
+              expect(requestInfo.res.status).toHaveBeenCalledWith(444);
+              expect(requestInfo.res.json).toHaveBeenCalledWith({
+                code: 444,
+                result: null,
+                error: {
+                  code: 444,
+                  message: 'Error details',
+                },
+                version: 2,
+                backendError: true,
+              });
+            },
+          );
+        })
+        .then(() => {
+          expect(specificHandler).toHaveBeenCalledTimes(1);
           expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         });
     });
