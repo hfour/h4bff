@@ -285,10 +285,10 @@ describe('RPCDispatcher', () => {
         },
       );
 
-      // register dummy handler to ensure the correct handler can be reached
+      // create dummy handler to ensure the correct handler can be reached
       let dummyHandler = jest.fn((_e: Error) => undefined);
 
-      // register custom handler that we expect to be reached
+      // create custom handler that we expect to be reached
       let specificHandler = jest.fn((e: Error) => {
         if ((e as any).isJoi) {
           return {
@@ -299,7 +299,7 @@ describe('RPCDispatcher', () => {
         }
       });
 
-      // register the handles in order
+      // register the handlers in order
       app.getSingleton(RPCErrorHandlers).addErrorHandler(dummyHandler);
       app.getSingleton(RPCErrorHandlers).addErrorHandler(specificHandler);
 
@@ -363,7 +363,7 @@ describe('RPCDispatcher', () => {
         },
       );
 
-      // register handler that can handle the error but cannot be reached? reached
+      // create handler that can handle the error but cannot be reached? reached
       let specificHandler1 = jest.fn((e: Error) => {
         if ((e as any).isJoi) {
           return {
@@ -374,7 +374,7 @@ describe('RPCDispatcher', () => {
         }
       });
 
-      // register third handler with same condition as the previous to ensure it was not reached
+      // create third handler with same condition as the previous to ensure it was not reached
       let specificHandler2 = jest.fn((e: Error) => {
         if ((e as any).isJoi) {
           return {
@@ -385,7 +385,7 @@ describe('RPCDispatcher', () => {
         }
       });
 
-      // register the handles in order
+      // register the handlers in order
       app.getSingleton(RPCErrorHandlers).addErrorHandler(specificHandler1);
       app.getSingleton(RPCErrorHandlers).addErrorHandler(specificHandler2);
 
@@ -449,7 +449,7 @@ describe('RPCDispatcher', () => {
         },
       );
 
-      // register custom handler that we expect to be reached
+      // create custom handler that we expect to be reached
       let specificHandler = jest.fn((e: Error) => {
         if ((e as any).isJoi) {
           return {
