@@ -429,6 +429,77 @@ describe('RPCDispatcher', () => {
         });
     });
 
+    it('should respond with error response from the default coded error handler if the RPC call fails with error no handler can handle', () => {
+      let app = new App();
+
+      // prepare request / response
+      app.overrideService(
+        RequestInfo,
+        class MockRequestInfo extends RequestInfo {
+          req = mockRequest('test.method', {});
+          res = mockResponse();
+        },
+      );
+
+      // mock middleware call and prepare erroneous response
+      app.overrideSingleton(
+        RPCMiddlewareContainer,
+        class MockRPCMiddlewareContainer extends RPCMiddlewareContainer {
+          call = jest.fn(() => Promise.reject({ code: 444, message: 'Error details' }));
+        },
+      );
+
+      // register custom handler that we expect to be reached
+      let specificHandler = jest.fn((e: Error) => {
+        if ((e as any).isJoi) {
+          return {
+            code: 400,
+            message: 'Technical error, the request was malformed.',
+            data: (e as any).details,
+          };
+        }
+      });
+
+      // register the handler
+      app.getSingleton(RPCErrorHandlers).addErrorHandler(specificHandler);
+
+      // mock disposeContext call
+      app.overrideSingleton(
+        ServiceContextEvents,
+        class MockServiceContextEvents extends ServiceContextEvents {
+          disposeContext = jest.fn(() => Promise.resolve());
+        },
+      );
+
+      return app
+        .withServiceContext(sCtx => {
+          let rpcDispatcher = sCtx.getService(RPCDispatcher);
+          let requestInfo = sCtx.getService(RequestInfo);
+
+          return rpcDispatcher.call().then(
+            () => {},
+            err => {
+              expect(err).toEqual(expect.objectContaining({ code: 444, message: 'Error details' }));
+              expect(requestInfo.res.status).toHaveBeenCalledWith(444);
+              expect(requestInfo.res.json).toHaveBeenCalledWith({
+                code: 444,
+                result: null,
+                error: {
+                  code: 444,
+                  message: 'Error details',
+                },
+                version: 2,
+                backendError: true,
+              });
+            },
+          );
+        })
+        .then(() => {
+          expect(specificHandler).toHaveBeenCalledTimes(1);
+          expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
+        });
+    });
+
     it('should respond with 500 error response when the RPC call fails with unknown error', () => {
       let app = new App();
       // prepare request / response
