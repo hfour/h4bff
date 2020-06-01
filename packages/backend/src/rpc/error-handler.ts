@@ -1,26 +1,28 @@
 import { AppSingleton } from '@h4bff/core';
 
-type jsonErrorResponse = { code: number; message: string; data?: any };
-type errorHandler = (e: Error) => jsonErrorResponse | undefined;
+type ErrorResponse = { code: number; message: string; data?: any };
+type ErrorHandler = (e: Error) => ErrorResponse | undefined;
 
 /**
- * Singleton for adding error handlers used in `RPCDispatcher.call()`
+ * RPC error handler container. Keeps all registered error handlers for RPC calls.
  */
 export class RPCErrorHandlers extends AppSingleton {
-  private errorHandlers: errorHandler[] = [];
+  private errorHandlers: ErrorHandler[] = [];
 
   /**
-   * Function that can test Error object, and if it should handle it - returns code and message
-   * @param handler function that accepts `Error` to test
-   * @returns optionally `{ code: number; message: string; data?: any }`
+   * Registers new error handler in a stack like order.
+   *
+   * @param handler function that accepts and test {@link Error} object. Return {@link ErrorResponse} if it handles the {@link Error} and `undefined` otherwise
+   * @returns {@link ErrorResponse} or {undefined}
    */
-  addErrorHandler(handler: errorHandler) {
-    this.errorHandlers.push(handler);
+  addErrorHandler(handler: ErrorHandler) {
+    this.errorHandlers.unshift(handler);
   }
 
   /**
-   * Cycles through all registered handlers and executes them.
-   * @returns the result of the first handler that returns `{ code: number; message: string; data?: any }`
+   * Iterates over all registered handlers in a stack-like order and executes them. Stops at the first handler that can handle the error. Returns {undefined} if no handler is able to handle the error.
+   *
+   * @returns {@link ErrorResponse} or {undefined}
    */
   handle(error: Error) {
     for (let handler of this.errorHandlers) {

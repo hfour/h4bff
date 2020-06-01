@@ -67,10 +67,10 @@ export class RPCDispatcher extends BaseService {
   }
 
   private fail = (e: Error) => {
-    let handler = this.getSingleton(RPCErrorHandlers).handle(e);
-    if (handler) {
-      console.error(`RPC call failed for "${this.rpcPath}":`);
-      return this.jsonFail(handler.code, handler.message, handler.data);
+    let errorResponse = this.getSingleton(RPCErrorHandlers).handle(e);
+
+    if (errorResponse) {
+      return this.jsonFail(errorResponse.code, errorResponse.message, errorResponse.data);
     }
 
     if (typeof (e as any).code === 'number') {
