@@ -286,10 +286,10 @@ describe('RPCDispatcher', () => {
       );
 
       // register dummy handler to ensure the correct handler can be reached
-      let dummyHandlerNotHandling = jest.fn((_e: Error) => undefined);
+      let dummyHandler = jest.fn((_e: Error) => undefined);
 
       // register custom handler that we expect to be reached
-      let specificHandlerHandling = jest.fn((e: Error) => {
+      let specificHandler = jest.fn((e: Error) => {
         if ((e as any).isJoi) {
           return {
             code: 400,
@@ -300,8 +300,8 @@ describe('RPCDispatcher', () => {
       });
 
       // register the handles in order
-      app.getSingleton(RPCErrorHandlers).addErrorHandler(dummyHandlerNotHandling);
-      app.getSingleton(RPCErrorHandlers).addErrorHandler(specificHandlerHandling);
+      app.getSingleton(RPCErrorHandlers).addErrorHandler(dummyHandler);
+      app.getSingleton(RPCErrorHandlers).addErrorHandler(specificHandler);
 
       // mock disposeContext call
       app.overrideSingleton(
@@ -337,8 +337,8 @@ describe('RPCDispatcher', () => {
           );
         })
         .then(() => {
-          expect(dummyHandlerNotHandling).not.toHaveBeenCalled();
-          expect(specificHandlerHandling).toHaveBeenCalledTimes(1);
+          expect(dummyHandler).not.toHaveBeenCalled();
+          expect(specificHandler).toHaveBeenCalledTimes(1);
           expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         });
     });
@@ -364,7 +364,7 @@ describe('RPCDispatcher', () => {
       );
 
       // register handler that can handle the error but cannot be reached? reached
-      let specificHandlerNotHandling = jest.fn((e: Error) => {
+      let specificHandler1 = jest.fn((e: Error) => {
         if ((e as any).isJoi) {
           return {
             code: 400,
@@ -375,7 +375,7 @@ describe('RPCDispatcher', () => {
       });
 
       // register third handler with same condition as the previous to ensure it was not reached
-      let specificHandlerHandling = jest.fn((e: Error) => {
+      let specificHandler2 = jest.fn((e: Error) => {
         if ((e as any).isJoi) {
           return {
             code: 444,
@@ -386,8 +386,8 @@ describe('RPCDispatcher', () => {
       });
 
       // register the handles in order
-      app.getSingleton(RPCErrorHandlers).addErrorHandler(specificHandlerNotHandling);
-      app.getSingleton(RPCErrorHandlers).addErrorHandler(specificHandlerHandling);
+      app.getSingleton(RPCErrorHandlers).addErrorHandler(specificHandler1);
+      app.getSingleton(RPCErrorHandlers).addErrorHandler(specificHandler2);
 
       // mock disposeContext call
       app.overrideSingleton(
@@ -423,8 +423,8 @@ describe('RPCDispatcher', () => {
           );
         })
         .then(() => {
-          expect(specificHandlerNotHandling).not.toHaveBeenCalledWith();
-          expect(specificHandlerHandling).toHaveBeenCalledTimes(1);
+          expect(specificHandler1).not.toHaveBeenCalledWith();
+          expect(specificHandler2).toHaveBeenCalledTimes(1);
           expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
         });
     });
