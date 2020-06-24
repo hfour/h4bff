@@ -5,6 +5,7 @@ import {
   PublicInterface,
   ServiceContextEvents,
 } from './internal';
+import { Interceptor } from './locator';
 
 /**
  * Represents an H4BFF application, the central hub of h4bff. Its the class that loads and
@@ -217,6 +218,16 @@ export class App {
    */
   loadPlugins() {
     throw new Error('Override this method to load plugins');
+  }
+
+  /**
+   * Registers an interceptor function that will be invoked before when the service get function is
+   * invoked.
+   *
+   * @param ic the interceptor function.
+   */
+  registerServiceInterceptor(ic: Interceptor<ServiceContext>): void {
+    this.serviceLocator.addInterceptor(ic);
   }
 
   /**
