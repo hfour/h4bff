@@ -5,6 +5,7 @@ import {
   PublicInterface,
   ServiceContextEvents,
 } from './internal';
+import { Interceptor } from './locator';
 
 /**
  * Represents an H4BFF application, the central hub of h4bff. Its the class that loads and
@@ -217,6 +218,24 @@ export class App {
    */
   loadPlugins() {
     throw new Error('Override this method to load plugins');
+  }
+
+  /**
+   *
+   * Registers a service interceptor function. Interceptors are called every time a service is
+   * instantiated and can transform the service into a different value. Interceptors can be used
+   * for aspect-oriented programming at a global (application) level to implement features such as
+   * logging, tracing and similar cross-cutting concerns.
+   *
+   * Note that this function will be invoked for every single service class being instantiated,
+   * including h4bff-internal classes (examples include TransactionProvider, RequestInfo etc).
+   * You'll probably want to apply any wrappers conditionally, checking if the instance's class
+   * has been decorated with some metadata and returning the original otherwise
+   *
+   * @param ic the interceptor function.
+   */
+  registerServiceInterceptor(ic: Interceptor<ServiceContext>): void {
+    this.serviceLocator.addInterceptor(ic);
   }
 
   /**

@@ -60,7 +60,7 @@ export class Locator<Context> {
     this.addInterceptor(overrideInterceptor(this.overrides));
   }
 
-  private addInterceptor(ic: Interceptor<Context>) {
+  public addInterceptor(ic: Interceptor<Context>) {
     this.get = ic(this.get);
   }
 

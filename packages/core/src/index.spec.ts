@@ -1,4 +1,5 @@
 import { App, AppSingleton, BaseService, ServiceContext, ServiceContextEvents } from './';
+import { Interceptor } from './locator';
 
 /**
  * Returns a random 8 char hex string.
@@ -218,5 +219,88 @@ describe('Context disposal', () => {
       // this should fail
       expect((childApp as App).getSingleton(testSingleton)).toBe('some text from override');
     });
+  });
+});
+
+describe('Service instantiator interceptors', () => {
+  class BaseServiceTest extends BaseService {}
+
+  it('register new interceptor', () => {
+    //given
+    const app = new App();
+    const myMockFunction = jest.fn();
+
+    const testInterceptor = <Context>(): Interceptor<Context> => {
+      return instantiator => f => {
+        myMockFunction();
+        return instantiator(f);
+      };
+    };
+
+    //when
+    app.registerServiceInterceptor(testInterceptor());
+    app.serviceLocator.get(BaseServiceTest);
+
+    //then
+    expect(myMockFunction.mock.calls.length).toBe(1);
+  });
+
+  it('register more than one service interceptors in given order', () => {
+    //given
+    const app = new App();
+    const myMockFunction1 = jest.fn();
+    const myMockFunction2 = jest.fn();
+    const order: string[] = [];
+
+    const testInterceptor1 = <Context>(): Interceptor<Context> => {
+      return instantiator => f => {
+        myMockFunction1();
+        order.push('a');
+        return instantiator(f);
+      };
+    };
+    const testInterceptor2 = <Context>(): Interceptor<Context> => {
+      return instantiator => f => {
+        myMockFunction2();
+        order.push('b');
+        return instantiator(f);
+      };
+    };
+
+    //when
+    app.registerServiceInterceptor(testInterceptor1());
+    app.registerServiceInterceptor(testInterceptor2());
+    app.serviceLocator.get(BaseServiceTest);
+
+    //then
+    expect(myMockFunction1.mock.calls.length).toBe(1);
+    expect(myMockFunction2.mock.calls.length).toBe(1);
+    expect(order).toEqual(['b', 'a']);
+  });
+
+  it('check if the interceptor modifies the service that we request', () => {
+    //given
+    const app = new App();
+
+    class TestStateService extends BaseService {
+      testValue: string = 'test 1';
+    }
+
+    const testInterceptor1 = <Context>(): Interceptor<Context> => {
+      return instantiator => f => {
+        const instance = instantiator(f);
+        if (instance instanceof TestStateService) {
+          instance.testValue = 'value is modified';
+        }
+        return instance;
+      };
+    };
+
+    //when
+    app.registerServiceInterceptor(testInterceptor1());
+    const testStateService = app.serviceLocator.get(TestStateService);
+
+    //then
+    expect(testStateService.testValue).toBe('value is modified');
   });
 });
