@@ -239,9 +239,9 @@ describe('Service instantiator interceptors', () => {
 
     //when
     app.registerServiceInterceptor(testInterceptor());
+    app.serviceLocator.get(BaseServiceTest);
 
     //then
-    app.serviceLocator.get(BaseServiceTest);
     expect(myMockFunction.mock.calls.length).toBe(1);
   });
 
@@ -270,11 +270,37 @@ describe('Service instantiator interceptors', () => {
     //when
     app.registerServiceInterceptor(testInterceptor1());
     app.registerServiceInterceptor(testInterceptor2());
+    app.serviceLocator.get(BaseServiceTest);
 
     //then
-    app.serviceLocator.get(BaseServiceTest);
     expect(myMockFunction1.mock.calls.length).toBe(1);
     expect(myMockFunction2.mock.calls.length).toBe(1);
     expect(order).toEqual(['b', 'a']);
+  });
+
+  it('check if the interceptor modifies the service that it instantiates', () => {
+    //given
+    const app = new App();
+
+    class TestStateService extends BaseService {
+      testValue: string = 'test 1';
+    }
+
+    const testInterceptor1 = <Context>(): Interceptor<Context> => {
+      return instantiator => f => {
+        const instance = instantiator(f);
+        if (instance instanceof TestStateService) {
+          instance.testValue = 'value is modified';
+        }
+        return instance;
+      };
+    };
+
+    //when
+    app.registerServiceInterceptor(testInterceptor1());
+    const testStateService = app.serviceLocator.get(TestStateService);
+
+    //then
+    expect(testStateService.testValue).toBe('value is modified');
   });
 });
