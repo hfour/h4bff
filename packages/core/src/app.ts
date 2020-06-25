@@ -221,8 +221,16 @@ export class App {
   }
 
   /**
-   * Registers an interceptor function that will be invoked before when the service get function is
-   * invoked.
+   *
+   * Registers a service interceptor function. Interceptors are called every time a service is
+   * instantiated and can transform the service into a different value. Interceptors can be used
+   * for aspect-oriented programming at a global (application) level to implement features such as
+   * logging, tracing and similar cross-cutting concerns.
+   *
+   * Note that this function will be invoked for every single service class being instantiated,
+   * including h4bff-internal classes (examples include TransactionProvider, RequestInfo etc).
+   * You'll probably want to apply any wrappers conditionally, checking if the instance's class
+   * has been decorated with some metadata and returning the original otherwise
    *
    * @param ic the interceptor function.
    */
