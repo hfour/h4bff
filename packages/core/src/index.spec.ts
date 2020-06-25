@@ -278,7 +278,7 @@ describe('Service instantiator interceptors', () => {
     expect(order).toEqual(['b', 'a']);
   });
 
-  it('check if the interceptor modifies the service that it instantiates', () => {
+  it('check if the interceptor modifies the service that we request', () => {
     //given
     const app = new App();
 
