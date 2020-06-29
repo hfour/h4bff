@@ -43,6 +43,7 @@ function overrideInterceptor<Context>(
 export class Locator<Context> {
   private instances: Map<Function, any> = new Map();
   private overrides: Map<Function, Function> = new Map();
+  private interceptors: Interceptor<Context>[] = [];
 
   public get: <T>(f: ConstructorOrFactory<Context, T>) => T;
 
@@ -52,15 +53,24 @@ export class Locator<Context> {
     options: {
       overrides?: Map<Function, Function>;
       isTransient?: boolean;
-    },
+    } = {},
   ) {
     if (options.overrides != null) this.overrides = options.overrides;
     this.get = baseInstantiator({ isClass, locatorCtx });
-    if (!options.isTransient) this.addInterceptor(cachingInterceptor(this.instances));
-    this.addInterceptor(overrideInterceptor(this.overrides));
+    if (!options.isTransient) this.addInternalInterceptor(cachingInterceptor(this.instances));
+    this.addInternalInterceptor(overrideInterceptor(this.overrides));
   }
 
+  private addInternalInterceptor(ic: Interceptor<Context>) {
+    this.get = ic(this.get);
+  }
+
+  /**
+   * Adds an interceptor to the locator. All external interceptors should be kept into an array
+   * so that when withNewContext is called, they're set to the new locator.
+   */
   public addInterceptor(ic: Interceptor<Context>) {
+    this.interceptors.push(ic);
     this.get = ic(this.get);
   }
 
@@ -81,7 +91,10 @@ export class Locator<Context> {
   }
 
   withNewContext(ctx: Context) {
-    return new Locator(ctx, this.isClass, { overrides: this.overrides });
+    const overrides = new Map(this.overrides);
+    const loc = new Locator(ctx, this.isClass, { overrides });
+    this.interceptors.forEach(ic => loc.addInterceptor(ic));
+    return loc;
   }
 
   clearOverrides() {
