@@ -1,8 +1,15 @@
 import { ConstructorOrFactory, ClassConstructor } from './internal';
 
 export type Instantiator<Context> = <T>(f: ConstructorOrFactory<Context, T>) => T;
+export type InterceptorGet<Context> = (i: Instantiator<Context>) => Instantiator<Context>;
 
-export type Interceptor<Context> = (i: Instantiator<Context>) => Instantiator<Context>;
+export interface Interceptor<C> {
+  get?: InterceptorGet<C>;
+  has?: <T>(f: ConstructorOrFactory<C, T>) => boolean;
+  override?: <T>(f: ConstructorOrFactory<C, T>, g: ConstructorOrFactory<C, T>) => void;
+  clear?: () => void;
+  inherit(): Interceptor<C>;
+}
 
 function baseInstantiator<Context>(opts: {
   isClass: (v: ConstructorOrFactory<Context, any>) => boolean;
@@ -18,86 +25,108 @@ function baseInstantiator<Context>(opts: {
   };
 }
 
-function cachingInterceptor<Context>(
-  instances: Map<Function, any> = new Map(),
-): Interceptor<Context> {
-  return instantiator => f => {
-    if (!instances.has(f)) {
-      instances.set(f, instantiator(f));
+export class CachingInterceptor<C> implements Interceptor<C> {
+  private instances: Map<Function, any> = new Map();
+
+  constructor(i?: Map<Function, Function>) {
+    if (i) {
+      this.instances = i;
     }
-    return instances.get(f);
+  }
+
+  get: InterceptorGet<C> = i => f => {
+    if (!this.instances.has(f)) {
+      this.instances.set(f, i(f));
+    }
+    return this.instances.get(f);
   };
+
+  has<T>(f: ConstructorOrFactory<C, T>): boolean {
+    return this.instances.has(f);
+  }
+
+  inherit(): Interceptor<C> {
+    const i = new CachingInterceptor<C>(this.instances);
+    return i;
+  }
 }
 
-function overrideInterceptor<Context>(
-  overrides: Map<Function, Function> = new Map(),
-): Interceptor<Context> {
-  return instantiator => f => {
-    if (overrides.has(f)) {
-      f = overrides.get(f) as any;
+export class OverrideInterceptor<C> implements Interceptor<C> {
+  overrides: Map<Function, Function> = new Map();
+  constructor(o?: Map<Function, Function>) {
+    if (o) {
+      this.overrides = o;
     }
-    return instantiator(f);
+  }
+
+  get: InterceptorGet<C> = i => f => {
+    if (this.overrides.has(f)) {
+      f = this.overrides.get(f) as any;
+    }
+    return i(f);
   };
+
+  has<T>(f: ConstructorOrFactory<C, T>): boolean {
+    return this.overrides.has(f);
+  }
+
+  override<T>(f: ConstructorOrFactory<C, T>, g: ConstructorOrFactory<C, T>) {
+    this.overrides.set(f, g);
+  }
+
+  clear() {
+    this.overrides.clear();
+  }
+
+  inherit(): Interceptor<C> {
+    const i = new OverrideInterceptor<C>(this.overrides);
+    return i;
+  }
 }
 
 export class Locator<Context> {
-  private instances: Map<Function, any> = new Map();
-  private overrides: Map<Function, Function> = new Map();
   private interceptors: Interceptor<Context>[] = [];
-
-  public get: <T>(f: ConstructorOrFactory<Context, T>) => T;
+  public baseGet: <T>(f: ConstructorOrFactory<Context, T>) => T;
 
   constructor(
     locatorCtx: Context,
     private isClass: (v: ConstructorOrFactory<Context, any>) => boolean,
-    options: {
-      overrides?: Map<Function, Function>;
-      isTransient?: boolean;
-    } = {},
   ) {
-    if (options.overrides != null) this.overrides = options.overrides;
-    this.get = baseInstantiator({ isClass, locatorCtx });
-    if (!options.isTransient) this.addInternalInterceptor(cachingInterceptor(this.instances));
-    this.addInternalInterceptor(overrideInterceptor(this.overrides));
+    this.baseGet = baseInstantiator({ isClass, locatorCtx });
   }
 
-  private addInternalInterceptor(ic: Interceptor<Context>) {
-    this.get = ic(this.get);
-  }
-
-  /**
-   * Adds an interceptor to the locator. All external interceptors should be kept into an array
-   * so that when withNewContext is called, they're set to the new locator.
-   */
   public addInterceptor(ic: Interceptor<Context>) {
     this.interceptors.push(ic);
-    this.get = ic(this.get);
   }
 
+  get = <T>(f: ConstructorOrFactory<Context, T>) => {
+    const ics = this.interceptors.filter(i => i.get) as Interceptor<Context>[];
+    const reducedFn = ics.reduce((acc, ic) => ic.get!(acc), this.baseGet);
+    return reducedFn(f);
+  };
+
   has<T>(f: ConstructorOrFactory<Context, T>): boolean {
-    if (this.instances.has(f)) return true;
-    let override = this.overrides.get(f);
-    if (override) return this.instances.has(override);
-    return false;
+    const ics = this.interceptors.filter(i => i.has);
+    const found = ics.some(ic => ic.has!(f));
+    return found;
   }
 
   override<T>(f: ConstructorOrFactory<Context, T>, g: ConstructorOrFactory<Context, T>) {
-    if (this.instances.has(f)) {
-      console.warn(
-        `Warning: by overriding ${f.name}, you will be shadowing an already instantiated class.`,
-      );
-    }
-    this.overrides.set(f, g);
+    const ics = this.interceptors.filter(i => i.override);
+    ics.forEach(i => i.override!(f, g));
   }
 
   withNewContext(ctx: Context) {
-    const overrides = new Map(this.overrides);
-    const loc = new Locator(ctx, this.isClass, { overrides });
-    this.interceptors.forEach(ic => loc.addInterceptor(ic));
+    const loc = new Locator(ctx, this.isClass);
+    this.interceptors.forEach(ic => {
+      const cloned = ic.inherit();
+      loc.addInterceptor(cloned);
+    });
     return loc;
   }
 
   clearOverrides() {
-    this.overrides.clear();
+    const ics = this.interceptors.filter(i => i.clear);
+    ics.forEach(i => i.clear!());
   }
 }

@@ -1,5 +1,4 @@
 import { App, AppSingleton, BaseService, ServiceContext, ServiceContextEvents } from './';
-import { Interceptor } from './locator';
 
 /**
  * Returns a random 8 char hex string.
@@ -230,15 +229,16 @@ describe('Service instantiator interceptors', () => {
     const app = new App();
     const myMockFunction = jest.fn();
 
-    const testInterceptor = <Context>(): Interceptor<Context> => {
-      return instantiator => f => {
+    class TestInterceptor {
+      get = (instantiator: any) => (f: any) => {
         myMockFunction();
         return instantiator(f);
       };
-    };
+      inherit = () => new TestInterceptor();
+    }
 
     //when
-    app.registerServiceInterceptor(testInterceptor());
+    app.registerServiceInterceptor(new TestInterceptor());
     app.serviceLocator.get(BaseServiceTest);
 
     //then
@@ -252,24 +252,30 @@ describe('Service instantiator interceptors', () => {
     const myMockFunction2 = jest.fn();
     const order: string[] = [];
 
-    const testInterceptor1 = <Context>(): Interceptor<Context> => {
-      return instantiator => f => {
+    class TestInterceptor1 {
+      get = (instantiator: any) => (f: any) => {
         myMockFunction1();
         order.push('a');
         return instantiator(f);
       };
-    };
-    const testInterceptor2 = <Context>(): Interceptor<Context> => {
-      return instantiator => f => {
+      inherit = () => new TestInterceptor2();
+    }
+
+    class TestInterceptor2 {
+      get = (instantiator: any) => (f: any) => {
         myMockFunction2();
         order.push('b');
         return instantiator(f);
       };
-    };
+      inherit = () => new TestInterceptor2();
+    }
+
+    const testInterceptor1 = new TestInterceptor1();
+    const testInterceptor2 = new TestInterceptor2();
 
     //when
-    app.registerServiceInterceptor(testInterceptor1());
-    app.registerServiceInterceptor(testInterceptor2());
+    app.registerServiceInterceptor(testInterceptor1);
+    app.registerServiceInterceptor(testInterceptor2);
     app.serviceLocator.get(BaseServiceTest);
 
     //then
@@ -286,18 +292,21 @@ describe('Service instantiator interceptors', () => {
       testValue: string = 'test 1';
     }
 
-    const testInterceptor1 = <Context>(): Interceptor<Context> => {
-      return instantiator => f => {
+    class TestInterceptor {
+      get = (instantiator: any) => (f: any) => {
         const instance = instantiator(f);
         if (instance instanceof TestStateService) {
           instance.testValue = 'value is modified';
         }
         return instance;
       };
-    };
+      inherit = () => new TestInterceptor();
+    }
+
+    const testInterceptor1 = new TestInterceptor();
 
     //when
-    app.registerServiceInterceptor(testInterceptor1());
+    app.registerServiceInterceptor(testInterceptor1);
     const testStateService = app.serviceLocator.get(TestStateService);
 
     //then

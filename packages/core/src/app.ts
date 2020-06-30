@@ -5,7 +5,7 @@ import {
   PublicInterface,
   ServiceContextEvents,
 } from './internal';
-import { Interceptor } from './locator';
+import { Interceptor, CachingInterceptor, OverrideInterceptor } from './locator';
 
 /**
  * Represents an H4BFF application, the central hub of h4bff. Its the class that loads and
@@ -41,20 +41,28 @@ import { Interceptor } from './locator';
  * @public
  */
 export class App {
-  private singletonLocator = new Locator(this, s => '__appSingleton' in s, {});
-  private transientLocator = new Locator(this, s => '__baseTransient' in s, { isTransient: true });
+  private singletonLocator: Locator<this>;
+  private transientLocator: Locator<this>;
+  /**
+   * @internal
+   */
+  serviceLocator: Locator<ServiceContext>;
 
   parentApp: App | null;
 
   constructor(opts: { parentApp?: App } = {}) {
     this.parentApp = opts.parentApp ? opts.parentApp : null;
-    this.singletonLocator = new Locator(this, s => '__appSingleton' in s, {});
-  }
+    this.singletonLocator = new Locator(this, s => '__appSingleton' in s);
+    this.singletonLocator.addInterceptor(new CachingInterceptor());
+    this.singletonLocator.addInterceptor(new OverrideInterceptor());
 
-  /**
-   * @internal
-   */
-  serviceLocator = new Locator(this.createServiceContext(), s => '__baseService' in s, {});
+    this.transientLocator = new Locator(this, s => '__baseTransient' in s);
+    this.transientLocator.addInterceptor(new OverrideInterceptor());
+
+    this.serviceLocator = new Locator(this.createServiceContext(), s => '__baseService' in s);
+    this.serviceLocator.addInterceptor(new CachingInterceptor());
+    this.serviceLocator.addInterceptor(new OverrideInterceptor());
+  }
 
   /**
    * Walks through parents and returns an existing singleton instance. Call
