@@ -28,13 +28,19 @@ function baseInstantiator<Context>(opts: {
 export class CachingInterceptor<C> implements Interceptor<C> {
   private instances: Map<Function, any> = new Map();
 
-  constructor(i?: Map<Function, Function>) {
-    if (i) {
-      this.instances = i;
-    }
-  }
+  constructor(private parent?: CachingInterceptor<C>) {}
 
+  /**
+   * This function returns a cached function (searches for it locally and in its parent) and if not
+   * found, caches it locally and returns it.
+   */
   get: InterceptorGet<C> = i => f => {
+    if (this.instances.has(f)) {
+      return this.instances.get(f);
+    }
+    if (this.parent && this.parent.has(f)) {
+      return this.parent.get(i);
+    }
     if (!this.instances.has(f)) {
       this.instances.set(f, i(f));
     }
@@ -42,32 +48,39 @@ export class CachingInterceptor<C> implements Interceptor<C> {
   };
 
   has<T>(f: ConstructorOrFactory<C, T>): boolean {
-    return this.instances.has(f);
+    let found = this.instances.has(f);
+    if (!found && this.parent) {
+      found = this.parent.has(f);
+    }
+    return found;
   }
 
   inherit(): Interceptor<C> {
-    const i = new CachingInterceptor<C>(this.instances);
-    return i;
+    return new CachingInterceptor<C>(this);
   }
 }
 
 export class OverrideInterceptor<C> implements Interceptor<C> {
   overrides: Map<Function, Function> = new Map();
-  constructor(o?: Map<Function, Function>) {
-    if (o) {
-      this.overrides = o;
-    }
-  }
+
+  constructor(private parent?: OverrideInterceptor<C>) {}
 
   get: InterceptorGet<C> = i => f => {
     if (this.overrides.has(f)) {
       f = this.overrides.get(f) as any;
+    } else if (this.parent && this.parent.has(f)) {
+      return this.parent.get(i)(f) as any;
     }
+
     return i(f);
   };
 
   has<T>(f: ConstructorOrFactory<C, T>): boolean {
-    return this.overrides.has(f);
+    let found = this.overrides.has(f);
+    if (!found && this.parent) {
+      found = this.parent.has(f);
+    }
+    return found;
   }
 
   override<T>(f: ConstructorOrFactory<C, T>, g: ConstructorOrFactory<C, T>) {
@@ -79,7 +92,7 @@ export class OverrideInterceptor<C> implements Interceptor<C> {
   }
 
   inherit(): Interceptor<C> {
-    const i = new OverrideInterceptor<C>(this.overrides);
+    const i = new OverrideInterceptor<C>(this);
     return i;
   }
 }

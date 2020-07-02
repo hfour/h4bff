@@ -55,7 +55,7 @@ describe('Locator', () => {
   });
 
   // TODO: Not sure if this is the correct behaviour. Investigate
-  it.skip('withNewContext should not share the overrides', () => {
+  it('Override after withNewContext should override', () => {
     let original = () => 'original';
     let fstOverride = () => 'override 1';
     let sndOverride = () => 'override 2';
