@@ -6,6 +6,12 @@ import { RPCMiddlewareContainer } from './middleware';
 import { isCustomResponse } from './response';
 import { RPCErrorHandlers } from './error-handler';
 
+export class CodedError extends Error {
+  constructor(public code: number, message: string) {
+    super(message);
+  }
+}
+
 /**
  * Responsible for finding and executing the right RPC method based on the RPC mapping found in the {@link RPCServiceRegistry}.
  */
@@ -53,47 +59,6 @@ export class RPCDispatcher extends BaseService {
     return this.serviceInstance && ((this.serviceInstance as any)[method] as Function);
   }
 
-  private jsonFail(code: number, message: string, data: any = null) {
-    return this.res.status(code).json({
-      code,
-      result: data,
-      error: {
-        code,
-        message,
-      },
-      version: 2,
-      backendError: true,
-    });
-  }
-
-  private fail = (e: Error) => {
-    let errorResponse = this.getSingleton(RPCErrorHandlers).handle(e);
-
-    if (errorResponse) {
-      return this.jsonFail(errorResponse.code, errorResponse.message, errorResponse.data);
-    }
-
-    if (typeof (e as any).code === 'number') {
-      return this.jsonFail((e as any).code, e.message);
-    }
-
-    console.error(e);
-    return this.jsonFail(500, 'An unexpected error occurred. Please try again.');
-  };
-
-  private success = (data: any, code: number = 200) => {
-    if (isCustomResponse(data)) {
-      return data.sendToHTTPResponse(this.res, code);
-    } else {
-      return this.res.status(code).json({
-        code,
-        result: data,
-        error: null,
-        version: 2,
-      });
-    }
-  };
-
   /**
    * Executes the genuine RPC method.
    */
@@ -101,16 +66,16 @@ export class RPCDispatcher extends BaseService {
     let { req } = this;
 
     if (!req.query.method) {
-      return this.jsonFail(400, '"method" query parameter not found');
+      throw new CodedError(400, '"method" query parameter not found');
     }
     if (!req.body.params) {
-      return this.jsonFail(
+      throw new CodedError(
         400,
         '"params" not found, send an empty object in case of no parameters',
       );
     }
     if (this.serviceMethod == null) {
-      return this.jsonFail(404, 'Method not found');
+      throw new CodedError(404, 'Method not found');
     }
 
     // in case the method fails, we want the error to bubble up
@@ -125,11 +90,6 @@ export class RPCDispatcher extends BaseService {
    * Handles both, success and error cases.
    */
   call = () => {
-    return this.getSingleton(RPCMiddlewareContainer)
-      .call(this)
-      .then(this.success, err => {
-        this.fail(err);
-        throw err;
-      });
+    return this.getSingleton(RPCMiddlewareContainer).call(this);
   };
 }
