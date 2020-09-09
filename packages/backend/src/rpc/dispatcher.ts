@@ -3,7 +3,6 @@ import { BaseService } from '@h4bff/core';
 import { RPCServiceRegistry } from './service-registry';
 import { RequestInfo } from '../request';
 import { RPCMiddlewareContainer } from './middleware';
-import { isCustomResponse } from './response';
 import { RPCErrorHandlers } from './error-handler';
 
 export class CodedError extends Error {
@@ -90,6 +89,12 @@ export class RPCDispatcher extends BaseService {
    * Handles both, success and error cases.
    */
   call = () => {
-    return this.getSingleton(RPCMiddlewareContainer).call(this);
+    return this.getSingleton(RPCMiddlewareContainer)
+      .call(this)
+      .catch(e => {
+        let customHandlerError = this.getSingleton(RPCErrorHandlers).handle(e);
+        if (customHandlerError) throw customHandlerError;
+        throw e;
+      });
   };
 }
