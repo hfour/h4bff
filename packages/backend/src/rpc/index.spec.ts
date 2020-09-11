@@ -24,27 +24,23 @@ function mockResponse() {
 
 function runMock(
   app: App,
-  opts: { method?: string; params?: any; response?: (params: unknown) => any },
+  opts: {
+    method?: string;
+    params?: any;
+    response?: (params: unknown) => any;
+    req?: Request;
+    res?: Response;
+  },
 ) {
   let sendResponse = opts.response || (() => 'Hello World');
-  let mReq = mockRequest(opts.method, opts.params);
-  let mRes = mockResponse();
+  let mReq = opts.req || mockRequest(opts.method, opts.params);
+  let mRes = opts.res || mockResponse();
 
-  app.overrideService(
-    RequestInfo,
-    class MockRequestInfo extends RequestInfo {
-      req = mReq;
-      res = mRes;
-    },
-  );
-
-  // mock disposeContext call
-  app.overrideSingleton(
-    ServiceContextEvents,
-    class MockServiceContextEvents extends ServiceContextEvents {
-      disposeContext = jest.fn(() => Promise.resolve());
-    },
-  );
+  let disposed = false;
+  app.getSingleton(ServiceContextEvents).onContextDisposed(() => {
+    disposed = true;
+    return Promise.resolve();
+  });
 
   app.getSingleton(RPCServiceRegistry).add(
     'test',
@@ -58,7 +54,11 @@ function runMock(
   return app
     .getSingleton(JSONRPCExpress)
     .routeHandler(mReq, mRes)
-    .then(() => ({ req: mReq, res: mRes }));
+
+    .then(() => {
+      expect(disposed).toBe(true);
+      return { req: mReq, res: mRes, disposed };
+    });
 }
 
 describe('RPCDispatcher', () => {
@@ -127,8 +127,6 @@ describe('RPCDispatcher', () => {
         version: 2,
       });
       expect(requestInfo.res.status).toHaveBeenCalledWith(200);
-
-      expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
     });
 
     it('should respond with custom success response and dispose context for specific results', async () => {
@@ -145,7 +143,6 @@ describe('RPCDispatcher', () => {
         response: () => mockData,
       });
       expect(mockData.sendToHTTPResponse).toHaveBeenCalledWith(requestInfo.res, 200);
-      expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
     });
 
     it('should respond with error response when the RPC call fails', async () => {
@@ -168,8 +165,6 @@ describe('RPCDispatcher', () => {
         version: 2,
         backendError: true,
       });
-
-      expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
     });
 
     it('should respond with error response from a registered error handler when the RPC call fails with error the handler can handle', async () => {
@@ -215,7 +210,6 @@ describe('RPCDispatcher', () => {
 
       expect(dummyHandler).not.toHaveBeenCalled();
       expect(specificHandler).toHaveBeenCalledTimes(1);
-      expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
     });
 
     it('should respond with error response from the last registered error handler when the RPC call fails with error that the handler can handle', async () => {
@@ -268,7 +262,6 @@ describe('RPCDispatcher', () => {
       });
       expect(specificHandler1).not.toHaveBeenCalledWith();
       expect(specificHandler2).toHaveBeenCalledTimes(1);
-      expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
     });
 
     it('should respond with error response from the default coded error handler if the RPC call fails with error no handler can handle', async () => {
@@ -308,7 +301,6 @@ describe('RPCDispatcher', () => {
       });
 
       expect(specificHandler).toHaveBeenCalledTimes(1);
-      expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
     });
 
     it('should respond with 500 error response when the RPC call fails with unknown error', async () => {
@@ -333,8 +325,65 @@ describe('RPCDispatcher', () => {
         version: 2,
         backendError: true,
       });
-
-      expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
     });
+  });
+});
+
+describe('rpc lifecycle', () => {
+  it.only('should work as expected', async () => {
+    let lifecycle = ['start'];
+    let app = new App();
+    app.getSingleton(RPCServiceRegistry).add(
+      'x',
+      class X extends BaseService {
+        method(params: { test: string }) {
+          lifecycle.push(params.test);
+          return Promise.resolve('Hello world');
+        }
+      },
+    );
+    app.getSingleton(RPCMiddlewareContainer).addMiddleware(async (_disp, next) => {
+      lifecycle.push('middleware1 before');
+      let res = await next();
+      lifecycle.push('middleware1 after');
+      return res;
+    });
+
+    app.getSingleton(RPCMiddlewareContainer).addMiddleware(async (_disp, next) => {
+      lifecycle.push('middleware2 before');
+      let res = await next();
+      lifecycle.push('middleware2 after');
+      return res;
+    });
+    app.getSingleton(ServiceContextEvents).onContextDisposed(async () => {
+      lifecycle.push('context disposing');
+      await new Promise(resolve => setTimeout(resolve, 1));
+      lifecycle.push('context fully disposed');
+    });
+
+    let res = mockResponse();
+    res.status = code => {
+      lifecycle.push('sendCode:' + code.toString());
+      return res;
+    };
+    res.json = json => {
+      lifecycle.push('sendJson:' + JSON.stringify(json));
+      return res;
+    };
+
+    await runMock(app, { method: 'x.method', params: { test: 'method' }, res });
+
+    expect(lifecycle).toEqual([
+      'start',
+      'middleware2 before',
+      'middleware1 before',
+      'method',
+      'middleware1 after',
+      'middleware2 after',
+      'context disposing',
+      'context fully disposed',
+      'sendCode:200',
+      'sendJson:{"code":200,"result":"Hello world","error":null,"version":2}',
+    ]);
   });
 });
