@@ -20,6 +20,7 @@ export class JSONRPCExpress extends AppSingleton {
   }
 
   private fail = (res: Response, e: Error | ErrorResponse) => {
+    console.log('Called fail with', e);
     if (e != null && 'data' in e) {
       return this.jsonFail(res, e.code, e.message, e.data);
     }
