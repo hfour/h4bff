@@ -329,61 +329,82 @@ describe('RPCDispatcher', () => {
   });
 });
 
-describe('rpc lifecycle', () => {
-  it.only('should work as expected', async () => {
-    let lifecycle = ['start'];
-    let app = new App();
-    app.getSingleton(RPCServiceRegistry).add(
-      'x',
-      class X extends BaseService {
-        method(params: { test: string }) {
-          lifecycle.push(params.test);
-          return Promise.resolve('Hello world');
-        }
-      },
-    );
-    app.getSingleton(RPCMiddlewareContainer).addMiddleware(async (_disp, next) => {
-      lifecycle.push('middleware1 before');
-      let res = await next();
-      lifecycle.push('middleware1 after');
-      return res;
-    });
-
-    app.getSingleton(RPCMiddlewareContainer).addMiddleware(async (_disp, next) => {
-      lifecycle.push('middleware2 before');
-      let res = await next();
-      lifecycle.push('middleware2 after');
-      return res;
-    });
-    app.getSingleton(ServiceContextEvents).onContextDisposed(async () => {
-      lifecycle.push('context disposing');
-      await new Promise(resolve => setTimeout(resolve, 1));
-      lifecycle.push('context fully disposed');
-    });
-
-    let res = mockResponse();
-    res.status = code => {
-      lifecycle.push('sendCode:' + code.toString());
-      return res;
-    };
-    res.json = json => {
-      lifecycle.push('sendJson:' + JSON.stringify(json));
-      return res;
-    };
-
-    await runMock(app, { method: 'x.method', params: { test: 'method' }, res });
-
-    expect(lifecycle).toEqual([
-      'start',
-      'middleware2 before',
-      'middleware1 before',
-      'method',
-      'middleware1 after',
-      'middleware2 after',
-      'context disposing',
-      'context fully disposed',
-      'sendCode:200',
-      'sendJson:{"code":200,"result":"Hello world","error":null,"version":2}',
-    ]);
+async function runLifecycleTest(opts?: {
+  mw1fail?: 'before' | 'after';
+  mw2fail?: 'before' | 'after';
+  methodfail?: boolean;
+  disposefail?: boolean;
+}) {
+  let lifecycle = ['start'];
+  let app = new App();
+  app.getSingleton(RPCServiceRegistry).add(
+    'x',
+    class X extends BaseService {
+      method(params: { test: string }) {
+        lifecycle.push(params.test);
+        if (opts && opts.methodfail) throw new Error('method fail');
+        return Promise.resolve('Hello world');
+      }
+    },
+  );
+  app.getSingleton(RPCMiddlewareContainer).addMiddleware(async (_disp, next) => {
+    lifecycle.push('middleware1 before');
+    if (opts && opts.mw1fail === 'before') throw new Error('mw1 fail before');
+    let res = await next();
+    lifecycle.push('middleware1 after');
+    if (opts && opts.mw1fail === 'after') throw new Error('mw1 fail after');
+    return res;
   });
+
+  app.getSingleton(RPCMiddlewareContainer).addMiddleware(async (_disp, next) => {
+    lifecycle.push('middleware2 before');
+    if (opts && opts.mw2fail === 'before') throw new Error('mw2 fail before');
+    let res = await next();
+    lifecycle.push('middleware2 after');
+    if (opts && opts.mw2fail === 'after') throw new Error('mw2 fail after');
+    return res;
+  });
+  app.getSingleton(ServiceContextEvents).onContextDisposed(async () => {
+    lifecycle.push('context disposing');
+    await new Promise(resolve => setTimeout(resolve, 1));
+    if (opts && opts.disposefail) throw new Error('dispose fail');
+    lifecycle.push('context fully disposed');
+  });
+
+  app.getSingleton(RPCErrorHandlers).addErrorHandler(e => {
+    lifecycle.push('error handler called');
+    return undefined;
+  });
+
+  let res = mockResponse();
+  res.status = code => {
+    lifecycle.push('sendCode:' + code.toString());
+    return res;
+  };
+  res.json = json => {
+    lifecycle.push('sendJson:' + JSON.stringify(json));
+    return res;
+  };
+
+  await runMock(app, { method: 'x.method', params: { test: 'method' }, res });
+
+  return lifecycle;
+}
+describe('rpc lifecycle', () => {
+  let variants = [
+    { mw1fail: 'before' as const },
+    { mw1fail: 'after' as const },
+    { mw2fail: 'before' as const },
+    { mw2fail: 'after' as const },
+    { disposefail: true },
+    { methodfail: true },
+    undefined,
+  ];
+  for (let combo of variants) {
+    let comboStr = JSON.stringify(combo);
+    it('should work in the combination ' + comboStr, async () => {
+      let lifecycle = await runLifecycleTest(combo);
+      expect(lifecycle).toMatchSnapshot();
+    });
+  }
 });
