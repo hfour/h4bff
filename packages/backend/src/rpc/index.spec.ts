@@ -271,7 +271,7 @@ describe('RPCDispatcher', () => {
       expect(app.getSingleton(ServiceContextEvents).disposeContext).toHaveBeenCalled();
     });
 
-    it.only('should respond with error response from the default coded error handler if the RPC call fails with error no handler can handle', async () => {
+    it('should respond with error response from the default coded error handler if the RPC call fails with error no handler can handle', async () => {
       let app = new App();
 
       // create custom handler that we expect to be reached
@@ -291,7 +291,7 @@ describe('RPCDispatcher', () => {
       let requestInfo = await runMock(app, {
         method: 'test.method',
         params: {},
-        response: () => Promise.reject({ code: 444, details: 'Error details' }),
+        response: () => Promise.reject({ code: 444, message: 'Error details' }),
       });
 
       // expect(err).toEqual(expect.objectContaining({ code: 444, message: 'Error details' }));
@@ -318,7 +318,7 @@ describe('RPCDispatcher', () => {
       let requestInfo = await runMock(app, {
         method: 'test.method',
         params: {},
-        response: () => Promise.reject({ code: 444, details: 'Error details' }),
+        response: () => Promise.reject('error'),
       });
 
       // expect(err).toEqual('error');
