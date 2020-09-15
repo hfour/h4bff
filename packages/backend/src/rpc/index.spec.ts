@@ -1,8 +1,5 @@
-import * as Promise from 'bluebird';
 import { App, BaseService, ServiceContextEvents } from '@h4bff/core';
-import { Request, Response, response } from 'express';
-import { RequestInfo } from '../request';
-import { RPCDispatcher } from './dispatcher';
+import { Request, Response } from 'express';
 import { RPCServiceRegistry } from './service-registry';
 import { RPCMiddlewareContainer } from './middleware';
 import { RPCErrorHandlers } from '.';
@@ -371,7 +368,7 @@ async function runLifecycleTest(opts?: {
     lifecycle.push('context fully disposed');
   });
 
-  app.getSingleton(RPCErrorHandlers).addErrorHandler(e => {
+  app.getSingleton(RPCErrorHandlers).addErrorHandler(_e => {
     lifecycle.push('error handler called');
     return undefined;
   });
