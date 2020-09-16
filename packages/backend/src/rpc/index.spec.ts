@@ -347,10 +347,15 @@ async function runLifecycleTest(opts?: {
   app.getSingleton(RPCMiddlewareContainer).addMiddleware(async (_disp, next) => {
     lifecycle.push('middleware1 before');
     if (opts && opts.mw1fail === 'before') throw new Error('mw1 fail before');
-    let res = await next();
-    lifecycle.push('middleware1 after');
-    if (opts && opts.mw1fail === 'after') throw new Error('mw1 fail after');
-    return res;
+    try {
+      let res = await next();
+      lifecycle.push('middleware1 after');
+      if (opts && opts.mw1fail === 'after') throw new Error('mw1 fail after');
+      return res;
+    } catch (e) {
+      lifecycle.push('middleware1 after-error');
+      throw e;
+    }
   });
 
   app.getSingleton(RPCMiddlewareContainer).addMiddleware(async (_disp, next) => {
