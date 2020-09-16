@@ -34,9 +34,9 @@ function runMock(
   let mRes = opts.res || mockResponse();
 
   let disposed = false;
-  app.getSingleton(ServiceContextEvents).onContextDisposed(() => {
+  app.getSingleton(ServiceContextEvents).onContextDisposed(async () => {
+    await new Promise(resolve => setTimeout(resolve, 1));
     disposed = true;
-    return Promise.resolve();
   });
 
   app.getSingleton(RPCServiceRegistry).add(
@@ -54,7 +54,7 @@ function runMock(
 
     .then(() => {
       expect(disposed).toBe(true);
-      return { req: mReq, res: mRes, disposed };
+      return { req: mReq, res: mRes };
     });
 }
 
@@ -368,8 +368,8 @@ async function runLifecycleTest(opts?: {
   });
   app.getSingleton(ServiceContextEvents).onContextDisposed(async () => {
     lifecycle.push('context disposing');
-    await new Promise(resolve => setTimeout(resolve, 1));
     if (opts && opts.disposefail) throw new Error('dispose fail');
+    await new Promise(resolve => setTimeout(resolve, 1));
     lifecycle.push('context fully disposed');
   });
 
