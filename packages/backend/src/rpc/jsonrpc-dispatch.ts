@@ -1,11 +1,26 @@
-import { AppSingleton } from '@h4bff/core';
+import { AppSingleton, ServiceContext } from '@h4bff/core';
 import { ErrorResponse } from './error-handler';
 import { isCustomResponse } from './response';
 import { Response, Request } from 'express';
-import { RequestContextProvider } from '../request';
-import { RPCDispatcher } from './dispatcher';
+import { RequestContextProvider, RequestInfo } from '../request';
+import { RPCDispatcher, DispatchInfo } from './dispatcher';
 
-export class JSONRPCExpress extends AppSingleton {
+export class JSONRPCDispatch extends AppSingleton {
+  getJSONRPCDispatchInfo(ctx: ServiceContext): () => DispatchInfo {
+    return () => {
+      let req = ctx.getService(RequestInfo).req;
+
+      const rpcPath = req.query && req.query.method;
+      const params = req.body && req.body.params;
+      if (!rpcPath) return { params, method: null, service: null };
+
+      const lastDotIndex = rpcPath && rpcPath.lastIndexOf('.');
+      const [service, method] = [rpcPath.slice(0, lastDotIndex), rpcPath.slice(lastDotIndex + 1)];
+
+      return { service, method, params };
+    };
+  }
+
   private jsonFail(res: Response, code: number, message: string, data: any = null) {
     return res.status(code).json({
       code,
@@ -52,7 +67,12 @@ export class JSONRPCExpress extends AppSingleton {
    */
   routeHandler = (req: Request, res: Response) => {
     return this.getSingleton(RequestContextProvider)
-      .withRequestContext(req, res, ctx => ctx.getService(RPCDispatcher).call())
+      .withRequestContext(req, res, ctx =>
+        ctx
+          .getService(RPCDispatcher)
+          .withDispatchInfo(this.getJSONRPCDispatchInfo(ctx))
+          .call(),
+      )
       .then(data => this.success(res, data, 200), err => this.fail(res, err));
   };
 }

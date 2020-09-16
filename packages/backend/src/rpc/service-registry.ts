@@ -1,5 +1,5 @@
 import { BaseService, AppSingleton, ServiceContext } from '@h4bff/core';
-import { JSONRPCExpress } from './jsonrpc-express';
+import { JSONRPCDispatch } from './jsonrpc-dispatch';
 
 /**
  * RPC service middleware.
@@ -35,7 +35,7 @@ export class RPCServiceRegistry extends AppSingleton {
   }
 
   /**
-   * @deprecated: Use JSONRRPCExpress.routeHandler instead
+   * @deprecated: Use JSONRPCDispatch.routeHandler instead to get a JSON-RPC based route handler.
    */
-  routeHandler = this.getSingleton(JSONRPCExpress).routeHandler;
+  routeHandler = this.getSingleton(JSONRPCDispatch).routeHandler;
 }

@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import { RPCServiceRegistry } from './service-registry';
 import { RPCMiddlewareContainer } from './middleware';
 import { RPCErrorHandlers } from '.';
-import { JSONRPCExpress } from './jsonrpc-express';
+import { JSONRPCDispatch } from './jsonrpc-dispatch';
 
 function mockRequest(method?: string, params?: any) {
   const req = {} as Request;
@@ -49,7 +49,7 @@ function runMock(
   );
 
   return app
-    .getSingleton(JSONRPCExpress)
+    .getSingleton(JSONRPCDispatch)
     .routeHandler(mReq, mRes)
 
     .then(() => {

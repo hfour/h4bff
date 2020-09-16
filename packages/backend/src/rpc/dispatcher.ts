@@ -11,10 +11,32 @@ export class CodedError extends Error {
   }
 }
 
+export interface DispatchInfo {
+  service: string | null;
+  method: string | null;
+  params: unknown;
+}
 /**
- * Responsible for finding and executing the right RPC method based on the RPC mapping found in the {@link RPCServiceRegistry}.
+ * Responsible for controlling the entire RPC lifecycle, including middleware and method calls.
+ * to the correct RPC mapping as found in the {@link RPCServiceRegistry}.
  */
 export class RPCDispatcher extends BaseService {
+  private dispatchInfo: () => DispatchInfo = () => {
+    throw new Error('RPC Dispatch info not provided!');
+  };
+
+  /**
+   * You can use this method to implement a different dispatch mechanism other than JSON RPC. As
+   * long as you can provide the necessary dispatch info - service name, method and params - it
+   * should be possible to implement any HTTP based dispatch, like REST
+   *
+   * @internal
+   */
+  public withDispatchInfo(di: () => DispatchInfo) {
+    this.dispatchInfo = di;
+    return this;
+  }
+
   get res() {
     return this.getService(RequestInfo).res;
   }
@@ -23,30 +45,14 @@ export class RPCDispatcher extends BaseService {
     return this.getService(RequestInfo).req;
   }
 
-  get rpcPath(): string {
-    return this.req.query.method;
-  }
-
   get rpcRegistry() {
     return this.getSingleton(RPCServiceRegistry);
   }
 
-  /**
-   * When given 'serviceAlias.method' string, it splits it to ['serviceAlias', 'method'].
-   *
-   * If the string has more than one dot, the serviceAlias consumes all parts of the name
-   * except for the last one:
-   *
-   * 'path.with.more.dots' =\> ['path.with.more', 'dots']
-   */
-  get serviceNameMethod() {
-    const lastDotIndex = this.rpcPath.lastIndexOf('.');
-    return [this.rpcPath.slice(0, lastDotIndex), this.rpcPath.slice(lastDotIndex + 1)];
-  }
-
   get serviceClass() {
-    const [serviceAlias] = this.serviceNameMethod;
-    return this.rpcRegistry.get(serviceAlias);
+    const { service } = this.dispatchInfo();
+    if (!service) return null;
+    return this.rpcRegistry.get(service);
   }
 
   get serviceInstance() {
@@ -54,7 +60,8 @@ export class RPCDispatcher extends BaseService {
   }
 
   get serviceMethod() {
-    const method = this.serviceNameMethod[1];
+    const { method } = this.dispatchInfo();
+    if (!method) return null;
     return this.serviceInstance && ((this.serviceInstance as any)[method] as Function);
   }
 
@@ -62,12 +69,12 @@ export class RPCDispatcher extends BaseService {
    * Executes the genuine RPC method.
    */
   handleRequest() {
-    let { req } = this;
+    let info = this.dispatchInfo();
 
-    if (!req.query.method) {
+    if (!info.method || !info.service) {
       throw new CodedError(400, '"method" query parameter not found');
     }
-    if (!req.body.params) {
+    if (!info.params) {
       throw new CodedError(
         400,
         '"params" not found, send an empty object in case of no parameters',
@@ -80,7 +87,7 @@ export class RPCDispatcher extends BaseService {
     // in case the method fails, we want the error to bubble up
     return Promise.resolve().then(
       // We already did the existence check above
-      () => this.serviceMethod!.call(this.serviceInstance, req.body.params),
+      () => this.serviceMethod!.call(this.serviceInstance, info.params),
     );
   }
 
