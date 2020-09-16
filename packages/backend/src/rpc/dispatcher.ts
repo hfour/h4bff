@@ -16,6 +16,7 @@ export interface DispatchInfo {
   method: string | null;
   params: unknown;
 }
+
 /**
  * Responsible for controlling the entire RPC lifecycle, including middleware and method calls.
  * to the correct RPC mapping as found in the {@link RPCServiceRegistry}.
@@ -43,6 +44,11 @@ export class RPCDispatcher extends BaseService {
 
   get req() {
     return this.getService(RequestInfo).req;
+  }
+
+  get rpcPath() {
+    let { service, method } = this.dispatchInfo();
+    return `${service}.${method}`;
   }
 
   get rpcRegistry() {
