@@ -1,7 +1,7 @@
 import { AppSingleton } from '@h4bff/core';
 
-type ErrorResponse = { code: number; message: string; data?: any };
-type ErrorHandler = (e: Error) => ErrorResponse | undefined;
+export type ErrorResponse = { code: number; message: string; data?: any };
+export type ErrorHandler = (e: Error) => ErrorResponse | undefined;
 
 /**
  * RPC error handler container. Keeps all registered error handlers for RPC calls.

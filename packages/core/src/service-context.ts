@@ -1,4 +1,5 @@
 import { Locator, App, BaseService, ConstructorOrFactory, AppSingleton } from './internal';
+import * as Promise from 'bluebird';
 
 /**
  * Represents a transient context. On the backend that's usually created for every individual
@@ -87,6 +88,14 @@ export class ServiceContextEvents extends AppSingleton {
    * @internal
    */
   disposeContext: ContextListener = (serviceCtx, err) => {
-    return Promise.all(this.listeners.map(l => l(serviceCtx, err))).then(() => {});
+    let listenersResults = this.listeners.map(l =>
+      Promise.resolve().then(() => l(serviceCtx, err)),
+    );
+
+    // Ideally we will switch to allSettled when we move away from bluebird
+    let listenersWait = Promise.all(listenersResults.map(r => r.catch(() => {})));
+    let listenersFirstErrorOrNothing = Promise.all(listenersResults).then(() => {});
+
+    return listenersWait.then(() => listenersFirstErrorOrNothing);
   };
 }

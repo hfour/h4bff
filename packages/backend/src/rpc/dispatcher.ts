@@ -3,13 +3,41 @@ import { BaseService } from '@h4bff/core';
 import { RPCServiceRegistry } from './service-registry';
 import { RequestInfo } from '../request';
 import { RPCMiddlewareContainer } from './middleware';
-import { isCustomResponse } from './response';
 import { RPCErrorHandlers } from './error-handler';
 
+export class CodedError extends Error {
+  constructor(public code: number, message: string) {
+    super(message);
+  }
+}
+
+export interface DispatchInfo {
+  service: string | null;
+  method: string | null;
+  params: unknown;
+}
+
 /**
- * Responsible for finding and executing the right RPC method based on the RPC mapping found in the {@link RPCServiceRegistry}.
+ * Responsible for controlling the entire RPC lifecycle, including middleware and method calls.
+ * to the correct RPC mapping as found in the {@link RPCServiceRegistry}.
  */
 export class RPCDispatcher extends BaseService {
+  private dispatchInfo: () => DispatchInfo = () => {
+    throw new Error('RPC Dispatch info not provided!');
+  };
+
+  /**
+   * You can use this method to implement a different dispatch mechanism other than JSON RPC. As
+   * long as you can provide the necessary dispatch info - service name, method and params - it
+   * should be possible to implement any HTTP based dispatch, like REST
+   *
+   * @internal
+   */
+  public withDispatchInfo(di: () => DispatchInfo) {
+    this.dispatchInfo = di;
+    return this;
+  }
+
   get res() {
     return this.getService(RequestInfo).res;
   }
@@ -18,30 +46,19 @@ export class RPCDispatcher extends BaseService {
     return this.getService(RequestInfo).req;
   }
 
-  get rpcPath(): string {
-    return this.req.query.method;
+  get rpcPath() {
+    let { service, method } = this.dispatchInfo();
+    return `${service}.${method}`;
   }
 
   get rpcRegistry() {
     return this.getSingleton(RPCServiceRegistry);
   }
 
-  /**
-   * When given 'serviceAlias.method' string, it splits it to ['serviceAlias', 'method'].
-   *
-   * If the string has more than one dot, the serviceAlias consumes all parts of the name
-   * except for the last one:
-   *
-   * 'path.with.more.dots' =\> ['path.with.more', 'dots']
-   */
-  get serviceNameMethod() {
-    const lastDotIndex = this.rpcPath.lastIndexOf('.');
-    return [this.rpcPath.slice(0, lastDotIndex), this.rpcPath.slice(lastDotIndex + 1)];
-  }
-
   get serviceClass() {
-    const [serviceAlias] = this.serviceNameMethod;
-    return this.rpcRegistry.get(serviceAlias);
+    const { service } = this.dispatchInfo();
+    if (!service) return null;
+    return this.rpcRegistry.get(service);
   }
 
   get serviceInstance() {
@@ -49,74 +66,34 @@ export class RPCDispatcher extends BaseService {
   }
 
   get serviceMethod() {
-    const method = this.serviceNameMethod[1];
+    const { method } = this.dispatchInfo();
+    if (!method) return null;
     return this.serviceInstance && ((this.serviceInstance as any)[method] as Function);
   }
-
-  private jsonFail(code: number, message: string, data: any = null) {
-    return this.res.status(code).json({
-      code,
-      result: data,
-      error: {
-        code,
-        message,
-      },
-      version: 2,
-      backendError: true,
-    });
-  }
-
-  private fail = (e: Error) => {
-    let errorResponse = this.getSingleton(RPCErrorHandlers).handle(e);
-
-    if (errorResponse) {
-      return this.jsonFail(errorResponse.code, errorResponse.message, errorResponse.data);
-    }
-
-    if (typeof (e as any).code === 'number') {
-      return this.jsonFail((e as any).code, e.message);
-    }
-
-    console.error(e);
-    return this.jsonFail(500, 'An unexpected error occurred. Please try again.');
-  };
-
-  private success = (data: any, code: number = 200) => {
-    if (isCustomResponse(data)) {
-      return data.sendToHTTPResponse(this.res, code);
-    } else {
-      return this.res.status(code).json({
-        code,
-        result: data,
-        error: null,
-        version: 2,
-      });
-    }
-  };
 
   /**
    * Executes the genuine RPC method.
    */
   handleRequest() {
-    let { req } = this;
+    let info = this.dispatchInfo();
 
-    if (!req.query.method) {
-      return this.jsonFail(400, '"method" query parameter not found');
+    if (!info.method || !info.service) {
+      throw new CodedError(400, '"method" query parameter not found');
     }
-    if (!req.body.params) {
-      return this.jsonFail(
+    if (!info.params) {
+      throw new CodedError(
         400,
         '"params" not found, send an empty object in case of no parameters',
       );
     }
     if (this.serviceMethod == null) {
-      return this.jsonFail(404, 'Method not found');
+      throw new CodedError(404, 'Method not found');
     }
 
     // in case the method fails, we want the error to bubble up
     return Promise.resolve().then(
       // We already did the existence check above
-      () => this.serviceMethod!.call(this.serviceInstance, req.body.params),
+      () => this.serviceMethod!.call(this.serviceInstance, info.params),
     );
   }
 
@@ -127,9 +104,10 @@ export class RPCDispatcher extends BaseService {
   call = () => {
     return this.getSingleton(RPCMiddlewareContainer)
       .call(this)
-      .then(this.success, err => {
-        this.fail(err);
-        throw err;
+      .catch(e => {
+        let customHandlerError = this.getSingleton(RPCErrorHandlers).handle(e);
+        if (customHandlerError) throw customHandlerError;
+        throw e;
       });
   };
 }

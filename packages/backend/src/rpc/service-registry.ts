@@ -1,7 +1,5 @@
-import { Request, Response } from 'express';
 import { BaseService, AppSingleton, ServiceContext } from '@h4bff/core';
-import { RequestContextProvider } from '../request';
-import { RPCDispatcher } from '../rpc';
+import { JSONRPCDispatch } from './jsonrpc-dispatch';
 
 /**
  * RPC service middleware.
@@ -37,13 +35,7 @@ export class RPCServiceRegistry extends AppSingleton {
   }
 
   /**
-   * Middleware that adds RPC handling for given request and response.
-   * It binds the request and response to a service context and forwards the
-   * request to the {@link RPCDispatcher}.
+   * @deprecated: Use JSONRPCDispatch.routeHandler instead to get a JSON-RPC based route handler.
    */
-  routeHandler = (req: Request, res: Response) => {
-    return this.getSingleton(RequestContextProvider).withRequestContext(req, res, ctx =>
-      ctx.getService(RPCDispatcher).call(),
-    );
-  };
+  routeHandler = this.getSingleton(JSONRPCDispatch).routeHandler;
 }

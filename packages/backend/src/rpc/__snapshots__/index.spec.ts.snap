@@ -1,0 +1,102 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`rpc lifecycle should work in the combination {"disposefail":true} 1`] = `
+Array [
+  "start",
+  "middleware2 before",
+  "middleware1 before",
+  "method",
+  "middleware1 after",
+  "middleware2 after",
+  "context disposing",
+  "sendCode:500",
+  "sendJson:{\\"code\\":500,\\"result\\":null,\\"error\\":{\\"code\\":500,\\"message\\":\\"An unexpected error occurred. Please try again.\\"},\\"version\\":2,\\"backendError\\":true}",
+]
+`;
+
+exports[`rpc lifecycle should work in the combination {"methodfail":true} 1`] = `
+Array [
+  "start",
+  "middleware2 before",
+  "middleware1 before",
+  "method",
+  "middleware1 after-error",
+  "error handler called",
+  "context disposing",
+  "context fully disposed",
+  "sendCode:500",
+  "sendJson:{\\"code\\":500,\\"result\\":null,\\"error\\":{\\"code\\":500,\\"message\\":\\"An unexpected error occurred. Please try again.\\"},\\"version\\":2,\\"backendError\\":true}",
+]
+`;
+
+exports[`rpc lifecycle should work in the combination {"mw1fail":"after"} 1`] = `
+Array [
+  "start",
+  "middleware2 before",
+  "middleware1 before",
+  "method",
+  "middleware1 after",
+  "middleware1 after-error",
+  "error handler called",
+  "context disposing",
+  "context fully disposed",
+  "sendCode:500",
+  "sendJson:{\\"code\\":500,\\"result\\":null,\\"error\\":{\\"code\\":500,\\"message\\":\\"An unexpected error occurred. Please try again.\\"},\\"version\\":2,\\"backendError\\":true}",
+]
+`;
+
+exports[`rpc lifecycle should work in the combination {"mw1fail":"before"} 1`] = `
+Array [
+  "start",
+  "middleware2 before",
+  "middleware1 before",
+  "error handler called",
+  "context disposing",
+  "context fully disposed",
+  "sendCode:500",
+  "sendJson:{\\"code\\":500,\\"result\\":null,\\"error\\":{\\"code\\":500,\\"message\\":\\"An unexpected error occurred. Please try again.\\"},\\"version\\":2,\\"backendError\\":true}",
+]
+`;
+
+exports[`rpc lifecycle should work in the combination {"mw2fail":"after"} 1`] = `
+Array [
+  "start",
+  "middleware2 before",
+  "middleware1 before",
+  "method",
+  "middleware1 after",
+  "middleware2 after",
+  "error handler called",
+  "context disposing",
+  "context fully disposed",
+  "sendCode:500",
+  "sendJson:{\\"code\\":500,\\"result\\":null,\\"error\\":{\\"code\\":500,\\"message\\":\\"An unexpected error occurred. Please try again.\\"},\\"version\\":2,\\"backendError\\":true}",
+]
+`;
+
+exports[`rpc lifecycle should work in the combination {"mw2fail":"before"} 1`] = `
+Array [
+  "start",
+  "middleware2 before",
+  "error handler called",
+  "context disposing",
+  "context fully disposed",
+  "sendCode:500",
+  "sendJson:{\\"code\\":500,\\"result\\":null,\\"error\\":{\\"code\\":500,\\"message\\":\\"An unexpected error occurred. Please try again.\\"},\\"version\\":2,\\"backendError\\":true}",
+]
+`;
+
+exports[`rpc lifecycle should work in the combination undefined 1`] = `
+Array [
+  "start",
+  "middleware2 before",
+  "middleware1 before",
+  "method",
+  "middleware1 after",
+  "middleware2 after",
+  "context disposing",
+  "context fully disposed",
+  "sendCode:200",
+  "sendJson:{\\"code\\":200,\\"result\\":\\"Hello world\\",\\"error\\":null,\\"version\\":2}",
+]
+`;
