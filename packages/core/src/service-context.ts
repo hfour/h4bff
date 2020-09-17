@@ -92,8 +92,10 @@ export class ServiceContextEvents extends AppSingleton {
       Promise.resolve().then(() => l(serviceCtx, err)),
     );
 
+    // Ideally we will switch to allSettled when we move away from bluebird
     let listenersWait = Promise.all(listenersResults.map(r => r.catch(() => {})));
+    let listenersFirstErrorOrNothing = Promise.all(listenersResults).then(() => {});
 
-    return listenersWait.then(() => Promise.all(listenersResults)).then(() => {});
+    return listenersWait.then(() => listenersFirstErrorOrNothing);
   };
 }

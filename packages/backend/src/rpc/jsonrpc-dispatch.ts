@@ -5,7 +5,16 @@ import { Response, Request } from 'express';
 import { RequestContextProvider, RequestInfo } from '../request';
 import { RPCDispatcher, DispatchInfo } from './dispatcher';
 
+/**
+ * This class allows you to expose the RPC service registry as a JSON-RPC api endpoint.
+ *
+ * To install, simply use JSONRPCDispatch's routeHandler and mount it at a specific express
+ * route e.g. `/api/v1`.
+ */
 export class JSONRPCDispatch extends AppSingleton {
+  /**
+   * @internal
+   */
   getJSONRPCDispatchInfo(ctx: ServiceContext): () => DispatchInfo {
     return () => {
       let req = ctx.getService(RequestInfo).req;
