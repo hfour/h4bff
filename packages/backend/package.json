@@ -24,7 +24,7 @@
     "anydb-sql-2-migrations": "^3.0.3",
     "bluebird": "^3.5.1",
     "content-disposition": "^0.5.2",
-    "express": "^4.16.4",
+    "express": "^4.17.3",
     "tslib": "^1.7.0"
   },
   "devDependencies": {
